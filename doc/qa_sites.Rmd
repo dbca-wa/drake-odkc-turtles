@@ -1,0 +1,132 @@
+---
+title: "WAStD Site QA"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+<style type="text/css">
+.main-container {
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## What should happen
+Data captured with ODK Collect is geo-referenced to point locations.
+This includes the Site Visit Start (SVS) and Site Visit End (SVE) points, 
+turtle tracks (TRACKS), disturbances (DIST), and marine wildlife incidents (MWI).
+
+WAStD stores a list of 
+[data capture sites](https://wastd.dbca.wa.gov.au/admin/observations/area/?area_type__exact=Site)
+with the polygonal extent of the respective beach and surrounding vegetation.
+
+The data ETL process reconstructs Surveys from matching SVS and SVE points 
+to the Site polygons, matching them by `device_id` (coming from the same tablet) 
+and calendar date (captured on the same day).
+Where SVE were forgotten (or ended up across a site boundary and in the wrong site),
+surveys have no end time.
+Where SVS were forgotten, no Surveys are created and uploaded to WAStD.
+
+WAStD reconstructs the Location and Site of Encounters like tracks / dist / mwi 
+from matching their respective point locations to Site polygons.
+
+WAStD's Surveys find and link Encounters by Encounter location and time.
+WASTD finally creates Surveys for orphaned Encounters (where SVS were forgotten),
+and ends Surveys with reconstructed end times 30 mins after their last Encounter 
+record.
+
+## What could go wrong
+### SVS location at wrong Site
+* ETL will create a Survey at wrong Site (but shouldn't).
+* ETL will create no Survey at correct Site (but should).
+
+If Encounters recorded at Site, a Survey will be reconstructed, but we will lose
+the SVS details (site photo, team, comments).
+
+If no Encounters are recorded at Site, no Survey will be reconstructed, and
+confirmed absences / survey effort will not be recorded.
+
+### SVS location outside of any Site
+* ETL will create no Survey.
+
+If Encounters recorded at Site, a Survey will be reconstructed, but we will lose
+the SVS details (site photo, team, comments).
+
+If no Encounters are recorded at Site, no Survey will be reconstructed, and
+confirmed absences / survey effort will not be recorded.
+
+### SVS forgotten
+* ETL will create no Survey.
+
+If Encounters recorded at Site, a Survey will be reconstructed, but we will lose
+the SVS details (site photo, team, comments).
+
+If no Encounters are recorded at Site, no Survey will be reconstructed, and
+confirmed absences / survey effort will not be recorded.
+
+### SVE forgotten
+* ETL will find no SVE for respective SVS.
+* WAStD will reconstruct end time as start time plus 6 hours.
+* If Encounters exist, WAStD will adjust end time to 30 mins after last Encounter.
+* We will lose SVE details (photo, comments, precise time).
+
+### SVE in wrong Site
+* ETL will discard SVE, as it mismatches other SVS's `device_id`.
+* What if same device surveys "wrong" Site before or after surveying intented Site?
+
+### SVE outside of any Site
+* ETL will find no SVE for respective SVS.
+* WAStD will reconstruct end time as start time plus 6 hours.
+* If Encounters exist, WAStD will adjust end time to 30 mins after last Encounter.
+* We will lose SVE details (photo, comments, precise time).
+
+### Tablet switch between SVS and SVE
+Reasons:
+* Tablet out of battery, overheated, malfunctioning, or destroyed, use backup tablet
+* Multi tablet survey
+
+Causes:
+* SVE and SVS within same site but different `device_id` between SVS and SVE.
+* Since we match SVE to SVS by date, Site and `device_id`, we will lose the SVE 
+  of "switchers".
+
+## How can we tell (and fix)
+
+### SVS location at wrong Site
+Map SVS with more than one count of site and calendar day. 
+These are candidates for missing details in reconstructed Surveys.
+
+WAStD would reconstruct a Survey for any Encounters at the intended Site.
+
+Tabulate/map SVS and link to search WAStD for Surveys on that calendar day.
+
+Identify reconstructed Survey in WAStD and backfill SVS details. (How should we do the photo?)
+
+### SVS location outside of any Site
+Map SVS with no `site_id`.
+Find reconstructed WAStD Survey for that SVS and backfill details.
+
+### SVS forgotten
+Not recoverable. Reconstructed in WAStD. Nothing to backfill.
+
+### SVE forgotten
+Not recoverable. Reconstructed in WAStD. Nothing to backfill.
+
+### SVE at wrong Site
+Map SVE with more than one count of site and calendar day.
+Identify Surveys with reconstructed end details and backfill details.
+
+### SVE outside of any Site
+Map SVE with no `site_id`.
+Find reconstructed WAStD Survey ends for that SVS and backfill SVE details.
+
+### Tablet switch between SVS and SVE
+Excluding matched SVE, match remaining SVE to SVS by only calendar date and Site.
+Find Survey (`source_id`) by SVS `device_id` in WAStD, backfill details.
+
+
+
