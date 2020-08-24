@@ -13,12 +13,11 @@
 #' at <- Sys.getenv("WASTDR_API_DEV_TOKEN")
 #' x <- odkc_tracks_dist_as_wastd_tndistobs(odkc_ex$tracks_dist)
 #' x %>% wastd_POST("turtle-nest-disturbance-observations",
-#'   api_url = au, api_token = at
-#' )
+#'   api_url = au, api_token = at)
 #' }
 odkc_tracks_dist_as_wastd_tndistobs <- function(data) {
   data %>%
-    sf_as_tbl() %>%
+    wastdr::sf_as_tbl() %>%
     dplyr::transmute(
       source = 2,
       source_id = id,

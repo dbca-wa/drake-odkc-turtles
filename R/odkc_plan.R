@@ -41,18 +41,23 @@
 #'                      api_token = Sys.getenv("WASTDR_API_DEV_TOKEN"))
 #' wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_TEST_URL"),
 #'                      api_token = Sys.getenv("WASTDR_API_TEST_TOKEN"))
+#' wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_URL"),
+#'                      api_token = Sys.getenv("WASTDR_API_TOKEN"))
 #' Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
-#' wastdr::odkc_plan()
-#' drake::vis_drake_graph(wastdr::odkc_plan())
+#' Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
+#' Sys.setenv(ODKC_DOWNLOAD=TRUE) # Dl media files
+#' Sys.setenv(ODKC_DOWNLOAD=FALSE)
+#' etlTurtleNesting::odkc_plan()
+#' drake::vis_drake_graph(odkc_plan())
 #' drake::clean()
-#' drake::clean("user_qa") # after updating WAStD user aliases
+#' drake::clean("wastd_users") # after updating WAStD user aliases
 #' drake::make(odkc_plan(), lock_envir = FALSE)
 #' }
 odkc_plan <- function() {
   drake::drake_plan(
     # ------------------------------------------------------------------------ #
     # SETUP
-    dl_odkc = FALSE,
+    dl_odkc = Sys.getenv("ODKC_DOWNLOAD", unset = FALSE),
     wastd_data_yr = 2019L,
     up_ex = Sys.getenv("ODKC_IMPORT_UPDATE_EXISTING", unset = FALSE),
 
@@ -78,22 +83,19 @@ odkc_plan <- function() {
     user_mapping = make_user_mapping(odkc_ex, wastd_users),
     # QA Reports: inspect user mappings - flag dissimilar matches
     # https://github.com/dbca-wa/wastdr/issues/21
+    # user_qa = rmarkdown::render(input = knitr_in("doc/qa_users.Rmd"), quiet = TRUE),
     user_qa  = target(
       command = {
         rmarkdown::render(knitr_in("doc/qa_users.Rmd"))
-        file_out("doc/qa_users.html")
-      }
-    ),
+        file_out("doc/qa_users.html")}),
     # Source data transformed into target format
     odkc_tf = odkc_as_wastd(odkc_ex, user_mapping),
     # Sites
-    wastd_sites = wastdr::download_wastd_sites(),
-    site_qa = target(
+    # site_qa = rmarkdown::render(input = knitr_in("doc/qa_sites.Rmd"), quiet = TRUE),
+    site_qa  = target(
       command = {
         rmarkdown::render(knitr_in("doc/qa_sites.Rmd"))
-        file_out("doc/qa_sites.html")
-      }
-    ),
+        file_out("doc/qa_sites.html")}),
 
     # ------------------------------------------------------------------------ #
     # LOAD
@@ -101,9 +103,9 @@ odkc_plan <- function() {
     # Existing data in target DB
     wastd_data = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
     # Skip logic
-    odkc_up = split_create_update_skip(odkc_tf, wastd_data)
+    odkc_up = split_create_update_skip(odkc_tf, wastd_data),
     # Upload
-    # upload_to_wastd = upload_odkc_to_wastd(odkc_up, update_existing = up_ex),
+    upload_to_wastd = upload_odkc_to_wastd(odkc_up, update_existing = up_ex)
     # QA Reports: inspect API responses for any trouble uploading
     # # https://github.com/dbca-wa/wastdr/issues/21
     # wastd_data_full = download_wastd_turtledata()

@@ -16,7 +16,7 @@
 #' }
 odkc_tracks_light_as_wastd_tnhels <- function(data) {
   data %>%
-    sf_as_tbl() %>%
+    wastdr::sf_as_tbl() %>%
     dplyr::transmute(
       source = 2,
       source_id = id,

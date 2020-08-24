@@ -15,7 +15,7 @@
 #' }
 odkc_tracks_hatch_as_wastd_thmorph <- function(data) {
   data %>%
-    sf_as_tbl() %>%
+    wastdr::sf_as_tbl() %>%
     dplyr::transmute(
       source = 2,
       source_id = id,

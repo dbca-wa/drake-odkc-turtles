@@ -22,7 +22,7 @@ odkc_mwi_tag_as_wastd_tagobs <- function(data, user_mapping) {
     dplyr::transmute(recorder = odkc_username, recorder_id = pk)
 
   data %>%
-    sf_as_tbl() %>%
+    wastdr::sf_as_tbl() %>%
     dplyr::transmute(
       source = 2,
       source_id = id,

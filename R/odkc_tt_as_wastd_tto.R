@@ -19,7 +19,7 @@
 odkc_tt_as_wastd_tto <- function(data) {
 
     data %>%
-        sf_as_tbl() %>%
+        wastdr::sf_as_tbl() %>%
         dplyr::select(
             dplyr::starts_with(
                 c("id", "fb_", "gn_", "lh_", "hb_", "or_", "unk_")

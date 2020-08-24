@@ -26,7 +26,7 @@ odkc_mwi_as_wastd_turtlemorph <- function(data, user_mapping) {
     dplyr::transmute(recorder = odkc_username, recorder_id = pk)
 
   data %>%
-    sf_as_tbl() %>%
+    wastdr::sf_as_tbl() %>%
     dplyr::transmute(
       source = 2,
       source_id = id,

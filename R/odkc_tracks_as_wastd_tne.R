@@ -38,7 +38,7 @@ odkc_tracks_as_wastd_tne <- function(data, user_mapping) {
     dplyr::transmute(observer = odkc_username, observer_id = pk)
 
   data %>%
-    sf_as_tbl() %>%
+    wastdr::sf_as_tbl() %>%
     dplyr::transmute(
       source = "odk", # wastd.observations.models.SOURCE_CHOICES
       source_id = id,
@@ -57,16 +57,20 @@ odkc_tracks_as_wastd_tne <- function(data, user_mapping) {
       species = details_species,
       habitat = nest_habitat %>% tidyr::replace_na("na"),
       disturbance = nest_disturbance %>% tidyr::replace_na("na"),
-      nest_tagged = nest_nest_tagged %>% tidyr::replace_na("na"),
-      logger_found = nest_logger_found %>% tidyr::replace_na("na"),
-      eggs_counted = nest_eggs_counted %>% tidyr::replace_na("na"),
-      hatchlings_measured = nest_hatchlings_measured %>% tidyr::replace_na("na"),
-      fan_angles_measured = nest_fan_angles_measured %>% tidyr::replace_na("na")
+      nest_tagged = nest_nest_tagged %>% tx_obs_choices,
+      logger_found = nest_logger_found %>% tx_obs_choices,
+      eggs_counted = nest_eggs_counted %>% tx_obs_choices,
+      hatchlings_measured = nest_hatchlings_measured %>% tx_obs_choices,
+      fan_angles_measured = nest_fan_angles_measured %>% tx_obs_choices
     ) %>%
     dplyr::left_join(wastd_reporters, by = "reporter") %>% # TSC User PK
     dplyr::left_join(wastd_observers, by = "observer") %>% # TSC User PK
     dplyr::select(-reporter, -observer) # drop odkc_username
 }
 
+
+tx_obs_choices <- . %>% tidyr::replace_na("na") %>%
+  stringr::str_replace_all("yes", "present") %>%
+  stringr::str_replace_all("no", "absent")
 
 # usethis::use_test("odkc_tracks_as_wastd_tne")

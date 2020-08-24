@@ -2,8 +2,6 @@ library(drake)
 library(pointblank)
 library(gt)
 
-drake::loadd(user_mapping)
-
 #' Turn a string of names into individual Markdown search links to WAStD Users.
 #'
 #' @param s A string, e.g. "Florian Mayer" or "Flo and Joe".

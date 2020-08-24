@@ -19,7 +19,7 @@
 #' }
 odkc_dist_as_tndo <- function(data) {
   data %>%
-    sf_as_tbl() %>%
+    wastdr::sf_as_tbl() %>%
     dplyr::transmute(
       source = 2,
       source_id = id,

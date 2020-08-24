@@ -27,7 +27,7 @@ odkc_dist_as_distenc <- function(data, user_mapping) {
     dplyr::transmute(observer = odkc_username, observer_id = pk)
 
   data %>%
-    sf_as_tbl() %>%
+    wastdr::sf_as_tbl() %>%
     dplyr::transmute(
       source = "odk", # wastd.observations.models.SOURCE_CHOICES
       source_id = id,

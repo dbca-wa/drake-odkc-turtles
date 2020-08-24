@@ -13,7 +13,17 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(wastdr)
+
+loadd("odkc_ex")
+loadd("odkc_tf")
 ```
+
+## Currency
+
+-   This QA report ran on `r Sys.time()`.
+-   The ODK Central data was downloaded on `r odkc_ex$downloaded_on`.
+-   The WAStD Sites were downloaded together with the ODK Central data on `r odkc_ex$downloaded_on`.
 
 ## What should happen
 Data captured with ODK Collect is geo-referenced to point locations.
@@ -40,6 +50,18 @@ and ends Surveys with reconstructed end times 30 mins after their last Encounter
 record.
 
 ## What could go wrong
+### WAStD Site polygons are inaccurate
+Review your sites on the following map.
+
+```{r}
+wastdr::map_sv_odkc(
+  svs = odkc_ex$svs,
+  sve = odkc_ex$sve,
+  sites = odkc_ex$sites
+  )
+```
+
+
 ### SVS location at wrong Site
 * ETL will create a Survey at wrong Site (but shouldn't).
 * ETL will create no Survey at correct Site (but should).
@@ -49,6 +71,7 @@ the SVS details (site photo, team, comments).
 
 If no Encounters are recorded at Site, no Survey will be reconstructed, and
 confirmed absences / survey effort will not be recorded.
+
 
 ### SVS location outside of any Site
 * ETL will create no Survey.
@@ -67,6 +90,10 @@ the SVS details (site photo, team, comments).
 
 If no Encounters are recorded at Site, no Survey will be reconstructed, and
 confirmed absences / survey effort will not be recorded.
+
+## Survey Ends missing
+
+There are several explanations for Surveys without end point details.
 
 ### SVE forgotten
 * ETL will find no SVE for respective SVS.
@@ -106,8 +133,19 @@ Tabulate/map SVS and link to search WAStD for Surveys on that calendar day.
 
 Identify reconstructed Survey in WAStD and backfill SVS details. (How should we do the photo?)
 
-### SVS location outside of any Site
-Map SVS with no `site_id`.
+### SVS or SVE location outside of any Site
+Map SVS and SVE with no `site_id`.
+
+If they are close to an existing site, it's possible the GPS error placed then just outside that site.
+
+```{r}
+wastdr::map_sv_odkc( 
+  svs = dplyr::filter(odkc_ex$svs, is.na(site_id)),
+  sve = dplyr::filter(odkc_ex$sve, is.na(site_id)), 
+  sites = odkc_ex$sites
+)
+```
+
 Find reconstructed WAStD Survey for that SVS and backfill details.
 
 ### SVS forgotten
@@ -130,3 +168,10 @@ Find Survey (`source_id`) by SVS `device_id` in WAStD, backfill details.
 
 
 
+Surveys without endpoints:
+ 
+```{r}
+odkc_tf$surveys %>% 
+  dplyr::filter(is.na(end_source_id)) %>% 
+  reactable::reactable(filterable = TRUE, sortable = TRUE, searchable = TRUE)
+```
