@@ -4,7 +4,7 @@
 \alias{get_media_file}
 \title{Turn a filename into a file object if exists else return NULL.}
 \usage{
-get_media_file(value)
+get_media_file(fn)
 }
 \description{
 Turn a filename into a file object if exists else return NULL.

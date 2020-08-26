@@ -14,9 +14,10 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(wastdr)
+library(drake)
 
-loadd("odkc_ex")
-loadd("odkc_tf")
+loadd(odkc_ex)
+loadd(odkc_tf)
 ```
 
 ## Currency

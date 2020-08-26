@@ -7,6 +7,7 @@
 upload_odkc_to_wastd(
   data,
   update_existing = FALSE,
+  update_media = FALSE,
   api_url = wastdr::get_wastdr_api_url(),
   api_token = wastdr::get_wastdr_api_token(),
   api_un = wastdr::get_wastdr_api_un(),
@@ -20,6 +21,9 @@ update, skip.}
 
 \item{update_existing}{Whether to update existing but unchanged records in
 WAStD Default: FALSE.}
+
+\item{update_media}{Whether to upload media files.
+Default: \code{Sys.getenv("ODKC_IMPORT_UPDATE_MEDIA", unset=FALSE)}}
 
 \item{api_url}{(character) The WAStD API URL,
 default \code{\link{get_wastdr_api_url}}, see \code{\link{wastdr_setup}}}

@@ -11,12 +11,15 @@
 #'   update, skip.
 #' @param update_existing Whether to update existing but unchanged records in
 #'   WAStD Default: FALSE.
+#' @param update_media Whether to upload media files.
+#'   Default: `Sys.getenv("ODKC_IMPORT_UPDATE_MEDIA", unset=FALSE)`
 #' @template param-auth
 #' @template param-verbose
 #' @return A list of results from `wastd_create_update_skip`.
 #' @export
 upload_odkc_to_wastd <- function(data,
                                update_existing = FALSE,
+                               update_media = TRUE,
                                api_url = wastdr::get_wastdr_api_url(),
                                api_token = wastdr::get_wastdr_api_token(),
                                api_un = wastdr::get_wastdr_api_un(),
@@ -268,6 +271,8 @@ upload_odkc_to_wastd <- function(data,
       api_url = api_url,
       api_token = api_token,
       verbose = verbose
-    )
+    ),
+
+    media = upload_media(data$media, upload = update_media)
   )
 }

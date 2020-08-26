@@ -45,6 +45,8 @@
 #'                      api_token = Sys.getenv("WASTDR_API_TOKEN"))
 #' Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
 #' Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
+#' Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=TRUE)
+#' Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=FALSE)
 #' Sys.setenv(ODKC_DOWNLOAD=TRUE) # Dl media files
 #' Sys.setenv(ODKC_DOWNLOAD=FALSE)
 #' etlTurtleNesting::odkc_plan()
@@ -60,6 +62,7 @@ odkc_plan <- function() {
     dl_odkc = Sys.getenv("ODKC_DOWNLOAD", unset = FALSE),
     wastd_data_yr = 2019L,
     up_ex = Sys.getenv("ODKC_IMPORT_UPDATE_EXISTING", unset = FALSE),
+    up_media = Sys.getenv("ODKC_IMPORT_UPDATE_MEDIA", unset = TRUE),
 
     # ------------------------------------------------------------------------ #
     # EXTRACT
@@ -105,7 +108,8 @@ odkc_plan <- function() {
     # Skip logic
     odkc_up = split_create_update_skip(odkc_tf, wastd_data),
     # Upload
-    upload_to_wastd = upload_odkc_to_wastd(odkc_up, update_existing = up_ex)
+    upload_to_wastd = upload_odkc_to_wastd(
+      odkc_up, update_existing = up_ex, update_media = up_media)
     # QA Reports: inspect API responses for any trouble uploading
     # # https://github.com/dbca-wa/wastdr/issues/21
     # wastd_data_full = download_wastd_turtledata()

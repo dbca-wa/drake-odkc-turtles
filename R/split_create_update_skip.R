@@ -175,6 +175,9 @@ split_create_update_skip <- function(odkc_prep, wastd_data) {
     svy_update = odkc_prep$surveys %>%
       dplyr::semi_join(svy_update, by = "source_id"),
     svy_skip = odkc_prep$surveys %>%
-      dplyr::semi_join(svy_skip, by = "source_id")
+      dplyr::semi_join(svy_skip, by = "source_id"),
+
+    # Media
+    media = odkc_prep$media # skip logic via env var
   )
 }

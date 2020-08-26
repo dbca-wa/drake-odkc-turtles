@@ -91,16 +91,6 @@ odkc_as_wastd <- function(odkc_data, user_mapping) {
     #
     # ---------------------------------------------------------------------#
     # https://wastd.dbca.wa.gov.au/api/1/media-attachments/
-    track_photos = odkc_tracks_as_media(odkc_data$tracks)
-    # survey_photos = odkc_tracks_as_media(odkc_data$tracks)
-    # "media_type": "photograph",
-    # "title": "...",
-    # "attachment": file(fs::path("media", odkc_ex$tracks$track_photos_photo_track_1[[1]]))
-    #
-    # media_att_* # generate for each possible media attachment
-    # photo eggs (repeats)
-    # uptrack, downtrack, nest photos 1-3
-    # # turtle nest dist photo
-    # mwi photos
+    media = odkc_as_media(odkc_data)
   )
 }

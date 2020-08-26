@@ -107,17 +107,13 @@ odkc_svs_sve_as_wastd_surveys <- function(svs, sve, user_mapping){
 
 #' Turn a filename into a file object if exists else return NULL.
 #' @export
-get_media_file <- . %>% {
-    if (is.na(.))
-       NA
-    else
-        httr::upload_file(fs::path("media", .), type = "image/jpg") #%>%
-        # magrittr::extract2(1)
-    # %>% `class<-`("form_file")
+get_media_file <- function(fn){
+    if (is.na(fn)) return(NA)
+    httr::upload_file(fn, type = "image/jpg")
 }
 
 #' @export
-make_uploadable <- Vectorize(get_media_file)
+make_uploadable <- Vectorize(httr::upload_file)
 
 #' @export
 goflo <- function(x) {

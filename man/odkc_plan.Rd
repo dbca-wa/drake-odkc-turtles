@@ -55,6 +55,8 @@ wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_URL"),
                      api_token = Sys.getenv("WASTDR_API_TOKEN"))
 Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
 Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
+Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=TRUE)
+Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=FALSE)
 Sys.setenv(ODKC_DOWNLOAD=TRUE) # Dl media files
 Sys.setenv(ODKC_DOWNLOAD=FALSE)
 etlTurtleNesting::odkc_plan()
