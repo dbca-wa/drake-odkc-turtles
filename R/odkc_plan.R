@@ -50,16 +50,16 @@
 #' Sys.setenv(ODKC_DOWNLOAD=TRUE) # Dl media files
 #' Sys.setenv(ODKC_DOWNLOAD=FALSE)
 #' etlTurtleNesting::odkc_plan()
-#' drake::vis_drake_graph(odkc_plan())
+#' drake::vis_drake_graph(etlTurtleNesting::odkc_plan())
 #' drake::clean()
 #' drake::clean("wastd_users") # after updating WAStD user aliases
-#' drake::make(odkc_plan(), lock_envir = FALSE)
+#' drake::make(etlTurtleNesting::odkc_plan(), lock_envir = FALSE)
 #' }
 odkc_plan <- function() {
   drake::drake_plan(
     # ------------------------------------------------------------------------ #
     # SETUP
-    dl_odkc = Sys.getenv("ODKC_DOWNLOAD", unset = FALSE),
+    dl_odkc = Sys.getenv("ODKC_DOWNLOAD", unset = TRUE),
     wastd_data_yr = 2019L,
     up_ex = Sys.getenv("ODKC_IMPORT_UPDATE_EXISTING", unset = FALSE),
     up_media = Sys.getenv("ODKC_IMPORT_UPDATE_MEDIA", unset = TRUE),
@@ -105,9 +105,9 @@ odkc_plan <- function() {
     #
     # Existing data in target DB
     wastd_data = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
-    # Skip logic
+    # Skip logic compares existing data in target DB with new data to upload
     odkc_up = split_create_update_skip(odkc_tf, wastd_data),
-    # Upload
+    # Upload (skip, update, create as per skip logic)
     upload_to_wastd = upload_odkc_to_wastd(
       odkc_up, update_existing = up_ex, update_media = up_media)
     # QA Reports: inspect API responses for any trouble uploading

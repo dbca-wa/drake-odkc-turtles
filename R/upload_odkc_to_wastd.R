@@ -22,8 +22,6 @@ upload_odkc_to_wastd <- function(data,
                                update_media = TRUE,
                                api_url = wastdr::get_wastdr_api_url(),
                                api_token = wastdr::get_wastdr_api_token(),
-                               api_un = wastdr::get_wastdr_api_un(),
-                               api_pw = wastdr::get_wastdr_api_pw(),
                                verbose = wastdr::get_wastdr_verbose()) {
   list(
     # Tracks ------------------------------------------------------------------#
@@ -62,6 +60,7 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
+
 
     tn_eggs = wastd_create_update_skip(
       data$tn_eggs_create,

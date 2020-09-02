@@ -42,7 +42,7 @@ upload_media <- function(x,
           verbose = verbose
         )
     } else {
-      glue::glue("Skipping missing file {x$attachment[i]}: {X$title[i]}") %>%
+      glue::glue("Skipping missing file {x$attachment[i]}: {x$title[i]}") %>%
         wastdr::wastdr_msg_warn()
     }
   }

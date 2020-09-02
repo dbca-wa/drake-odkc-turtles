@@ -9,7 +9,7 @@ upload_media(
   api_url = wastdr::get_wastdr_api_url(),
   api_token = wastdr::get_wastdr_api_token(),
   verbose = wastdr::get_wastdr_verbose(),
-  upload = Sys.getenv("ODKC_IMPORT_UPDATE_MEDIA", unset = FALSE)
+  upload = Sys.getenv("ODKC_IMPORT_UPDATE_MEDIA", unset = TRUE)
 )
 }
 \arguments{
@@ -27,7 +27,7 @@ default \code{\link{get_wastdr_api_token}}, see \code{\link{wastdr_setup}}}
 Default: wastdr::get_wastdr_verbose()}
 
 \item{upload}{Whether to upload media files.
-Default: \code{Sys.getenv("ODKC_IMPORT_UPDATE_MEDIA", unset=FALSE)}}
+Default: \code{Sys.getenv("ODKC_IMPORT_UPDATE_MEDIA", unset=TRUE)}}
 
 \item{api_un}{(character) A WAStD API username,
 default \code{\link{get_wastdr_api_un}}, see \code{\link{wastdr_setup}}}
