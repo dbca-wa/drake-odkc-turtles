@@ -22,7 +22,10 @@ upload_media <- function(x,
     wastdr::wastdr_msg_noop(glue::glue("Not uploading {nrow(x)} media files."))
     return(x)
   }
-
+  if (nrow(x)==0) {
+    wastdr::wastdr_msg_noop(glue::glue("No media files to upload, skipping."))
+    return(x)
+  }
   for (i in seq_len(nrow(x))){
     if (fs::file_exists(x$attachment[i])){
       list(

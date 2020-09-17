@@ -65,12 +65,13 @@ library(wastdr)
 library(drake)
 
 odkc_plan()
+visNetwork::visSave(r_vis_drake_graph(), here::here("docs", "drake_graph.html"))
 drake::vis_drake_graph(odkc_plan())
 drake::clean()
 drake::clean("wastd_users") # after updating WAStD user aliases
 drake::clean("upload_to_wastd")
 drake::clean("up_media")
-drake::clean("site_qa")
+drake::clean("odkc_up")
 drake::make(odkc_plan(), lock_envir = FALSE)
 
 deps_code(quote(knitr_in("doc/qa_sites.Rmd")))

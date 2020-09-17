@@ -272,6 +272,10 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    media = upload_media(data$media, upload = update_media)
+    media = upload_media(data$media_create,
+                         upload = update_media,
+                         api_url = api_url,
+                         api_token = api_token,
+                         verbose = verbose)
   )
 }
