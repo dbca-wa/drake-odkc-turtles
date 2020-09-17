@@ -11,20 +11,33 @@ output: html_document
 }
 </style>
 
-```{r setup, include=FALSE}
+```{r setup}
 knitr::opts_chunk$set(echo = TRUE)
+library(etlTurtleNesting)
 library(wastdr)
 library(drake)
+```
 
+```{r load_data}
 loadd(odkc_ex)
 loadd(odkc_tf)
 ```
 
 ## Currency
-
 -   This QA report ran on `r Sys.time()`.
 -   The ODK Central data was downloaded on `r odkc_ex$downloaded_on`.
 -   The WAStD Sites were downloaded together with the ODK Central data on `r odkc_ex$downloaded_on`.
+
+## Export to GIS
+WAStD Sites, as well as Site Visit Start and End records are exported here into 
+GeoJSON, which can be viewed in GIS tools like Quantum GIS.
+SVS and SVE can inform how to adjust WAStD sites to capture and separate
+survey effort most efficiently.
+
+```{r export_geojson, eval=FALSE}
+odkc_ex$svs %>% geojsonio::geojson_write(file = here::here("docs/svs.geojson"))
+odkc_ex$sve %>% geojsonio::geojson_write(file = here::here("docs/sve.geojson"))
+```
 
 ## What should happen
 Data captured with ODK Collect is geo-referenced to point locations.
@@ -114,10 +127,12 @@ There are several explanations for Surveys without end point details.
 
 ### Tablet switch between SVS and SVE
 Reasons:
+
 * Tablet out of battery, overheated, malfunctioning, or destroyed, use backup tablet
 * Multi tablet survey
 
 Causes:
+
 * SVE and SVS within same site but different `device_id` between SVS and SVE.
 * Since we match SVE to SVS by date, Site and `device_id`, we will lose the SVE 
   of "switchers".

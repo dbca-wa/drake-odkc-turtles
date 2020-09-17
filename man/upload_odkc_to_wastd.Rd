@@ -39,7 +39,7 @@ default \code{\link{get_wastdr_api_un}}, see \code{\link{wastdr_setup}}}
 default \code{\link{get_wastdr_api_pw}}, see \code{\link{wastdr_setup}}}
 }
 \value{
-A list of results from \code{wastd_create_update_skip}.
+A list of results from \code{wastdr::wastd_create_update_skip}.
 }
 \description{
 Encounters and their related observations are uploaded to WAStD:

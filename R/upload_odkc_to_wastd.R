@@ -15,7 +15,7 @@
 #'   Default: `Sys.getenv("ODKC_IMPORT_UPDATE_MEDIA", unset=FALSE)`
 #' @template param-auth
 #' @template param-verbose
-#' @return A list of results from `wastd_create_update_skip`.
+#' @return A list of results from `wastdr::wastd_create_update_skip`.
 #' @export
 upload_odkc_to_wastd <- function(data,
                                update_existing = FALSE,
@@ -25,7 +25,7 @@ upload_odkc_to_wastd <- function(data,
                                verbose = wastdr::get_wastdr_verbose()) {
   list(
     # Tracks ------------------------------------------------------------------#
-    tne = wastd_create_update_skip(
+    tne = wastdr::wastd_create_update_skip(
       data$tne_create,
       data$tne_update,
       data$tne_skip,
@@ -37,7 +37,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    tn_dist = wastd_create_update_skip(
+    tn_dist = wastdr::wastd_create_update_skip(
       data$tn_dist_create,
       data$tn_dist_update,
       data$tn_dist_skip,
@@ -49,7 +49,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    tn_tags = wastd_create_update_skip(
+    tn_tags = wastdr::wastd_create_update_skip(
       data$tn_tags_create,
       data$tn_tags_update,
       data$tn_tags_skip,
@@ -62,7 +62,7 @@ upload_odkc_to_wastd <- function(data,
     ),
 
 
-    tn_eggs = wastd_create_update_skip(
+    tn_eggs = wastdr::wastd_create_update_skip(
       data$tn_eggs_create,
       data$tn_eggs_update,
       data$tn_eggs_skip,
@@ -74,7 +74,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    th_morph = wastd_create_update_skip(
+    th_morph = wastdr::wastd_create_update_skip(
       data$th_morph_create,
       data$th_morph_update,
       data$th_morph_skip,
@@ -86,7 +86,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    th_emerg = wastd_create_update_skip(
+    th_emerg = wastdr::wastd_create_update_skip(
       data$th_emerg_create,
       data$th_emerg_update,
       data$th_emerg_skip,
@@ -98,7 +98,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    th_outlier = wastd_create_update_skip(
+    th_outlier = wastdr::wastd_create_update_skip(
       data$th_outlier_create,
       data$th_outlier_update,
       data$th_outlier_skip,
@@ -110,7 +110,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    th_light = wastd_create_update_skip(
+    th_light = wastdr::wastd_create_update_skip(
       data$th_light_create,
       data$th_light_update,
       data$th_light_skip,
@@ -123,7 +123,7 @@ upload_odkc_to_wastd <- function(data,
     ),
 
     # tracktally
-    tte = wastd_create_update_skip(
+    tte = wastdr::wastd_create_update_skip(
       data$tte_create,
       data$tte_update,
       data$tte_skip,
@@ -135,7 +135,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    tto = wastd_create_update_skip(
+    tto = wastdr::wastd_create_update_skip(
       data$tto_create,
       data$tto_update,
       data$tto_skip,
@@ -147,7 +147,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    ttd = wastd_create_update_skip(
+    ttd = wastdr::wastd_create_update_skip(
       data$ttd_create,
       data$ttd_update,
       data$ttd_skip,
@@ -161,7 +161,7 @@ upload_odkc_to_wastd <- function(data,
 
 
     # MWI > AE ----------------------------------------------------------------#
-    ae_mwi = wastd_create_update_skip(
+    ae_mwi = wastdr::wastd_create_update_skip(
       data$ae_mwi_create,
       data$ae_mwi_update,
       data$ae_mwi_skip,
@@ -173,7 +173,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    obs_turtlemorph = wastd_create_update_skip(
+    obs_turtlemorph = wastdr::wastd_create_update_skip(
       data$obs_turtlemorph_create,
       data$obs_turtlemorph_update,
       data$obs_turtlemorph_skip,
@@ -185,7 +185,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    obs_tagobs = wastd_create_update_skip(
+    obs_tagobs = wastdr::wastd_create_update_skip(
       data$obs_tagobs_create,
       data$obs_tagobs_update,
       data$obs_tagobs_skip,
@@ -197,7 +197,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    obs_turtledmg = wastd_create_update_skip(
+    obs_turtledmg = wastdr::wastd_create_update_skip(
       data$obs_turtledmg_create,
       data$obs_turtledmg_update,
       data$obs_turtledmg_skip,
@@ -210,7 +210,7 @@ upload_odkc_to_wastd <- function(data,
     ),
 
     # TSI > AE ----------------------------------------------------------------#
-    ae_tsi = wastd_create_update_skip(
+    ae_tsi = wastdr::wastd_create_update_skip(
       data$ae_tsi_create,
       data$ae_tsi_update,
       data$ae_tsi_skip,
@@ -224,7 +224,7 @@ upload_odkc_to_wastd <- function(data,
 
     # tracks_log > LE ---------------------------------------------------------#
 
-    le = wastd_create_update_skip(
+    le = wastdr::wastd_create_update_skip(
       data$le_create,
       data$le_update,
       data$le_skip,
@@ -236,7 +236,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    de = wastd_create_update_skip(
+    de = wastdr::wastd_create_update_skip(
       data$de_mwi_create,
       data$de_mwi_update,
       data$de_mwi_skip,
@@ -248,7 +248,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    tnd_obs = wastd_create_update_skip(
+    tnd_obs = wastdr::wastd_create_update_skip(
       data$tnd_obs_create,
       data$tnd_obs_update,
       data$tnd_obs_skip,
@@ -260,7 +260,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    svy = wastd_create_update_skip(
+    svy = wastdr::wastd_create_update_skip(
       data$svy_create,
       data$svy_update,
       data$svy_skip,

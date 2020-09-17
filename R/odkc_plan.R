@@ -49,11 +49,22 @@
 #' Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=FALSE)
 #' Sys.setenv(ODKC_DOWNLOAD=TRUE) # Dl media files
 #' Sys.setenv(ODKC_DOWNLOAD=FALSE)
-#' etlTurtleNesting::odkc_plan()
-#' drake::vis_drake_graph(etlTurtleNesting::odkc_plan())
+#'
+#' library(etlTurtleNesting)
+#' library(wastdr)
+#' library(drake)
+#'
+#' odkc_plan()
+#' drake::vis_drake_graph(odkc_plan())
 #' drake::clean()
 #' drake::clean("wastd_users") # after updating WAStD user aliases
-#' drake::make(etlTurtleNesting::odkc_plan(), lock_envir = FALSE)
+#' drake::clean("upload_to_wastd")
+#' drake::clean("up_media")
+#' drake::clean("site_qa")
+#' drake::make(odkc_plan(), lock_envir = FALSE)
+#'
+#' deps_code(quote(knitr_in("doc/qa_sites.Rmd")))
+#' deps_code(quote(knitr_in("doc/qa_users.Rmd")))
 #' }
 odkc_plan <- function() {
   drake::drake_plan(
@@ -86,19 +97,19 @@ odkc_plan <- function() {
     user_mapping = make_user_mapping(odkc_ex, wastd_users),
     # QA Reports: inspect user mappings - flag dissimilar matches
     # https://github.com/dbca-wa/wastdr/issues/21
-    # user_qa = rmarkdown::render(input = knitr_in("doc/qa_users.Rmd"), quiet = TRUE),
-    user_qa  = target(
-      command = {
-        rmarkdown::render(knitr_in("doc/qa_users.Rmd"))
-        file_out("doc/qa_users.html")}),
+    user_qa  = rmarkdown::render(
+      knitr_in("doc/qa_users.Rmd"),
+      output_file = file_out("doc/qa_users.html"),
+      quiet=FALSE
+    ),
     # Source data transformed into target format
     odkc_tf = odkc_as_wastd(odkc_ex, user_mapping),
     # Sites
-    # site_qa = rmarkdown::render(input = knitr_in("doc/qa_sites.Rmd"), quiet = TRUE),
-    site_qa  = target(
-      command = {
-        rmarkdown::render(knitr_in("doc/qa_sites.Rmd"))
-        file_out("doc/qa_sites.html")}),
+    site_qa  = rmarkdown::render(
+      knitr_in("doc/qa_sites.Rmd"),
+      output_file = file_out("doc/qa_sites.html"),
+      quiet=FALSE
+    ),
 
     # ------------------------------------------------------------------------ #
     # LOAD

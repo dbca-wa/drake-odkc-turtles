@@ -59,10 +59,21 @@ Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=TRUE)
 Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=FALSE)
 Sys.setenv(ODKC_DOWNLOAD=TRUE) # Dl media files
 Sys.setenv(ODKC_DOWNLOAD=FALSE)
-etlTurtleNesting::odkc_plan()
-drake::vis_drake_graph(etlTurtleNesting::odkc_plan())
+
+library(etlTurtleNesting)
+library(wastdr)
+library(drake)
+
+odkc_plan()
+drake::vis_drake_graph(odkc_plan())
 drake::clean()
 drake::clean("wastd_users") # after updating WAStD user aliases
-drake::make(etlTurtleNesting::odkc_plan(), lock_envir = FALSE)
+drake::clean("upload_to_wastd")
+drake::clean("up_media")
+drake::clean("site_qa")
+drake::make(odkc_plan(), lock_envir = FALSE)
+
+deps_code(quote(knitr_in("doc/qa_sites.Rmd")))
+deps_code(quote(knitr_in("doc/qa_users.Rmd")))
 }
 }
