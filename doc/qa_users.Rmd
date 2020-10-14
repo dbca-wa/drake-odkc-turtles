@@ -24,6 +24,8 @@ library(reactable)
 library(gt)
 readd(odkc_ex)
 readd(user_mapping)
+loadd(odkc_ex)
+loadd(user_mapping)
 ```
 
 ## Currency

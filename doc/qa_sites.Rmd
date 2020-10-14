@@ -21,6 +21,8 @@ library(drake)
 ```{r load_data}
 readd(odkc_ex)
 readd(odkc_tf)
+loadd(odkc_ex)
+loadd(odkc_tf)
 ```
 
 ## Currency
