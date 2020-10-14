@@ -22,8 +22,8 @@ library(pointblank)
 library(magrittr)
 library(reactable)
 library(gt)
-loadd(odkc_ex)
-loadd(user_mapping)
+readd(odkc_ex)
+readd(user_mapping)
 ```
 
 ## Currency

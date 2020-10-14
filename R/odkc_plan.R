@@ -64,6 +64,7 @@
 #' drake::clean("up_media")
 #' drake::clean("odkc_up")
 #' drake::make(odkc_plan(), lock_envir = FALSE)
+#' drake::make(plan = odkc_plan(), targets = c("odkc_tf"))
 #'
 #' deps_code(quote(knitr_in("doc/qa_sites.Rmd")))
 #' deps_code(quote(knitr_in("doc/qa_users.Rmd")))
