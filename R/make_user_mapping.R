@@ -21,15 +21,18 @@
 #' @param wastd_users A tibble of WAStD users
 #' @export
 make_user_mapping <- function(odkc_data, wastd_users) {
-  odkc_reporters <- unique(c(
-    odkc_data$tracks$reporter,
-    odkc_data$track_tally$reporter,
-    odkc_data$dist$reporter,
-    odkc_data$mwi$reporter,
-    odkc_data$svs$reporter,
-    odkc_data$sve$reporter,
-    odkc_data$tsi$reporter
-  ))
+  odkc_reporters <- unique(
+    c(
+      odkc_data$tracks$reporter,
+      odkc_data$track_tally$reporter,
+      odkc_data$dist$reporter,
+      odkc_data$mwi$reporter,
+      odkc_data$svs$reporter,
+      odkc_data$sve$reporter,
+      odkc_data$tsi$reporter
+    ) %>%
+      tidyr::replace_na("Turtles")
+  )
 
   wastd_users <- wastd_users %>%
     dplyr::mutate(

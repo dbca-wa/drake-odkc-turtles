@@ -34,3 +34,8 @@ renv/
 .env
 inst/doc
 media
+*.RData
+port-hedland
+*.zip
+data
+cape-domett

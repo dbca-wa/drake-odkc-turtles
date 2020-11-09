@@ -29,7 +29,12 @@ odkc_tracks_as_wastd_nestobs <- function(data) {
       no_unhatched_term = egg_count_no_unhatched_term,
       no_depredated_eggs = egg_count_no_depredated_eggs,
       nest_depth_top = egg_count_nest_depth_top,
-      nest_depth_bottom = egg_count_nest_depth_bottom
+      nest_depth_bottom = egg_count_nest_depth_bottom,
+      comments = ifelse(
+        "egg_count_nest_excavation_comments" %in% names(data),
+        egg_count_nest_excavation_comments,
+        ""
+      )
     ) %>%
     dplyr::filter_at(
       dplyr::vars(-source, -source_id, -encounter_source, -encounter_source_id),

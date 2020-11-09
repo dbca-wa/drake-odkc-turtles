@@ -36,9 +36,6 @@
 #' drake::loadd(odkc_ex)
 #' drake::loadd(user_mapping)
 #' x <- odkc_svs_sve_as_wastd_surveys(odkc_ex$svs, odkc_ex$sve, user_mapping)
-#' # Doesn't work yet:
-#' wastdr::wastd_POST(x, serializer="surveys", encode="multipart")
-#' goflo(x[1,]) # shared/api.py", line 117: QueryDict instance is immutable
 #' }
 odkc_svs_sve_as_wastd_surveys <- function(svs, sve, user_mapping){
 
@@ -47,9 +44,7 @@ odkc_svs_sve_as_wastd_surveys <- function(svs, sve, user_mapping){
 
     survey_ends <- sve %>%
         wastdr::sf_as_tbl() %>%
-        # dplyr::rowwise() %>%
         dplyr::transmute(
-            # reporter = reporter, # survey$reporter = svs$reporter
             end_source_id = id,
             end_time = lubridate::format_ISO8601(survey_end_time, usetz = TRUE),
             end_location = glue::glue(
@@ -57,7 +52,7 @@ odkc_svs_sve_as_wastd_surveys <- function(svs, sve, user_mapping){
                 " {site_visit_location_latitude})"
             ),
             end_location_accuracy_m = site_visit_location_accuracy,
-            # end_photo = site_visit_site_conditions, #%>% get_media_file,
+            # end_photo = site_visit_site_conditions,
             end_comments = glue::glue("{site_visit_comments}\n",
                                       "End point recorded by {reporter} ",
                                       "on device {device_id}."),
@@ -80,7 +75,7 @@ odkc_svs_sve_as_wastd_surveys <- function(svs, sve, user_mapping){
             ),
             start_location_accuracy_m = site_visit_location_accuracy,
             start_time = lubridate::format_ISO8601(datetime, usetz = TRUE),
-            # start_photo = site_visit_site_conditions %>% make_uploadable,
+            # start_photo = site_visit_site_conditions,
             start_comments = glue::glue("{site_visit_comments}\n",
                                         "Team: {site_visit_team}"),
             production = TRUE, # SVS should have field "production/training"
@@ -98,25 +93,7 @@ odkc_svs_sve_as_wastd_surveys <- function(svs, sve, user_mapping){
                 "site_id" # site_id or not?
             )
         ) %>%
-        dplyr::select(-reporter, -calendar_date_awst, -site_id) #%>%
-        # dplyr::rowwise() %>%
-        # dplyr::mutate(start_photo = make_uploadable(start_photo))
+        dplyr::select(-reporter, -calendar_date_awst, -site_id)
 
     surveys
-}
-
-#' Turn a filename into a file object if exists else return NULL.
-#' @export
-get_media_file <- function(fn){
-    if (is.na(fn)) return(NA)
-    httr::upload_file(fn, type = "image/jpg")
-}
-
-#' @export
-make_uploadable <- Vectorize(httr::upload_file)
-
-#' @export
-goflo <- function(x) {
-    wastdr::wastdr_msg_info(str(x))
-    wastdr::wastd_POST(x, serializer="surveys", encode="multipart")
 }

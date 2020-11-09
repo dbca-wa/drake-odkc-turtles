@@ -260,7 +260,8 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    svy = wastdr::wastd_create_update_skip(
+    svy = wastd_create_update_skip(
+      #upload_surveys(
       data$svy_create,
       data$svy_update,
       data$svy_skip,

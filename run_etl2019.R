@@ -1,0 +1,7 @@
+library(etlTurtleNesting)
+library(wastdr)
+library(drake)
+library(magrittr)
+drake::clean()
+# drake::drake_graph_info(etlTurtleNesting::odkc2019())
+drake::make(etlTurtleNesting::odkc2019())

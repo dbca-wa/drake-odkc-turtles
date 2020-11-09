@@ -1,0 +1,5 @@
+library(etlTurtleNesting)
+library(wastdr)
+library(drake)
+drake::clean()
+drake::make(odkc2020(), lock_envir = FALSE)

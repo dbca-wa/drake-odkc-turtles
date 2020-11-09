@@ -18,7 +18,7 @@ library(wastdr)
 library(drake)
 ```
 
-```{r load_data}
+```{r load_data, echo=FALSE, message=FALSE}
 readd(odkc_ex)
 readd(odkc_tf)
 loadd(odkc_ex)
@@ -157,11 +157,16 @@ Map SVS and SVE with no `site_id`.
 If they are close to an existing site, it's possible the GPS error placed then just outside that site.
 
 ```{r}
+svs_na <- dplyr::filter(odkc_ex$svs, is.na(site_id))
+sve_na = dplyr::filter(odkc_ex$sve, is.na(site_id))
+
+
+if (nrow(svs_na) > 0 && nrow(sve_na) > 0){
 wastdr::map_sv_odkc( 
   svs = dplyr::filter(odkc_ex$svs, is.na(site_id)),
   sve = dplyr::filter(odkc_ex$sve, is.na(site_id)), 
   sites = odkc_ex$sites
-)
+)} else wastdr::wastdr_msg_noop("No SVS and SVE outside of known sites found.")
 ```
 
 Find reconstructed WAStD Survey for that SVS and backfill details.

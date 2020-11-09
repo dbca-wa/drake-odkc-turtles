@@ -39,7 +39,12 @@ odkc_tracks_log_as_loggerenc <- function(data, user_mapping) {
       when = lubridate::format_ISO8601(observation_start_time, usetz = TRUE),
       logger_type = "temperature-logger",
       deployment_status = "resighted",
-      logger_id = logger_id
+      logger_id = logger_id,
+      comments = ifelse(
+        "logger_details_logger_comments" %in% names(data),
+        logger_details_logger_comments,
+        ""
+      )
     ) %>%
     dplyr::left_join(wastd_reporters, by = "reporter") %>% # wastd User PK
     dplyr::left_join(wastd_observers, by = "observer") %>% # wastd User PK

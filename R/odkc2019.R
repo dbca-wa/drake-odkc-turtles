@@ -49,27 +49,28 @@
 #' Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=FALSE)
 #' Sys.setenv(ODKC_DOWNLOAD=TRUE) # Dl media files
 #' Sys.setenv(ODKC_DOWNLOAD=FALSE)
+#' Sys.setenv(ODKC_YEAR=2019)
+#' Sys.setenv(ODKC_YEAR=2020)
 #'
 #' library(etlTurtleNesting)
 #' library(wastdr)
 #' library(drake)
-#' library(magrittr)
 #'
-#' odkc_plan()
-#' visNetwork::visSave(vis_drake_graph(odkc_plan()), "drake_graph.html")
-#' drake::vis_drake_graph(odkc_plan())
+#' odkc2019()
+#' visNetwork::visSave(vis_drake_graph(odkc2019()), "etl2019.html")
+#' drake::vis_drake_graph(odkc2019())
 #' drake::clean()
 #' drake::clean("wastd_users") # after updating WAStD user aliases
 #' drake::clean("upload_to_wastd")
-#' drake::clean("up_media")
-#' drake::clean("odkc_up")
-#' drake::make(odkc_plan(), lock_envir = FALSE)
-#' drake::make(plan = odkc_plan(), targets = c("odkc_tf"))
+#' drake::clean("odkc_ex")
+#' drake::clean("upload_to_wastd")
+#' drake::make(plan = odkc2019(), targets = c("upload_to_wastd"))
+#' drake::make(odkc2019(), lock_envir = FALSE)
 #'
 #' deps_code(quote(knitr_in("doc/qa_sites.Rmd")))
 #' deps_code(quote(knitr_in("doc/qa_users.Rmd")))
 #' }
-odkc_plan <- function() {
+odkc2019 <- function() {
   drake::drake_plan(
     # ------------------------------------------------------------------------ #
     # SETUP
@@ -89,6 +90,7 @@ odkc_plan <- function() {
     # odkc_ex <- odkc
     #
     odkc_ex = wastdr::download_odkc_turtledata_2019(download = dl_odkc),
+
     # QA Reports: data collection problems?
     # https://github.com/dbca-wa/wastdr/issues/21
 
@@ -101,16 +103,16 @@ odkc_plan <- function() {
     # QA Reports: inspect user mappings - flag dissimilar matches
     # https://github.com/dbca-wa/wastdr/issues/21
     user_qa  = rmarkdown::render(
-      knitr_in(here::here("doc/qa_users.Rmd") %>% as.character()),
-      output_file = file_out(here::here("doc/qa_users.html") %>% as.character()),
+      knitr_in("qa_users.Rmd"),
+      output_file = file_out("qa_users2019.html"),
       quiet=FALSE
     ),
     # Source data transformed into target format
     odkc_tf = odkc_as_wastd(odkc_ex, user_mapping),
     # Sites
     site_qa  = rmarkdown::render(
-      knitr_in(here::here("doc/qa_sites.Rmd") %>% as.character()),
-      output_file = file_out(here::here("doc/qa_sites.html") %>% as.character()),
+      knitr_in("qa_sites.Rmd"),
+      output_file = file_out("qa_sites2019.html"),
       quiet=FALSE
     ),
 
