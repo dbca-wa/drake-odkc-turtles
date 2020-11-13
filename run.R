@@ -1,0 +1,7 @@
+library(etlTurtleNesting)
+library(wastdr)
+library(drake)
+drake::clean()
+drake::make(odkc2020())
+drake::clean()
+drake::make(odkc2019())

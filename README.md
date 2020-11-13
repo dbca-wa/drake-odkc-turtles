@@ -37,7 +37,7 @@ Actions on spreadsheet:
 # Step 1: New users (username, name, phone, email, role)
 # 400 for existing, 201 for new
 # Append new users to spreadsheet: username, name, email, phone, role
-users <- here::here("data/users_thv2020.csv") %>%
+users <- here::here("data/users_nin2020.csv") %>%
  readr::read_csv(col_types = "ccccc") %>%
  wastdr::wastd_bulk_post("users",
  #api_url = Sys.getenv("WASTDR_API_DEV_URL"),
