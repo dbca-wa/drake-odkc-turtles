@@ -60,6 +60,22 @@ The data was downloaded from WAStD on `r wastd_data$downloaded_on`.
 
 # Data summaries
 
+## Turtle tracks (current season)
+
+```{r tracks_map_2020}
+x$tracks %>% 
+  wastdr::filter_wastd_season(2020) %>% 
+  wastdr::map_tracks(sites = x$sites)
+```
+
+## Disturbance, predation: nests and general
+
+```{r dist_map_2020}
+x$nest_dist %>% 
+  wastdr::filter_wastd_season(2020) %>%
+  wastdr::map_dist()
+```
+
 ## Turtle tracks and nests season totals
 Tracks and nests are tallied by type and grouped by
 
@@ -72,7 +88,7 @@ Tracks and nests are tallied by type and grouped by
 
 To see only missed tracks, type "mis" into the filter box of column "(details_)nest_age".
 
-```{r}
+```{r tracks_season}
 wastd_nesting_type_by_season_age_species <-
   x$tracks %>% 
   wastdr::nesting_type_by_area_season_age_species() %>% 
@@ -81,26 +97,14 @@ wastd_nesting_type_by_season_age_species <-
 wastd_nesting_type_by_season_age_species %>% 
   reactable::reactable(filterable = T, sortable = T)
 
-# wastd_nesting_type_by_season_age_species %>% 
-#   readr::write_csv(here::here(fn, "nesting_type_by_season_age_species_2017.csv"))
+wastd_nesting_type_by_season_age_species %>%
+  readr::write_csv(here::here(fn, "nesting_type_by_season_age_species.csv"))
 ```
-
 
 ## Turtle tracks and nests daily totals
 The same data, but grouped by day instead of season.
 
-```{r}
-# odkc_nesting_type_by_day_type_species <- 
-#   odkc_data$tracks %>% 
-#   wastdr::sf_as_tbl() %>% 
-#   wastdr::nesting_type_by_season_calendarday_age_species_odkc() 
-
-# odkc_nesting_type_by_day_type_species %>% 
-#   reactable::reactable(filterable = T, sortable = T) 
-
-# odkc_nesting_type_by_day_type_species %>% 
-#   readr::write_csv(here::here(fn, "nesting_type_by_day_age_species_2019.csv"))
-
+```{r tracks_day}
 wastd_nesting_type_by_day_age_species <-
   x$tracks %>% 
   wastdr::nesting_type_by_season_calendarday_age_species() %>% 
@@ -109,8 +113,8 @@ wastd_nesting_type_by_day_age_species <-
 wastd_nesting_type_by_day_age_species %>% 
   reactable::reactable(filterable = T, sortable = T)
 
-# wastd_nesting_type_by_day_age_species %>% 
-#   readr::write_csv(here::here(fn, "nesting_type_by_day_age_species_2017.csv"))
+wastd_nesting_type_by_day_age_species %>%
+  readr::write_csv(here::here(fn, "nesting_type_by_day_age_species.csv"))
 ```
 
 ## Night recaptures by species year and total TAG
@@ -130,79 +134,43 @@ Tracks and nests are combined and tallied, grouped by season and species to form
 the total number of emergences in one season.
 This data needs to be added to the number of tagged turtles from WAMTRAM.
 
-```{r}
-# odkc_data$tracks %>% 
-#   wastdr::sf_as_tbl() %>% 
-#   wastdr::exclude_training_species_odkc() %>% 
-#   dplyr::group_by(season, details_species) %>% 
-#   dplyr::tally() %>% 
-#   dplyr::ungroup() %>%
-#   reactable::reactable(filterable = T, sortable = T)
-
+```{r total_emerg}
 x$tracks %>% 
   wastdr::exclude_training_species() %>% 
   dplyr::group_by(season, species) %>% 
   dplyr::tally() %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(-season) %>%
-  reactable::reactable(filterable = T, sortable = T)
+  reactable::reactable(filterable = T, sortable = T, searchable = T)
 ```
 
 ## Number of nests tagged 
 Tagged nests are exported as individual records of encounters with tagged nests
-(including initial tagging and resighting).
+(including initial tagging and re-sighting).
 We show both the individual records and the season tallies.
 
-```{r}
-# odkc_tagged_nests <- odkc_data$tracks %>% 
-#   wastdr::sf_as_tbl() %>% 
-#   wastdr::exclude_training_species_odkc() %>% 
-#   dplyr::filter(nest_nest_tagged == "yes")
-# Individual records 2019-20
-# odkc_tagged_nests %>%
-#   reactable::reactable(filterable = T, sortable = T)
-# odkc_tagged_nests %>% 
-  # readr::write_csv(here::here(fn, "tagged_nests_2019.csv"))
-# Season tally 2019-20  
-# odkc_tagged_nests %>% 
-#   dplyr::group_by(season, details_species) %>% 
-#   dplyr::tally() %>% 
-#   dplyr::ungroup() %>%
-#   reactable::reactable(filterable = T, sortable = T)
-
+```{r nests_tagged}
 wastd_tagged_nests <- x$nest_tags %>% 
   wastdr::exclude_training_species() 
-# Individual records 2017-19
+# Individual records
 wastd_tagged_nests %>%
-  reactable::reactable(filterable = T, sortable = T)
-# wastd_tagged_nests %>%
-   # readr::write_csv(here::here(fn, "tagged_nests_2017.csv"))
-# Season tally 2017-19
+  reactable::reactable(filterable = T, sortable = T, searchable = T)
+wastd_tagged_nests %>%
+readr::write_csv(here::here(fn, "tagged_nests.csv"))
+# Season tally
 wastd_tagged_nests %>% 
   dplyr::group_by(season, species) %>% 
   dplyr::tally() %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(-season) %>%
-  reactable::reactable(filterable = T, sortable = T)
+  reactable::reactable(filterable = T, sortable = T, searchable = T)
 ```
 
 ## Number of nests found
 The data here is the same as above, 
 nest type "successful-crawl" (confirmed fresh nest) and "hatched nest".
 
-```{r}
-# odkc_nests <- odkc_data$tracks %>% 
-#   wastdr::sf_as_tbl() %>% 
-#   wastdr::exclude_training_species_odkc() %>% 
-#   dplyr::filter(details_nest_type %in% c("successful-crawl", "hatched nest")) %>% 
-#   dplyr::group_by(season, details_species, details_nest_type) %>% 
-#   dplyr::tally() %>% 
-#   dplyr::ungroup()
-# odkc_nests %>%
-#   reactable::reactable(filterable = T, sortable = T)
-# odkc_nests %>% 
-  # readr::write_csv(here::here(fn, "fresh_and_hatched_nests_2019.csv"))
-
+```{r nests_total}
 wastd_nests <- x$tracks %>% 
   wastdr::exclude_training_species() %>% 
   dplyr::filter(nest_type %in% c("successful-crawl", "hatched nest")) %>% 
@@ -211,9 +179,9 @@ wastd_nests <- x$tracks %>%
   dplyr::ungroup() %>% 
   dplyr::arrange(-season)
 wastd_nests %>%
-  reactable::reactable(filterable = T, sortable = T)
-# wastd_nests %>% 
-  # readr::write_csv(here::here(fn, "fresh_and_hatched_nests_2017.csv"))
+  reactable::reactable(filterable = T, sortable = T, searchable = T)
+wastd_nests %>%
+  readr::write_csv(here::here(fn, "fresh_and_hatched_nests.csv"))
 ```
 
 ## Nest loggers
@@ -237,22 +205,13 @@ Data shown here is summarised by season, and exported as individual
 nest excavation records. Data is split up by source between new season (2019-20)
 and previous seasons.
 
-```{r}
-# odkc_data$tracks_egg %>% 
-#   wastdr::sf_as_tbl() %>% 
-#   wastdr::add_hatching_emergence_success_odkc() %>% 
-#   wastdr::hatching_emergence_success_odkc() %>%
-#   reactable::reactable(filterable = T, sortable = T)
-# odkc_data$tracks_egg %>% 
-  # wastdr::sf_as_tbl() %>%
-  # readr::write_csv(here::here(fn, "nest_excavations_hatching_emergence_success_2019.csv"))
-
+```{r nest_excav}
 x$nest_excavations %>% 
   wastdr::hatching_emergence_success() %>% 
   dplyr::arrange(-season) %>%
   reactable::reactable(filterable = T, sortable = T)
-# x$nest_excavations %>%
-  # readr::write_csv(here::here(fn, "nest_excavations_hatching_emergence_success_2017.csv"))
+x$nest_excavations %>%
+  readr::write_csv(here::here(fn, "nest_excavations_hatching_emergence_success.csv"))
 ```
 
 TODO Plot HS/ES time series to show different season length / survey effort
@@ -260,33 +219,12 @@ TODO Plot HS/ES time series to show different season length / survey effort
 
 ## Fan angle data
 Fan angle data is only exported here for now.
-The map shows nests with recorded hatchling fans from 2019-20.
+The map shows nests with recorded hatchling fans.
 
 TODO discuss meaningful visualisations
 
 ```{r}
-# odkc_fans <- odkc_data$tracks %>% 
-#   dplyr::filter(nest_fan_angles_measured == "yes")
-# odkc_fans %>% 
-  # wastdr::sf_as_tbl() %>%
-  # readr::write_csv(here::here(fn, "fan_angles_main_2019.csv"))
-
-# odkc_data$tracks_fan_outlier %>% 
-  # wastdr::sf_as_tbl() %>%
-  # readr::write_csv(here::here(fn, "fan_angles_outliers_2019.csv"))
-
-# odkc$tracks_light %>% 
-  # wastdr::sf_as_tbl() %>%
-  # readr::write_csv(here::here(fn, "fan_angles_lightsources_2019.csv"))
-
-# odkc_fans %>% wastdr::map_tracks_odkc()
-
-# x$nest_fans %>%
-  # readr::write_csv(here::here(fn, "fan_angles_main_2017.csv"))
-# x$nest_fan_outliers %>%
-  # readr::write_csv(here::here(fn, "fan_angles_outliers_2017.csv"))
-# x$nest_lightsources %>%
-  # readr::write_csv(here::here(fn, "fan_angles_lightsources_2017.csv"))
+x$nest_fans %>% wastdr::map_tracks(sites = x$sites)
 ```
 
 ## Tag return crossovers from or to by year 
@@ -296,48 +234,25 @@ WAMTRAM
 The 2019-20 data has not been value-added by WAStD. Therefore, we calculate season
 stats manually.
 
-```{r}
-# 2019-20 season
-first_survey <- min(min(wastd_data$surveys$start_time), min(wastd_data$surveys$end_time))
-last_survey <- max(max(wastd_data$surveys$start_time), max(wastd_data$surveys$end_time))
-season_length <- first_survey - last_survey
+```{r svy_duration}
+svy <- x$surveys %>% wastdr::filter_wastd_season(2020)
+
+first_survey <- min(min(svy$start_time), min(svy$end_time))
+last_survey <- max(max(svy$start_time), max(svy$end_time))
+season_length <- round(last_survey - first_survey, 0)
 ```
 
 The surveys span `r season_length` between `r first_survey` and 
 `r last_survey`.
 
-```{r}
-# wastdr::map_sv_odkc(odkc_data$svs, odkc_data$sve, sites=odkc_data$sites)
-# 
-# svs_tally <- odkc_data$svs %>% 
-#       wastdr::sf_as_tbl() %>%
-#       dplyr::group_by(season, calendar_date_awst, site_name) %>% 
-#       dplyr::tally() %>% 
-#       dplyr::rename(no_start_surveys=n) %>% 
-#       dplyr::ungroup()
-#     
-# sve_tally <- odkc_data$sve %>% 
-#   wastdr::sf_as_tbl() %>%
-#   dplyr::group_by(season, calendar_date_awst, site_name) %>% 
-#   dplyr::tally() %>% 
-#   dplyr::rename(no_end_surveys=n) %>% 
-#   dplyr::ungroup()
-# 
-# grp <- c("season", "calendar_date_awst", "site_name")
-# 
-# svs_tally %>% 
-#   dplyr::full_join(sve_tally, by = grp) %>% 
-#   reactable::reactable(filterable = T)
-```
+A summary of past seasons follows. Note the dates are "turtle dates" (calendar 
+date of nesting night's evening).
 
-
-A summary of past seasons follows. Note the dates are "turtle dates".
-
-```{r, fig.width=10}
-# x$surveys %>% 
+```{r svy_stats, fig.width=10}
+# x$surveys %>%
 #   wastdr::survey_count_heatmap(
-#     placename = params$area_name, 
-#     prefix = params$wamtram_an
+#     placename = params$area_name,
+#     prefix = ""
 #   )
 x$surveys %>% 
   wastdr::survey_season_stats() %>%
@@ -346,20 +261,13 @@ x$surveys %>%
 
 
 ## Number of volunteers each year
-```{r}
-# odkc_data$svs %>% 
-#   wastdr::sf_as_tbl() %>% 
-#   dplyr::group_by(season, reporter) %>% 
-#   dplyr::tally() %>% 
-#   dplyr::ungroup() %>%
-#   reactable::reactable(filterable = T, sortable = T)
-
+```{r volunteers}
 x$surveys %>% 
   dplyr::group_by(season, reporter) %>% 
   dplyr::tally() %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(-season) %>%
-  reactable::reactable(filterable = T, sortable = T)
+  reactable::reactable(filterable = T, sortable = T, searchable = T)
 ```
 
 ## Number of Indigenous employee days
