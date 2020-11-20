@@ -19,8 +19,8 @@ You can install etlTurtleNesting from [GitHub](https://github.com/)
 with:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("dbca-wa/etlTurtleNesting")
+# install.packages("remotes")
+remotes::install_github("dbca-wa/etlTurtleNesting")
 ```
 
 ## Add new users
@@ -37,7 +37,8 @@ Actions on spreadsheet:
 # Step 1: New users (username, name, phone, email, role)
 # 400 for existing, 201 for new
 # Append new users to spreadsheet: username, name, email, phone, role
-users <- here::here("data/users_nin2020.csv") %>%
+library(wastdr)
+users <- here::here("data/users_wptp2020.csv") %>%
  readr::read_csv(col_types = "ccccc") %>%
  wastdr::wastd_bulk_post("users",
  #api_url = Sys.getenv("WASTDR_API_DEV_URL"),
@@ -45,59 +46,11 @@ users <- here::here("data/users_nin2020.csv") %>%
  verbose = TRUE)
 ```
 
-## Import 2019-20 data
+## Import ODKC data
 
-``` r
-library(etlTurtleNesting)
-library(wastdr)
-library(drake)
+Run \`run.R\`\` as a local job. Read the documentation for details.
 
-odkc2019()
-
-# Show plan
-drake::vis_drake_graph(odkc2019())
-
-# Save plan
-visNetwork::visSave(vis_drake_graph(odkc2019()), "etl2019.html")
-
-# Reset plan
-# Invalidate specific cached steps
-# drake::clean("wastd_users") # after updating WAStD user aliases
-# or re-run all from the top
-drake::clean()
-
-# Run specific steps
-# drake::make(plan = odkc2019(), targets = c("upload_to_wastd"))
-
-# Run all
-drake::make(odkc2019(), lock_envir = FALSE)
-```
-
-## Import 2020-21 data
-
-``` r
-# Comprehensive - update everything unless QA'd in WAStD
-Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
-Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=TRUE)
-Sys.setenv(ODKC_DOWNLOAD=TRUE) # Dl media files
-
-# Incremental
-Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
-Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=FALSE)
-Sys.setenv(ODKC_DOWNLOAD=FALSE)
-
-# Show graph
-odkc2020()
-drake::vis_drake_graph(odkc2020())
-visNetwork::visSave(vis_drake_graph(odkc2020()), "etl2020.html")
-
-# Reset and re-run
-drake::clean("odkc_ex")
-drake::clean()
-drake::make(odkc2020(), lock_envir = FALSE)
-```
-
-## Download WAStD Turtledata
+## Report on WAStD Turtledata
 
 ``` r
 library(wastdr)

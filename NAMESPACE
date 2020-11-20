@@ -2,6 +2,7 @@
 
 export("%>%")
 export(annotate_user_mapping)
+export(generate_wastd_reports)
 export(make_search_links)
 export(make_user_mapping)
 export(odkc2019)
@@ -32,4 +33,5 @@ export(split_create_update_skip)
 export(upload_media)
 export(upload_odkc_to_wastd)
 export(upload_surveys)
+export(wastd_reports)
 importFrom(magrittr,"%>%")
