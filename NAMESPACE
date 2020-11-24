@@ -2,9 +2,13 @@
 
 export("%>%")
 export(annotate_user_mapping)
+export(generate_qa_sites_report)
+export(generate_qa_users_report)
 export(generate_wastd_reports)
+export(get_user_area)
 export(make_search_links)
 export(make_user_mapping)
+export(map_unknown_user)
 export(odkc2019)
 export(odkc2020)
 export(odkc_as_media)

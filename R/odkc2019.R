@@ -75,60 +75,35 @@ odkc2019 <- function() {
     # ------------------------------------------------------------------------ #
     # SETUP
     dl_odkc = Sys.getenv("ODKC_DOWNLOAD", unset = TRUE),
-    wastd_data_yr = 2019L,
+    wastd_data_yr = Sys.getenv("WASTD_YEAR", unset = 2019L),
+    odkc_yr = Sys.getenv("ODKC_YEAR", unset = 2019L),
     up_ex = Sys.getenv("ODKC_IMPORT_UPDATE_EXISTING", unset = FALSE),
     up_media = Sys.getenv("ODKC_IMPORT_UPDATE_MEDIA", unset = TRUE),
 
     # ------------------------------------------------------------------------ #
     # EXTRACT
-    #
-    # Source data extracted from source DB
-    # TODO there are duplicates due to overlapping sites, e.g. CBB overlap/gap
-    #
-    # Development: skip the download step and use cached data
-    # data(odkc, package = "turtleviewer")
-    # odkc_ex <- odkc
-    #
     odkc_ex = wastdr::download_odkc_turtledata_2019(download = dl_odkc),
-
-    # QA Reports: data collection problems?
-    # https://github.com/dbca-wa/wastdr/issues/21
 
     # ------------------------------------------------------------------------ #
     # TRANSFORM
-    #
-    # User mapping
     wastd_users = wastdr::download_wastd_users(),
     user_mapping = make_user_mapping(odkc_ex, wastd_users),
     # QA Reports: inspect user mappings - flag dissimilar matches
     # https://github.com/dbca-wa/wastdr/issues/21
-    user_qa  = rmarkdown::render(
-      knitr_in("qa_users.Rmd"),
-      output_file = file_out("qa_users2019.html"),
-      quiet=FALSE
-    ),
+    user_qa = generate_qa_users_report(odkc_ex, user_mapping, odkc_yr),
     # Source data transformed into target format
     odkc_tf = odkc_as_wastd(odkc_ex, user_mapping),
     # Sites
-    site_qa  = rmarkdown::render(
-      knitr_in("qa_sites.Rmd"),
-      output_file = file_out("qa_sites2019.html"),
-      quiet=FALSE
-    ),
+    site_qa = generate_qa_sites_report(odkc_ex, odkc_tf, odkc_yr),
 
     # ------------------------------------------------------------------------ #
     # LOAD
-    #
-    # Existing data in target DB
     wastd_data = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
     # Skip logic compares existing data in target DB with new data to upload
     odkc_up = split_create_update_skip(odkc_tf, wastd_data),
     # Upload (skip, update, create as per skip logic)
     upload_to_wastd = upload_odkc_to_wastd(
       odkc_up, update_existing = up_ex, update_media = up_media)
-    # QA Reports: inspect API responses for any trouble uploading
-    # # https://github.com/dbca-wa/wastdr/issues/21
-    # wastd_data_full = download_wastd_turtledata()
   )
 }
 

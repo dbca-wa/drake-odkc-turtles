@@ -15,6 +15,6 @@ library(etlTurtleNesting)
 library(wastdr)
 library(drake)
 drake::clean("wastd_reports")
-drake::make(etlTurtleNesting::wastd_reports())
+drake::make(etlTurtleNesting::wastd_reports(), lock_envir = FALSE)
 }
 }

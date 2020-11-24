@@ -7,7 +7,7 @@
 #' library(wastdr)
 #' library(drake)
 #' drake::clean("wastd_reports")
-#' drake::make(etlTurtleNesting::wastd_reports())
+#' drake::make(etlTurtleNesting::wastd_reports(), lock_envir = FALSE)
 #' }
 wastd_reports <- function() {
   drake::drake_plan(

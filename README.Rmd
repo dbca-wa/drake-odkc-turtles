@@ -116,3 +116,23 @@ wastd_data_filtered %>%
 # See wastdr helpers for available summaries and maps
 save(wastd_data_filtered, file = glue::glue("wastd_data_{target_fn}.RData"))
 ```
+
+
+## Errors
+TODO download these media attachments through REST API.
+
+```
+3: ⚠ Skipping missing file 1603951391846.jpg: Photo Eggs
+4: ⚠ Skipping missing file 1606178861386.jpg: Photo Disturbance
+5: ⚠ Skipping missing file 1606178906061.jpg: Photo Disturbance
+6: ⚠ Skipping missing file 1605394350794.jpg: Photo Disturbance
+7: ⚠ Skipping missing file 1604788298520.jpg: Photo Disturbance
+8: ⚠ Skipping missing file 1604788460047.jpg: Photo Disturbance
+9: ⚠ Skipping missing file 1604354976007.jpg: Photo Disturbance
+10: ⚠ Skipping missing file 1604353703744.jpg: Photo Disturbance
+11: ⚠ Skipping missing file 1604353796728.jpg: Photo Disturbance
+12: ⚠ Skipping missing file 1603951316184.jpg: Photo Disturbance
+13: ⚠ Skipping missing file 1603951510771.jpg: Photo Logger
+14: ⚠ Skipping missing file 1605390414374.jpg: Photo Damage
+15: ⚠ Skipping missing file 1603952192983.jpg: Photo Damage
+```

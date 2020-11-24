@@ -15,7 +15,7 @@ output: html_document
 ```
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-# library(etlTurtleNesting)
+library(etlTurtleNesting)
 library(drake)
 library(wastdr)
 library(pointblank)
@@ -113,7 +113,7 @@ or higher. Perfect matches will have a dissimilarity below 0.01.
 
 You can download a spreadsheet of mismatches from the CSV button:
 
-```{r message = FALSE, echo=FALSE}
+```{r user_mapping, message = FALSE, echo=FALSE}
 a <- user_mapping %>%
     annotate_user_mapping() %>%
     pointblank::create_agent() %>%
@@ -126,7 +126,7 @@ Alternatively, you can work through the issues directly in the table below.
 
 Your actions:
 
--   Users who put team lists in username - re-train better next season:
+-   Users who put team lists in username - please re-train ASAP:
 
     -   Username is tablet holder.
     -   SVS team is other names.
@@ -155,14 +155,18 @@ Your actions:
     -   Next time we run the user matching, the match should come up with a 
         lower dissimilarity measure (or even drop off the validation shortlist).
 
-```{r echo=FALSE}
+```{r user_table, echo=FALSE}
 a %>%
   pointblank::get_data_extracts() %>%
   magrittr::extract2(1) %>%
+  dplyr::rowwise() %>% 
+  dplyr::mutate(active_at = get_user_area(odkc_ex, odkc_username)) %>% 
+  dplyr::arrange(active_at, -dist) %>% 
   gt::gt() %>%
   gt::fmt_markdown(columns = TRUE) %>%
   gt::cols_label(
     odkc_username = gt::html("<h5>They wrote</h5>\n<small>ODK Collect username</small>"),
+    active_at = gt::html("<small>Active at</small>"),
     odkc_un_trim = gt::html("<h5>We searched</h5>\n<small>Cleaned ODK name</small>"),
     wastd_matched = gt::html("<h5>We matched</h5>\n<small>WAStD User</small>"),
     search_wastd = gt::html("<h5>Search</h5>\n<small>likely candidates</small>"),
@@ -171,11 +175,12 @@ a %>%
   gt::tab_spanner(
     label = "WASTD User match",
     columns = vars(odkc_username,
+                   active_at,
                    odkc_un_trim,
                    wastd_matched, search_wastd, dist)
   ) %>%
   gt::tab_spanner(
-    label = "WASTD User profile",
+    label = "WASTD User profile (chosen as most likely)",
     columns = vars(role, pk, username, name, nickname, aliases, email, phone)
   )
 ```

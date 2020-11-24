@@ -224,11 +224,30 @@ The map shows nests with recorded hatchling fans.
 TODO discuss meaningful visualisations
 
 ```{r}
-x$nest_fans %>% wastdr::map_tracks(sites = x$sites)
+x$nest_fans %>% reactable::reactable(filterable=TRUE, searchable=TRUE)
+
 ```
 
 ## Tag return crossovers from or to by year 
 WAMTRAM
+
+## Strandings and rescues
+### Live sightings: rescues, in water, tagging
+
+```{r}
+x$animals %>% 
+  wastdr::filter_alive() %>% 
+  wastdr::map_mwi(sites = wastd_data$sites)
+```
+
+### Dead sightings: strandings, mortalities
+
+```{r}
+x$animals %>% 
+  wastdr::filter_dead() %>% 
+  wastdr::map_mwi(sites = wastd_data$sites)
+```
+
 
 ## Survey effort
 The 2019-20 data has not been value-added by WAStD. Therefore, we calculate season
