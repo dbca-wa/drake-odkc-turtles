@@ -78,7 +78,9 @@ odkc2020 <- function() {
     odkc_up = split_create_update_skip(odkc_tf, wastd_data),
     # Upload (skip, update, create as per skip logic)
     upload_to_wastd = upload_odkc_to_wastd(
-      odkc_up, update_existing = up_ex, update_media = up_media)
+      odkc_up,
+      update_existing = up_ex,
+      update_media = up_media
+    )
   )
 }
-

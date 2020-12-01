@@ -4,6 +4,7 @@ library(drake)
 
 
 Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
+Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=TRUE)
 drake::clean()
 drake::make(odkc2019(), lock_envir = FALSE)
 

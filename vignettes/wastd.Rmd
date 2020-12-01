@@ -43,8 +43,6 @@ if (!fs::file_exists(fn)) {
   wastdr::wastdr_msg_info(glue::glue("Creating dir {fn}"))
   fs::dir_create(fn, recurse = TRUE)
 }
-
-class(wastd_data)
 ```
 
 ```{r}
@@ -67,6 +65,26 @@ x$tracks %>%
   wastdr::filter_wastd_season(2020) %>% 
   wastdr::map_tracks(sites = x$sites)
 ```
+
+### Missed tracks
+This section is relevant for monitoring programs which tag turtles.
+
+Missed tracks come from turtles which got away just before or during tagging.
+These records can be used to inform tagging start and end times:
+
+Missed tracks recorded at the beginning of a tagging night means that tagging 
+needs to start earlier in the day.
+Missed tracks recorded during tagging indicates that tagging beaches are understaffed.
+
+```{r tracks_missed}
+mt <- x$tracks %>% 
+  wastdr::filter_wastd_season(2020) %>% 
+  dplyr::filter(nest_age == "missed")
+
+mt %>% wastdr::map_tracks(sites = x$sites)
+mt %>% reactable::reactable(filterable = TRUE, searchable = TRUE)
+```
+
 
 ## Disturbance, predation: nests and general
 
