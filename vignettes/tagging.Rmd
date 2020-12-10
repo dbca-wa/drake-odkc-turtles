@@ -122,31 +122,13 @@ wkt_geoshape %>%
 `wkt=FALSE` returns GeoJSON
 -->
 ```{r dl_submissions}
-data <- ruODK::odata_submission_get(
-  table = ft$url[1], 
-  local_dir = loc, 
-  wkt = TRUE
-)
+data <- ruODK::odata_submission_get(table = ft$url[1], local_dir = loc, wkt = T)
 
-data_tags <- ruODK::odata_submission_get(
-  table = ft$url[2], 
-  local_dir = loc
-) %>%
-  dplyr::left_join(
-    data, 
-    by = c("submissions_id" = "id")
-  )
+data_tags <- ruODK::odata_submission_get(table = ft$url[2], local_dir = loc) %>%
+  dplyr::left_join(data, by = c("submissions_id" = "id"))
 
-data_dmg <- ruODK::odata_submission_get(
-  table = ft$url[3], 
-  local_dir = loc
-) %>%
-  dplyr::left_join(
-    data, 
-    by = c("submissions_id" = "id")
-)
-
-# repeat for any remaining nested tables
+data_dmg <- ruODK::odata_submission_get(table = ft$url[3], local_dir = loc) %>%
+  dplyr::left_join(data, by = c("submissions_id" = "id"))
 ```
 
 # Analyse and visualise data
