@@ -57,7 +57,8 @@ odkc2020 <- function() {
 
     # ------------------------------------------------------------------------ #
     # EXTRACT
-    odkc_ex = wastdr::download_odkc_turtledata_2020(download = dl_odkc),
+    odkc_ex = wastdr::download_odkc_turtledata_2020(
+      download = dl_odkc, verbose = FALSE),
 
     # ------------------------------------------------------------------------ #
     # TRANSFORM

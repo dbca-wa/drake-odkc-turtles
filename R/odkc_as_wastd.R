@@ -43,8 +43,10 @@ odkc_as_wastd <- function(odkc_data, user_mapping) {
     th_light = odkc_tracks_light_as_wastd_tnhels(odkc_data$tracks_light),
 
     # -------------------------------------------------------------------- #
-    # https://wastd.dbca.wa.gov.au/api/1/logger-encounters/
-    le = odkc_tracks_log_as_loggerenc(odkc_data$tracks_log, user_mapping),
+    # https://wastd.dbca.wa.gov.au/api/1/logger-encounters/ - now logger obs
+    # le = odkc_tracks_log_as_loggerenc(odkc_data$tracks_log, user_mapping),
+    # https://wastd.dbca.wa.gov.au/api/1/logger-observations/
+    lo = odkc_tracks_log_as_wastd_loggerobs(odkc_data$tracks_log),
 
     # -------------------------------------------------------------------- #
     # https://wastd.dbca.wa.gov.au/api/1/encounters/

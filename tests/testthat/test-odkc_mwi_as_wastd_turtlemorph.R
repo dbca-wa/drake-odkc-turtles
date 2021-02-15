@@ -2,7 +2,7 @@ test_that("odkc_mwi_as_wastd_turtlemorph works", {
   data("odkc_data", package = "wastdr")
   data("wastd_data", package = "wastdr")
 
-  user_mapping <- tibble(odkc_username = "test", pk = 1)
+  user_mapping <- tibble::tibble(odkc_username = "test", pk = 1)
 
   # TSC API shows source and source_id under encounter, resolves users
   odkc_names <- odkc_data$mwi %>%

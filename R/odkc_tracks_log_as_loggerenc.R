@@ -17,6 +17,8 @@
 #'   jsonlite::toJSON()
 #' }
 odkc_tracks_log_as_loggerenc <- function(data, user_mapping) {
+
+  # TODO create LoggerObs instead
   wastd_reporters <- user_mapping %>%
     dplyr::transmute(reporter = odkc_username, reporter_id = pk)
 

@@ -224,13 +224,25 @@ upload_odkc_to_wastd <- function(data,
 
     # tracks_log > LE ---------------------------------------------------------#
 
-    le = wastdr::wastd_create_update_skip(
-      data$le_create,
-      data$le_update,
-      data$le_skip,
+    # le = wastdr::wastd_create_update_skip(
+    #   data$le_create,
+    #   data$le_update,
+    #   data$le_skip,
+    #   update_existing = update_existing,
+    #   serializer = "logger-encounters",
+    #   label = "Logger Encounters",
+    #   api_url = api_url,
+    #   api_token = api_token,
+    #   verbose = verbose
+    # ),
+
+    lo = wastdr::wastd_create_update_skip(
+      data$lo_create,
+      data$lo_update,
+      data$lo_skip,
       update_existing = update_existing,
-      serializer = "logger-encounters",
-      label = "Logger Encounters",
+      serializer = "logger-observations",
+      label = "Logger Observations",
       api_url = api_url,
       api_token = api_token,
       verbose = verbose

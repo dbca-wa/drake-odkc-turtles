@@ -106,13 +106,21 @@ split_create_update_skip <- function(odkc_prep, wastd_data) {
     ttd_skip = odkc_prep$ttd %>%
       dplyr::semi_join(enc_skip, by = c("encounter_source_id" = "source_id")),
 
-    # Logger Encounters -------------------------------------------------------#
-    le_create = odkc_prep$le %>%
-      dplyr::anti_join(wastd_data$enc, by = "source_id"),
-    le_update = odkc_prep$le %>%
-      dplyr::semi_join(enc_update, by = "source_id"),
-    le_skip = odkc_prep$le %>%
-      dplyr::semi_join(enc_skip, by = "source_id"),
+    # Logger Encounters > Obs -------------------------------------------------#
+    # le_create = odkc_prep$le %>%
+    #   dplyr::anti_join(wastd_data$enc, by = "source_id"),
+    # le_update = odkc_prep$le %>%
+    #   dplyr::semi_join(enc_update, by = "source_id"),
+    # le_skip = odkc_prep$le %>%
+    #   dplyr::semi_join(enc_skip, by = "source_id"),
+
+
+    lo_create = odkc_prep$lo %>%
+      dplyr::anti_join(wastd_data$enc, by = c("encounter_source_id" = "source_id")),
+    lo_update = odkc_prep$lo %>%
+      dplyr::semi_join(enc_update, by = c("encounter_source_id" = "source_id")),
+    lo_skip = odkc_prep$lo %>%
+      dplyr::semi_join(enc_skip, by = c("encounter_source_id" = "source_id")),
 
     # Disturbance Encounters --------------------------------------------------#
     de_mwi_create = odkc_prep$de %>%
