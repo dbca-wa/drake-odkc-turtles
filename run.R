@@ -10,7 +10,7 @@ library(ruODK)
 # Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
 #
 # Else skip unchanged records
-Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
+Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
 
 Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=FALSE)
 Sys.setenv(RU_VERBOSE=FALSE)

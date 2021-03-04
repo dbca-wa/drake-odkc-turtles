@@ -3,7 +3,7 @@
 #' The matching is done by
 #' [`fuzzyjoin::stringdist_left_join`](http://varianceexplained.org/fuzzyjoin/reference/stringdist_join.html)
 #' using the Jaro-Winker distance between the ODKC username and the individual
-#' WAStD `name`, `username` and `aliases`.
+#' WAStD `name`, `username` and `aliases` of current active WAStD Users.
 #'
 #' The field `aliases` is where the magic happens. `make_user_mapping` matches
 #' against each alias after separating the aliases by comma.
@@ -35,6 +35,7 @@ make_user_mapping <- function(odkc_data, wastd_users) {
   )
 
   wastd_users <- wastd_users %>%
+    dplyr::filter(is_active=TRUE) %>%
     dplyr::mutate(
       wastd_usernames = paste(username, name, aliases, sep=",") %>%
         stringr::str_remove_all(",$|,,$")

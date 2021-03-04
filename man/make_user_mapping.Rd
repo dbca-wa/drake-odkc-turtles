@@ -15,7 +15,7 @@ make_user_mapping(odkc_data, wastd_users)
 The matching is done by
 \href{http://varianceexplained.org/fuzzyjoin/reference/stringdist_join.html}{\code{fuzzyjoin::stringdist_left_join}}
 using the Jaro-Winker distance between the ODKC username and the individual
-WAStD \code{name}, \code{username} and \code{aliases}.
+WAStD \code{name}, \code{username} and \code{aliases} of current active WAStD Users.
 }
 \details{
 The field \code{aliases} is where the magic happens. \code{make_user_mapping} matches
