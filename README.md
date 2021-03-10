@@ -10,8 +10,7 @@ The package etlTurtleNesting contains the ETL and QA for Turtle Nesting
 Census data from ODK Central to WAStD.
 
 Issues are tracked at
-[wastdr](https://github.com/dbca-wa/wastdr/milestone/1). QA products can
-be reviewed at (TBD).
+[wastdr](https://github.com/dbca-wa/wastdr/milestone/1).
 
 ## Installation
 
@@ -19,23 +18,26 @@ You can install etlTurtleNesting from [GitHub](https://github.com/)
 with:
 
 ``` r
-# install.packages("remotes")
 remotes::install_github("dbca-wa/etlTurtleNesting")
 ```
 
 ## Add new users
 
-Actions on spreadsheet:
+New users can be added to WAStD in batches before each field season.
+Local coordinators will provide a spreadsheet with columns “name” (full
+name, correct! spelling and capitalisation), “email”, “phone”.
+
+The spreadsheet is post-processed:
 
 -   Open with option “quoted columns as text”
 -   username (A), name (B), email, phone, role (C-E)
 -   Formula for username: `=SUBSTITUTE(LOWER(B2), " ", "_")`
--   Format phone as text and prepend with +61
+-   Format phone as text and prefix with +61
 -   Save as CSV with “quote all text columns”
 
 ``` r
 # Step 1: New users (username, name, phone, email, role)
-# 400 for existing, 201 for new
+# HTTP status returned: 400 for existing, 201 for new
 # Append new users to spreadsheet: username, name, email, phone, role
 library(wastdr)
 users <- here::here("data/users_wptp2020.csv") %>%
@@ -46,11 +48,10 @@ users <- here::here("data/users_wptp2020.csv") %>%
  verbose = TRUE)
 ```
 
-## Import ODKC data
+## Import ODKC data, export WAStD data, create reports and outputs
 
-Run \`run.R\`\` as a local job. Read the documentation for details.
-
-## Report on WAStD Turtledata
+Run `run.R` as a local job. Full data export and reporting are already
+part of `run.R`.
 
 ``` r
 library(wastdr)
@@ -61,7 +62,6 @@ wastd_data_full <- download_wastd_turtledata()
 # Save and restore
 save(wastd_data_full, file = "wastd_data_full.RData")
 load("wastd_data_full.RData")
-
 
 # Docs on data structure and contents
 ??wastdr::download_wastd_turtledata
@@ -104,21 +104,3 @@ wastd_data_filtered %>%
 # See wastdr helpers for available summaries and maps
 save(wastd_data_filtered, file = glue::glue("wastd_data_{target_fn}.RData"))
 ```
-
-## Errors
-
-TODO download these media attachments through REST API.
-
-    3: ⚠ Skipping missing file 1603951391846.jpg: Photo Eggs
-    4: ⚠ Skipping missing file 1606178861386.jpg: Photo Disturbance
-    5: ⚠ Skipping missing file 1606178906061.jpg: Photo Disturbance
-    6: ⚠ Skipping missing file 1605394350794.jpg: Photo Disturbance
-    7: ⚠ Skipping missing file 1604788298520.jpg: Photo Disturbance
-    8: ⚠ Skipping missing file 1604788460047.jpg: Photo Disturbance
-    9: ⚠ Skipping missing file 1604354976007.jpg: Photo Disturbance
-    10: ⚠ Skipping missing file 1604353703744.jpg: Photo Disturbance
-    11: ⚠ Skipping missing file 1604353796728.jpg: Photo Disturbance
-    12: ⚠ Skipping missing file 1603951316184.jpg: Photo Disturbance
-    13: ⚠ Skipping missing file 1603951510771.jpg: Photo Logger
-    14: ⚠ Skipping missing file 1605390414374.jpg: Photo Damage
-    15: ⚠ Skipping missing file 1603952192983.jpg: Photo Damage

@@ -185,6 +185,11 @@ split_create_update_skip <- function(odkc_prep, wastd_data) {
     svy_skip = odkc_prep$surveys %>%
       dplyr::semi_join(svy_skip, by = "source_id"),
 
+    survey_media_create = odkc_prep$survey_media %>%
+      dplyr::anti_join(wastd_data$survey_media, by = "source_id"),
+    survey_media_skip = odkc_prep$media %>%
+      dplyr::semi_join(wastd_data$survey_media, by = "source_id"),
+
     # Media
     media_create = odkc_prep$media %>%
       dplyr::anti_join(wastd_data$media, by = "source_id"),

@@ -12,6 +12,11 @@ Generate reports from WAStD turtle data
 \examples{
 \dontrun{
 drake::loadd("wastd_data")
+
+# Compile all reports
+etlTurtleNesting::generate_wastd_reports(wastd_data)
+
+# Compile one single report
 rmarkdown::render(
 here::here("vignettes/wastd.Rmd"),
 params = list(area_name = "Delambre Island"),

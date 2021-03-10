@@ -90,6 +90,8 @@ odkc_as_wastd <- function(odkc_data, user_mapping) {
     # make survey end from orphaned sve?
     surveys = odkc_svs_sve_as_wastd_surveys(
       odkc_data$svs, odkc_data$sve, user_mapping),
+    survey_media = odkc_as_survey_media(odkc_data),
+
 
     # ---------------------------------------------------------------------#
     # https://wastd.dbca.wa.gov.au/api/1/media-attachments/

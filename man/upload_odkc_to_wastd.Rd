@@ -7,7 +7,7 @@
 upload_odkc_to_wastd(
   data,
   update_existing = FALSE,
-  update_media = TRUE,
+  up_media = TRUE,
   api_url = wastdr::get_wastdr_api_url(),
   api_token = wastdr::get_wastdr_api_token(),
   verbose = wastdr::get_wastdr_verbose()
@@ -20,9 +20,6 @@ update, skip.}
 \item{update_existing}{Whether to update existing but unchanged records in
 WAStD Default: FALSE.}
 
-\item{update_media}{Whether to upload media files.
-Default: \code{Sys.getenv("ODKC_IMPORT_UPDATE_MEDIA", unset=FALSE)}}
-
 \item{api_url}{(character) The WAStD API URL,
 default \code{\link{get_wastdr_api_url}}, see \code{\link{wastdr_setup}}}
 
@@ -31,6 +28,9 @@ default \code{\link{get_wastdr_api_token}}, see \code{\link{wastdr_setup}}}
 
 \item{verbose}{Whether to show debug messages.
 Default: wastdr::get_wastdr_verbose()}
+
+\item{upload_media}{Whether to upload media files.
+Default: \code{Sys.getenv("ODKC_IMPORT_UPLOAD_MEDIA", unset=FALSE)}}
 
 \item{api_un}{(character) A WAStD API username,
 default \code{\link{get_wastdr_api_un}}, see \code{\link{wastdr_setup}}}

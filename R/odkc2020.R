@@ -22,8 +22,8 @@
 #'                      api_token = Sys.getenv("WASTDR_API_TOKEN"))
 #' Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
 #' Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
-#' Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=TRUE)
-#' Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=FALSE)
+#' Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA=TRUE)
+#' Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA=FALSE)
 #' Sys.setenv(ODKC_DOWNLOAD=TRUE) # Dl media files
 #' Sys.setenv(ODKC_DOWNLOAD=FALSE)
 #'
@@ -53,7 +53,7 @@ odkc2020 <- function() {
     wastd_data_yr = Sys.getenv("WASTD_YEAR", unset = 2019L),
     odkc_yr = Sys.getenv("ODKC_YEAR", unset = 2020L),
     up_ex = Sys.getenv("ODKC_IMPORT_UPDATE_EXISTING", unset = FALSE),
-    up_media = Sys.getenv("ODKC_IMPORT_UPDATE_MEDIA", unset = TRUE),
+    up_media = Sys.getenv("ODKC_IMPORT_UPLOAD_MEDIA", unset = TRUE),
 
     # ------------------------------------------------------------------------ #
     # EXTRACT
@@ -81,7 +81,7 @@ odkc2020 <- function() {
     upload_to_wastd = upload_odkc_to_wastd(
       odkc_up,
       update_existing = up_ex,
-      update_media = up_media
+      upload_media = up_media
     )
   )
 }

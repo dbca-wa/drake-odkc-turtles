@@ -6,13 +6,13 @@ library(ruODK)
 # After a failed run, unlock the cache
 # drake::drake_cache(here::here(".drake"))$unlock()
 
-# Overwrite new records after importing new users into WAStD
-# Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
+# Overwrite new records after importing new users or adding aliases
+Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
 #
 # Else skip unchanged records
-Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
+# Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
 
-Sys.setenv(ODKC_IMPORT_UPDATE_MEDIA=FALSE)
+Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA=TRUE)
 Sys.setenv(RU_VERBOSE=FALSE)
 Sys.setenv(WASTDR_VERBOSE=FALSE)
 
