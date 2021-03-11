@@ -12,32 +12,28 @@ output:
     theme: lumen
 vignette: >
   %\VignetteIndexEntry{wastd}
-  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
 params:
-  area_name: 'Port Hedland'
+  area_name: 'Cape Domett'
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
-<style type="text/css">
-body, .main-container {
-  max-width: 100%;
-  margin-left: auto;
-  margin-right: auto;
-}
-</style>
 
-# Data
-Data for this summary is supplied from WAStD.
-In this report, we filter the data to the location `r params$area_name`.
+```{css, echo=FALSE}
+body, .main-container {max-width: 100%; margin-left: auto; margin-right: auto;}
+```
 
 ```{r setup}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 options(rmarkdown.html_vignette.check_title = FALSE)
 library(wastdr)
 drake::loadd("wastd_data")
+rt <- . %>% reactable::reactable(filterable = T, sortable = T, searchable = T)
 ```
 
-
-```{r filter_data}
+```{r prepare_export}
 fn <- here::here("inst/reports", wastdr::urlize(params$area_name))
 if (!fs::file_exists(fn)) {
   wastdr::wastdr_msg_info(glue::glue("Creating dir {fn}"))
@@ -45,14 +41,42 @@ if (!fs::file_exists(fn)) {
 }
 ```
 
-```{r}
+```{r filter_data}
 x <- wastd_data %>% 
   wastdr::filter_wastd_turtledata(area_name = params$area_name)
 ```
 
+# Overview
+
+This report is a story **about** data. It explains, visualises, and
+rudimentarily summarises the data which is exported to CSV and various
+other formats. The audience of this report are data analysts and
+modellers who need to consume and understand the exported data.
+Suggestions and ideas for additional summaries or visualisations are
+welcome [here](https://github.com/dbca-wa/wastdr/issues).
+
 ```{r export_data}
 x %>% wastdr::export_wastd_turtledata(outdir = fn)
+x %>% save(file = fs::path(fn, "wastd_data.RData"))
 ```
+
+# Data
+
+Data for this summary is supplied from WAStD, and is manipulated using
+helpers from the R package [wastdr](https://dbca-wa.github.io/wastdr/).
+Analysts are welcome to utilise `wastdr` or contribute ideas back as
+feature requests.
+
+The raw data is exported into separate CSV files. The content of the
+individual CSV files is documented at
+[wastdr::export_wastd_turtledata](https://dbca-wa.github.io/wastdr/reference/export_wastd_turtledata.html).
+
+Additionally, an R object of class `wastd_data` containing all the data
+objects is saved to an `.RData` file which can be read into R directly.
+All code in this workbook can be reproduced by running the code shown
+inline with the data from `.RData`.
+
+In this report, we filter the data to the location `r params$area_name`.
 
 The data was downloaded from WAStD on `r wastd_data$downloaded_on`.
 
@@ -67,14 +91,16 @@ x$tracks %>%
 ```
 
 ### Missed tracks
+
 This section is relevant for monitoring programs which tag turtles.
 
-Missed tracks come from turtles which got away just before or during tagging.
-These records can be used to inform tagging start and end times:
+Missed tracks come from turtles which got away just before or during
+tagging. These records can be used to inform tagging start and end
+times:
 
-Missed tracks recorded at the beginning of a tagging night means that tagging 
-needs to start earlier in the day.
-Missed tracks recorded during tagging indicates that tagging beaches are understaffed.
+Missed tracks recorded at the beginning of a tagging night means that
+tagging needs to start earlier in the day. Missed tracks recorded during
+tagging indicates that tagging beaches are understaffed.
 
 ```{r tracks_missed}
 mt <- x$tracks %>% 
@@ -82,9 +108,9 @@ mt <- x$tracks %>%
   dplyr::filter(nest_age == "missed")
 
 mt %>% wastdr::map_tracks(sites = x$sites)
-mt %>% reactable::reactable(filterable = TRUE, searchable = TRUE)
-```
 
+mt %>% rt
+```
 
 ## Disturbance, predation: nests and general
 
@@ -95,31 +121,36 @@ x$nest_dist %>%
 ```
 
 ## Turtle tracks and nests season totals
+
 Tracks and nests are tallied by type and grouped by
 
-* season: numeric year of season start, i.e. 2019 = season 2019-20
-* nest age:
-  * fresh - made last night,
-  * old - made before last night, 
-  * missed - at night during tagging
-* species: "cheloniidae-fam" = species unknown
+-   season: numeric year of season start, i.e. 2019 = season 2019-20
 
-To see only missed tracks, type "mis" into the filter box of column "(details_)nest_age".
+-   nest age:
+
+    -   fresh - made last night,
+    -   old - made before last night,
+    -   missed - at night during tagging
+    
+-   species: "cheloniidae-fam" = species unknown
+
+To see only missed tracks, type "mis" into the filter box of column
+"(details\_)nest_age".
 
 ```{r tracks_season}
 wastd_nesting_type_by_season_age_species <-
   x$tracks %>% 
   wastdr::nesting_type_by_area_season_age_species() %>% 
   dplyr::arrange(-season)
-  
-wastd_nesting_type_by_season_age_species %>% 
-  reactable::reactable(filterable = T, sortable = T)
 
 wastd_nesting_type_by_season_age_species %>%
   readr::write_csv(here::here(fn, "nesting_type_by_season_age_species.csv"))
+  
+wastd_nesting_type_by_season_age_species %>% rt
 ```
 
 ## Turtle tracks and nests daily totals
+
 The same data, but grouped by day instead of season.
 
 ```{r tracks_day}
@@ -127,30 +158,34 @@ wastd_nesting_type_by_day_age_species <-
   x$tracks %>% 
   wastdr::nesting_type_by_season_calendarday_age_species() %>% 
   dplyr::arrange(-season)
-  
-wastd_nesting_type_by_day_age_species %>% 
-  reactable::reactable(filterable = T, sortable = T)
 
 wastd_nesting_type_by_day_age_species %>%
   readr::write_csv(here::here(fn, "nesting_type_by_day_age_species.csv"))
+  
+wastd_nesting_type_by_day_age_species %>% rt
 ```
 
-## Night recaptures by species year and total TAG
-Bob.
+## Night recaptures by species year and total
 
-## Annual new turtles by species year and total WAMTRAM
-Bob.
+This section will be completed once the tagging database has been merged into WAStD.
 
-## Annual recaptures by species year and total WAMTRAM
-Bob.
+## Annual new turtles by species year and total
 
-## Annual total turtles (individuals) by species year and total WAMTRAM
-Bob.
+This section will be completed once the tagging database has been merged into WAStD.
 
-## Annual total turtle emergences 
-Tracks and nests are combined and tallied, grouped by season and species to form
-the total number of emergences in one season.
-This data needs to be added to the number of tagged turtles from WAMTRAM.
+## Annual recaptures by species year and total
+
+This section will be completed once the tagging database has been merged into WAStD.
+
+## Annual total turtles (individuals) by species year and total
+
+This section will be completed once the tagging database has been merged into WAStD.
+
+## Annual total turtle emergences
+
+Tracks and nests are combined and tallied, grouped by season and species
+to form the total number of emergences in one season. This data needs to
+be added to the number of tagged turtles from the tagging database.
 
 ```{r total_emerg}
 x$tracks %>% 
@@ -159,34 +194,38 @@ x$tracks %>%
   dplyr::tally() %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(-season) %>%
-  reactable::reactable(filterable = T, sortable = T, searchable = T)
+  rt
 ```
 
-## Number of nests tagged 
-Tagged nests are exported as individual records of encounters with tagged nests
-(including initial tagging and re-sighting).
-We show both the individual records and the season tallies.
+## Number of nests tagged
+
+Tagged nests are exported as individual records of encounters with
+tagged nests (including initial tagging and re-sighting). We show both
+the individual records and the season tallies.
 
 ```{r nests_tagged}
 wastd_tagged_nests <- x$nest_tags %>% 
   wastdr::exclude_training_species() 
+
+wastd_tagged_nests %>%
+  readr::write_csv(here::here(fn, "tagged_nests.csv"))
+
 # Individual records
-wastd_tagged_nests %>%
-  reactable::reactable(filterable = T, sortable = T, searchable = T)
-wastd_tagged_nests %>%
-readr::write_csv(here::here(fn, "tagged_nests.csv"))
+wastd_tagged_nests %>% rt
+
 # Season tally
 wastd_tagged_nests %>% 
   dplyr::group_by(season, species) %>% 
   dplyr::tally() %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(-season) %>%
-  reactable::reactable(filterable = T, sortable = T, searchable = T)
+  rt
 ```
 
 ## Number of nests found
-The data here is the same as above, 
-nest type "successful-crawl" (confirmed fresh nest) and "hatched nest".
+
+The data here is the same as above, nest type "successful-crawl"
+(confirmed fresh nest) and "hatched nest".
 
 ```{r nests_total}
 wastd_nests <- x$tracks %>% 
@@ -196,16 +235,18 @@ wastd_nests <- x$tracks %>%
   dplyr::tally() %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(-season)
-wastd_nests %>%
-  reactable::reactable(filterable = T, sortable = T, searchable = T)
+
 wastd_nests %>%
   readr::write_csv(here::here(fn, "fresh_and_hatched_nests.csv"))
+
+wastd_nests %>% rt
 ```
 
 ## Nest loggers
 
-Nest loggers, n is number of encounters which includes both initial deployment 
-and any recorded re-sighting.
+Nest loggers, n is number of encounters which includes both initial
+deployment and any recorded re-sighting.
+
 ```{r}
 # odkc_data$tracks_log %>% 
 #   wastdr::sf_as_tbl() %>% 
@@ -217,42 +258,44 @@ and any recorded re-sighting.
 # x$tracks$logger_found %>% unique() # all NA
 ```
 
-## Hatching and emergence success 
+## Hatching and emergence success
 
-Data shown here is summarised by season, and exported as individual 
-nest excavation records. Data is split up by source between new season (2019-20)
-and previous seasons.
+Data shown here is summarised by season, and exported as individual nest
+excavation records. Data is split up by source between new season
+(2019-20) and previous seasons.
 
 ```{r nest_excav}
+x$nest_excavations %>%
+  readr::write_csv(here::here(fn, "nest_excavations_hatching_emergence_success.csv"))
+
 x$nest_excavations %>% 
   wastdr::hatching_emergence_success() %>% 
   dplyr::arrange(-season) %>%
-  reactable::reactable(filterable = T, sortable = T)
-x$nest_excavations %>%
-  readr::write_csv(here::here(fn, "nest_excavations_hatching_emergence_success.csv"))
+  rt
 ```
 
-TODO Plot HS/ES time series to show different season length / survey effort
-
+<!-- TODO Plot HS/ES time series to show different season length / survey effort. -->
 
 ## Fan angle data
-Fan angle data is only exported here for now.
-The map shows nests with recorded hatchling fans.
 
-TODO discuss meaningful visualisations
+Fan angle data is only exported here for now. The map shows nests with
+recorded hatchling fans.
 
-```{r}
-x$nest_fans %>% reactable::reactable(filterable=TRUE, searchable=TRUE)
+<!-- TODO discuss meaningful visualisations -->
 
+```{r fanangle_table}
+x$nest_fans %>% rt
 ```
 
-## Tag return crossovers from or to by year 
+## Tag return crossovers from or to by year
+
 WAMTRAM
 
 ## Strandings and rescues
+
 ### Live sightings: rescues, in water, tagging
 
-```{r}
+```{r mwi_map_resc}
 x$animals %>% 
   wastdr::filter_alive() %>% 
   wastdr::map_mwi(sites = wastd_data$sites)
@@ -260,30 +303,16 @@ x$animals %>%
 
 ### Dead sightings: strandings, mortalities
 
-```{r}
+```{r mwi_map_str}
 x$animals %>% 
   wastdr::filter_dead() %>% 
   wastdr::map_mwi(sites = wastd_data$sites)
 ```
 
-
 ## Survey effort
-The 2019-20 data has not been value-added by WAStD. Therefore, we calculate season
-stats manually.
 
-```{r svy_duration}
-svy <- x$surveys %>% wastdr::filter_wastd_season(2020)
-
-first_survey <- min(min(svy$start_time), min(svy$end_time))
-last_survey <- max(max(svy$start_time), max(svy$end_time))
-season_length <- round(last_survey - first_survey, 0)
-```
-
-The surveys span `r season_length` between `r first_survey` and 
-`r last_survey`.
-
-A summary of past seasons follows. Note the dates are "turtle dates" (calendar 
-date of nesting night's evening).
+A summary of past seasons follows. Note the dates are "turtle dates"
+(calendar date of nesting night's evening).
 
 ```{r svy_stats, fig.width=10}
 # x$surveys %>%
@@ -293,22 +322,27 @@ date of nesting night's evening).
 #   )
 x$surveys %>% 
   wastdr::survey_season_stats() %>%
-  reactable::reactable(filterable = T, sortable = T)
+  rt
 ```
 
-
 ## Number of volunteers each year
+
+The number of surveys lead by each volunteer is tallied here for each
+season.
+
 ```{r volunteers}
 x$surveys %>% 
   dplyr::group_by(season, reporter) %>% 
   dplyr::tally() %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(-season) %>%
-  reactable::reactable(filterable = T, sortable = T, searchable = T)
+  rt
 ```
 
 ## Number of Indigenous employee days
-Scott
+
+<!-- Scott -->
 
 ## List of sat tags applied in last three years
+
 Seaturtle.org or WAMTRAM
