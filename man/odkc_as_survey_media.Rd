@@ -24,7 +24,7 @@ wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_DEV_URL"),
                      api_token = Sys.getenv("WASTDR_API_DEV_TOKEN"))
 drake::loadd(odkc_ex)
 x <- odkc_as_survey_media(odkc_ex)
-upload_survey_media(x[1:10,])
+upload_survey_media(x)
 
 
 # Outside R, using curl (with correct auth token)
