@@ -11,7 +11,7 @@
 #'                      api_token = Sys.getenv("WASTDR_API_DEV_TOKEN"))
 #' drake::loadd(odkc_ex)
 #' x <- odkc_as_media(odkc_ex)
-#' upload_media(x)
+#' upload_media(x[1:100,])
 #'
 #'
 #' # Outside R, using curl (with correct auth token)

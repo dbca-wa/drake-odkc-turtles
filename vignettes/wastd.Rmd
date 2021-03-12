@@ -34,7 +34,8 @@ rt <- . %>% reactable::reactable(filterable = T, sortable = T, searchable = T)
 ```
 
 ```{r prepare_export}
-fn <- here::here("inst/reports", wastdr::urlize(params$area_name))
+zipfn <- wastdr::urlize(params$area_name)
+fn <- here::here("inst/reports", zipfn)
 if (!fs::file_exists(fn)) {
   wastdr::wastdr_msg_info(glue::glue("Creating dir {fn}"))
   fs::dir_create(fn, recurse = TRUE)
@@ -56,8 +57,7 @@ Suggestions and ideas for additional summaries or visualisations are
 welcome [here](https://github.com/dbca-wa/wastdr/issues).
 
 ```{r export_data}
-x %>% wastdr::export_wastd_turtledata(outdir = fn)
-x %>% save(file = fs::path(fn, "wastd_data.RData"))
+x %>% wastdr::export_wastd_turtledata(outdir = fn, filename = zipfn))
 ```
 
 # Data
@@ -81,6 +81,8 @@ In this report, we filter the data to the location `r params$area_name`.
 The data was downloaded from WAStD on `r wastd_data$downloaded_on`.
 
 # Data summaries
+Training and test data is marked as species "Hatchback turtle (Corolla corolla)",
+surveys are "production=FALSE", disturbance causes are "training or test record".
 
 ## Turtle tracks (current season)
 
@@ -113,6 +115,10 @@ mt %>% rt
 ```
 
 ## Disturbance, predation: nests and general
+
+In the exported `nest_dist.csv`, the `encounter_type` "nest" refers to disturbances
+or predation of turtle nests, whereas "other" refers to sightings of general
+disturbance or presence of predators.
 
 ```{r dist_map_2020}
 x$nest_dist %>% 
@@ -209,10 +215,9 @@ wastd_tagged_nests <- x$nest_tags %>%
 
 wastd_tagged_nests %>%
   readr::write_csv(here::here(fn, "tagged_nests.csv"))
+```
 
-# Individual records
-wastd_tagged_nests %>% rt
-
+```{r}
 # Season tally
 wastd_tagged_nests %>% 
   dplyr::group_by(season, species) %>% 
@@ -220,6 +225,11 @@ wastd_tagged_nests %>%
   dplyr::ungroup() %>% 
   dplyr::arrange(-season) %>%
   rt
+```
+
+```{r}
+# Individual records
+wastd_tagged_nests %>% rt
 ```
 
 ## Number of nests found
