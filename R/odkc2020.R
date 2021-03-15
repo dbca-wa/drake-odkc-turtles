@@ -81,7 +81,7 @@ odkc2020 <- function() {
     upload_to_wastd = upload_odkc_to_wastd(
       odkc_up,
       update_existing = up_ex,
-      upload_media = up_media
+      up_media = up_media
     )
   )
 }

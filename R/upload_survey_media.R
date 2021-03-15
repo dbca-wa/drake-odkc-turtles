@@ -21,15 +21,19 @@ upload_survey_media <- function(x,
                          verbose = wastdr::get_wastdr_verbose(),
                          upload = Sys.getenv("ODKC_IMPORT_UPLOAD_MEDIA", unset=TRUE)){
   if (upload==FALSE) {
-    wastdr::wastdr_msg_noop(glue::glue("Not uploading {nrow(x)} media files."))
+    "Not uploading {nrow(x)} media files." %>%
+      glue::glue() %>% wastdr::wastdr_msg_noop()
     return(x)
   }
   if (nrow(x)==0) {
-    wastdr::wastdr_msg_noop(glue::glue("No media files to upload, skipping."))
+    "No media files to upload, skipping." %>%
+      glue::glue() %>% wastdr::wastdr_msg_noop()
     return(x)
   }
   for (i in seq_len(nrow(x))){
     if (fs::file_exists(x$attachment[i])){
+      "Uploading Survey photo {x$attachment[i]}" %>%
+        glue::glue() %>% wastdr_msg_info()
       list(
         source = x$source[i],
         source_id = x$source_id[i],
@@ -48,8 +52,8 @@ upload_survey_media <- function(x,
           verbose = verbose
         )
     } else {
-      glue::glue("Skipping missing file {x$attachment[i]}: {x$title[i]}") %>%
-        wastdr::wastdr_msg_warn()
+      "Skipping missing file {x$attachment[i]}: {x$title[i]}" %>%
+        glue::glue() %>% wastdr::wastdr_msg_warn()
     }
   }
 
