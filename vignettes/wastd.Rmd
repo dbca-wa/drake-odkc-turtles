@@ -15,7 +15,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 params:
-  area_name: 'Cape Domett'
+  area_name: 'Port Hedland'
 editor_options: 
   markdown: 
     wrap: 72
@@ -37,7 +37,7 @@ rt <- . %>% reactable::reactable(filterable = T, sortable = T, searchable = T)
 zipfn <- wastdr::urlize(params$area_name)
 fn <- here::here("inst/reports", zipfn)
 if (!fs::file_exists(fn)) {
-  wastdr::wastdr_msg_info(glue::glue("Creating dir {fn}"))
+  "Creating dir {fn}" %>% glue::glue() %>% wastdr::wastdr_msg_info()
   fs::dir_create(fn, recurse = TRUE)
 }
 ```
@@ -57,7 +57,7 @@ Suggestions and ideas for additional summaries or visualisations are
 welcome [here](https://github.com/dbca-wa/wastdr/issues).
 
 ```{r export_data}
-x %>% wastdr::export_wastd_turtledata(outdir = fn, filename = zipfn))
+x %>% wastdr::export_wastd_turtledata(outdir = fn, filename = zipfn)
 ```
 
 # Data
@@ -72,9 +72,9 @@ individual CSV files is documented at
 [wastdr::export_wastd_turtledata](https://dbca-wa.github.io/wastdr/reference/export_wastd_turtledata.html).
 
 Additionally, an R object of class `wastd_data` containing all the data
-objects is saved to an `.RData` file which can be read into R directly.
+objects is saved to `wastd_data.RData` which can be read into R directly.
 All code in this workbook can be reproduced by running the code shown
-inline with the data from `.RData`.
+inline with the data from `wastd_data.RData`.
 
 In this report, we filter the data to the location `r params$area_name`.
 
@@ -83,6 +83,8 @@ The data was downloaded from WAStD on `r wastd_data$downloaded_on`.
 # Data summaries
 Training and test data is marked as species "Hatchback turtle (Corolla corolla)",
 surveys are "production=FALSE", disturbance causes are "training or test record".
+Where summaries hide the columns "species" and "production", respectively, 
+training and test data are excluded.
 
 ## Turtle tracks (current season)
 
@@ -104,17 +106,23 @@ Missed tracks recorded at the beginning of a tagging night means that
 tagging needs to start earlier in the day. Missed tracks recorded during
 tagging indicates that tagging beaches are understaffed.
 
+Missed tracks are contained in the exported `tracks.csv` with `nest_age` "missed".
+
 ```{r tracks_missed}
 mt <- x$tracks %>% 
   wastdr::filter_wastd_season(2020) %>% 
   dplyr::filter(nest_age == "missed")
 
 mt %>% wastdr::map_tracks(sites = x$sites)
-
-mt %>% rt
+# mt %>% rt
 ```
 
 ## Disturbance, predation: nests and general
+General disturbance and signs of predator presence is captured through the 
+ODK form "Predator or Disturbance". Dist urbance or predation of nests are 
+captured through the ODK form "Turtle Track or Nest".
+As the data specific to the disturbance or predation is identical, both are 
+presented here as one table.
 
 In the exported `nest_dist.csv`, the `encounter_type` "nest" refers to disturbances
 or predation of turtle nests, whereas "other" refers to sightings of general
@@ -143,6 +151,8 @@ Tracks and nests are tallied by type and grouped by
 To see only missed tracks, type "mis" into the filter box of column
 "(details\_)nest_age".
 
+This summary is exported as `nesting_type_by_season_age_species.csv`.
+
 ```{r tracks_season}
 wastd_nesting_type_by_season_age_species <-
   x$tracks %>% 
@@ -158,6 +168,7 @@ wastd_nesting_type_by_season_age_species %>% rt
 ## Turtle tracks and nests daily totals
 
 The same data, but grouped by day instead of season.
+This summary is exported as `nesting_type_by_day_age_species.csv`.
 
 ```{r tracks_day}
 wastd_nesting_type_by_day_age_species <-
@@ -237,6 +248,8 @@ wastd_tagged_nests %>% rt
 The data here is the same as above, nest type "successful-crawl"
 (confirmed fresh nest) and "hatched nest".
 
+This summary is exported as `fresh_and_hatched_nests.csv`.
+
 ```{r nests_total}
 wastd_nests <- x$tracks %>% 
   wastdr::exclude_training_species() %>% 
@@ -288,10 +301,8 @@ x$nest_excavations %>%
 
 ## Fan angle data
 
-Fan angle data is only exported here for now. The map shows nests with
-recorded hatchling fans.
-
-<!-- TODO discuss meaningful visualisations -->
+Fan angle data is exported as `nest_fans.csv` and previewed in the following table.
+More meaningful visualisations are in preparation.
 
 ```{r fanangle_table}
 x$nest_fans %>% rt
@@ -299,11 +310,17 @@ x$nest_fans %>% rt
 
 ## Tag return crossovers from or to by year
 
-WAMTRAM
+This section will be completed once the tagging database has been merged into WAStD.
 
-## Strandings and rescues
+## Strandings, rescues, and live sightings
 
 ### Live sightings: rescues, in water, tagging
+The ODK form "Turtle Sighthing" captures turtles encountered during boat based 
+surveys.
+The ODK form "Marine Wildlife Incident" also captures encounters with injured,
+entangled, rescued, but overall alive animals (including turtles).
+
+Both forms feed into WAStD AnimalEncounters, which are shown in the map below.
 
 ```{r mwi_map_resc}
 x$animals %>% 
@@ -312,6 +329,8 @@ x$animals %>%
 ```
 
 ### Dead sightings: strandings, mortalities
+The ODK form "Marine Wildlife Incident" captures encounters with dead animals 
+(including turtles), which then become WAStD AnimalEncounters.
 
 ```{r mwi_map_str}
 x$animals %>% 
@@ -352,7 +371,8 @@ x$surveys %>%
 ## Number of Indigenous employee days
 
 <!-- Scott -->
+To be inserted.
 
 ## List of sat tags applied in last three years
 
-Seaturtle.org or WAMTRAM
+Source: Seaturtle.org or tagging database.
