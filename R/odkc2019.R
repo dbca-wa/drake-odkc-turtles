@@ -82,29 +82,29 @@ odkc2019 <- function() {
 
     # ------------------------------------------------------------------------ #
     # EXTRACT
-    odkc_ex = wastdr::download_odkc_turtledata_2019(
+    odkc_ex_2019 = wastdr::download_odkc_turtledata_2019(
       download = dl_odkc, verbose = FALSE),
 
     # ------------------------------------------------------------------------ #
     # TRANSFORM
     wastd_users = wastdr::download_wastd_users(),
-    user_mapping = make_user_mapping(odkc_ex, wastd_users),
+    user_mapping_2019 = make_user_mapping(odkc_ex_2019, wastd_users),
     # QA Reports: inspect user mappings - flag dissimilar matches
     # https://github.com/dbca-wa/wastdr/issues/21
-    user_qa = generate_qa_users_report(odkc_ex, user_mapping, odkc_yr),
+    user_qa_2019 = generate_qa_users_report(odkc_ex_2019, user_mapping_2019, odkc_yr),
     # Source data transformed into target format
-    odkc_tf = odkc_as_wastd(odkc_ex, user_mapping),
+    odkc_tf_2019 = odkc_as_wastd(odkc_ex_2019, user_mapping_2019),
     # Sites
-    site_qa = generate_qa_sites_report(odkc_ex, odkc_tf, odkc_yr),
+    site_qa_2019 = generate_qa_sites_report(odkc_ex_2019, odkc_tf_2019, odkc_yr),
 
     # ------------------------------------------------------------------------ #
     # LOAD
-    wastd_data = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
+    wastd_data_min = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
     # Skip logic compares existing data in target DB with new data to upload
-    odkc_up = split_create_update_skip(odkc_tf, wastd_data),
+    odkc_up_2019 = split_create_update_skip(odkc_tf_2019, wastd_data_min),
     # Upload (skip, update, create as per skip logic)
-    upload_to_wastd = upload_odkc_to_wastd(
-      odkc_up, update_existing = up_ex, up_media = up_media)
+    upload_to_wastd_2019 = upload_odkc_to_wastd(
+      odkc_up_2019, update_existing = up_ex, up_media = up_media)
   )
 }
 

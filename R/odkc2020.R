@@ -74,9 +74,9 @@ odkc2020 <- function() {
 
     # ------------------------------------------------------------------------ #
     # LOAD
-    wastd_data = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
+    wastd_data_min = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
     # Skip logic compares existing data in target DB with new data to upload
-    odkc_up = split_create_update_skip(odkc_tf, wastd_data),
+    odkc_up = split_create_update_skip(odkc_tf, wastd_data_min),
     # Upload (skip, update, create as per skip logic)
     upload_to_wastd = upload_odkc_to_wastd(
       odkc_up,
