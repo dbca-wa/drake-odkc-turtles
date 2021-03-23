@@ -91,7 +91,8 @@ odkc2019 <- function() {
     user_mapping_2019 = make_user_mapping(odkc_ex_2019, wastd_users),
     # QA Reports: inspect user mappings - flag dissimilar matches
     # https://github.com/dbca-wa/wastdr/issues/21
-    user_qa_2019 = generate_qa_users_report(odkc_ex_2019, user_mapping_2019, odkc_yr),
+    user_qa_2019 = generate_qa_users_report_2019(
+      odkc_ex_2019, user_mapping_2019, odkc_yr),
     # Source data transformed into target format
     odkc_tf_2019 = odkc_as_wastd(odkc_ex_2019, user_mapping_2019),
     # Sites

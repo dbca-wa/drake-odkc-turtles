@@ -6,6 +6,9 @@
 \usage{
 generate_wastd_reports(wastd_data)
 }
+\arguments{
+\item{wastd_data}{The output of \code{wastdr::download_wastd_turtledata()}.}
+}
 \description{
 Generate reports from WAStD turtle data
 }

@@ -1,5 +1,6 @@
-#'Generate reports from WAStD turtle data
+#' Generate reports from WAStD turtle data
 #'
+#' @param wastd_data The output of `wastdr::download_wastd_turtledata()`.
 #' @export
 #' @examples
 #' \dontrun{

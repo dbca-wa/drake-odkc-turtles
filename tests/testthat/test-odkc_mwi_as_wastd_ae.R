@@ -1,6 +1,7 @@
 test_that("odkc_mwi_as_wastd_ae works", {
   data("odkc_data", package = "wastdr")
-  data("wastd_data", package = "wastdr")
+  # data("wastd_data", package = "wastdr") # dumb luck: no comments in first 1k records
+  data("wastd_ae", package = "wastdr")
 
   user_mapping <- tibble::tibble(odkc_username = "test", pk = 1)
 
@@ -14,8 +15,8 @@ test_that("odkc_mwi_as_wastd_ae works", {
   # WAStD serializer
   for (n in odkc_names) {
     testthat::expect_true(
-      n %in% names(wastd_data$animals),
-      label = glue::glue("Column \"{n}\" exists in wastd_data$animals")
+      n %in% names(wastd_ae),
+      label = glue::glue("Column \"{n}\" exists in wastd_ae")
     )
   }
 })
