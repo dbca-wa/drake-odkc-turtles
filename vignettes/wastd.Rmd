@@ -113,8 +113,8 @@ mt <- x$tracks %>%
   wastdr::filter_wastd_season(2020) %>% 
   dplyr::filter(nest_age == "missed")
 
-mt %>% wastdr::map_tracks(sites = x$sites)
 # mt %>% rt
+mt %>% wastdr::map_tracks(sites = x$sites)
 ```
 
 ## Disturbance, predation: nests and general
@@ -129,8 +129,15 @@ or predation of turtle nests, whereas "other" refers to sightings of general
 disturbance or presence of predators.
 
 ```{r dist_map_2020}
+tracks_min_admin <- x$tracks %>% 
+  dplyr::select(species, source_id, absolute_admin_url)
+
 x$nest_dist %>% 
   wastdr::filter_wastd_season(2020) %>%
+  # dplyr::left_join(tracks_min_admin, by=c("encounter_source_id" = "source_id")) %>% 
+  dplyr::rename(
+    absolute_admin_url = encounter_absolute_admin_url
+  ) %>% 
   wastdr::map_dist()
 ```
 
@@ -217,15 +224,20 @@ x$tracks %>%
 ## Number of nests tagged
 
 Tagged nests are exported as individual records of encounters with
-tagged nests (including initial tagging and re-sighting). We show both
-the individual records and the season tallies.
+tagged nests (including initial tagging and re-sighting). 
+We show the season tallies, and export the individual records as 
+`nest_tags_with_encounters.csv`.
 
 ```{r nests_tagged}
+tracks_min <- x$tracks %>% 
+  dplyr::select(species, source_id)
+
 wastd_tagged_nests <- x$nest_tags %>% 
+  dplyr::left_join(tracks_min, by=c("encounter_source_id" = "source_id")) %>% 
   wastdr::exclude_training_species() 
 
 wastd_tagged_nests %>%
-  readr::write_csv(here::here(fn, "tagged_nests.csv"))
+  readr::write_csv(here::here(fn, "nest_tags_with_encounters.csv"))
 ```
 
 ```{r}
@@ -238,7 +250,7 @@ wastd_tagged_nests %>%
   rt
 ```
 
-```{r}
+```{r, eval=FALSE}
 # Individual records
 wastd_tagged_nests %>% rt
 ```
@@ -270,6 +282,9 @@ wastd_nests %>% rt
 Nest loggers, n is number of encounters which includes both initial
 deployment and any recorded re-sighting.
 
+For want of a better overview, we show an interactive table of all loggers here.
+The nest logger records are also exported as `nest_loggers.csv`.
+
 ```{r}
 # odkc_data$tracks_log %>% 
 #   wastdr::sf_as_tbl() %>% 
@@ -279,6 +294,7 @@ deployment and any recorded re-sighting.
 #   reactable::reactable(filterable = T, sortable = T)
 
 # x$tracks$logger_found %>% unique() # all NA
+x$nest_loggers %>% rt
 ```
 
 ## Hatching and emergence success
@@ -287,14 +303,18 @@ Data shown here is summarised by season, and exported as individual nest
 excavation records. Data is split up by source between new season
 (2019-20) and previous seasons.
 
+This summary is exported as `nest_excavations_hatching_emergence_success.csv`.
+
 ```{r nest_excav}
-x$nest_excavations %>%
+nest_excav <- x$nest_excavations %>%
+  dplyr::left_join(tracks_min, by=c("encounter_source_id" = "source_id")) %>% 
+  wastdr::hatching_emergence_success() %>% 
+  dplyr::arrange(-season)
+
+nest_excav %>% 
   readr::write_csv(here::here(fn, "nest_excavations_hatching_emergence_success.csv"))
 
-x$nest_excavations %>% 
-  wastdr::hatching_emergence_success() %>% 
-  dplyr::arrange(-season) %>%
-  rt
+nest_excav %>% rt
 ```
 
 <!-- TODO Plot HS/ES time series to show different season length / survey effort. -->
@@ -325,7 +345,7 @@ Both forms feed into WAStD AnimalEncounters, which are shown in the map below.
 ```{r mwi_map_resc}
 x$animals %>% 
   wastdr::filter_alive() %>% 
-  wastdr::map_mwi(sites = wastd_data$sites)
+  wastdr::map_mwi(sites = x$sites)
 ```
 
 ### Dead sightings: strandings, mortalities
@@ -335,7 +355,7 @@ The ODK form "Marine Wildlife Incident" captures encounters with dead animals
 ```{r mwi_map_str}
 x$animals %>% 
   wastdr::filter_dead() %>% 
-  wastdr::map_mwi(sites = wastd_data$sites)
+  wastdr::map_mwi(sites = x$sites)
 ```
 
 ## Survey effort
@@ -343,15 +363,16 @@ x$animals %>%
 A summary of past seasons follows. Note the dates are "turtle dates"
 (calendar date of nesting night's evening).
 
+This summary is exported as `survey_season_stats.csv`.
+
 ```{r svy_stats, fig.width=10}
-# x$surveys %>%
-#   wastdr::survey_count_heatmap(
-#     placename = params$area_name,
-#     prefix = ""
-#   )
-x$surveys %>% 
-  wastdr::survey_season_stats() %>%
-  rt
+survey_season_stats <- x$surveys %>% 
+  wastdr::survey_season_stats() 
+
+survey_season_stats %>% 
+  readr::write_csv(here::here(fn, "survey_season_stats.csv"))
+
+survey_season_stats %>% rt
 ```
 
 ## Number of volunteers each year
