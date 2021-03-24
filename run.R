@@ -9,8 +9,6 @@ library(googlesheets4)
 
 # Overwrite new records after importing new users or adding aliases
 Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
-#
-# Else skip unchanged records
 # Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
 
 Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA=TRUE)
@@ -29,9 +27,3 @@ drake::make(odkc2020(), lock_envir = FALSE)
 # drake::clean("wastd_data")
 # drake::clean("wastd_reports")
 drake::make(etlTurtleNesting::wastd_reports())
-
-
-# x <- googlesheets4::read_sheet(Sys.getenv("TURTLE_SHEET"), sheet = "turtle_tags")
-# drake::loadd("wastd_data")
-
-

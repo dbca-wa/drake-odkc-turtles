@@ -7,7 +7,7 @@
 update_tagexplorer(
   wastd_data,
   doc_id = Sys.getenv("TURTLE_SHEET"),
-  google_email = Sys.getenv("GOOGLE_EMAIL")
+  service_account_token = Sys.getenv("GSA_TOKEN")
 )
 }
 \arguments{
@@ -15,8 +15,8 @@ update_tagexplorer(
 
 \item{doc_id}{The Google Sheet ID, default: \code{Sys.getenv("TURTLE_SHEET")}.}
 
-\item{google_email}{A Google email with write permission to the sheet,
-default: \code{Sys.getenv("GOOGLE_EMAIL")}.}
+\item{service_account_token}{The file path to aGoogle service account token
+with the Google Sheets API enabled, default: \code{Sys.getenv("GSA_TOKEN")}.}
 }
 \value{
 A list with keys:

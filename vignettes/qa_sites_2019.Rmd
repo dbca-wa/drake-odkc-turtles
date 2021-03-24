@@ -45,8 +45,8 @@ SVS and SVE can inform how to adjust WAStD sites to capture and separate
 survey effort most efficiently.
 
 ```{r export_geojson, eval=FALSE}
-odkc_ex$svs %>% geojsonio::geojson_write(file = here::here("docs/svs.geojson"))
-odkc_ex$sve %>% geojsonio::geojson_write(file = here::here("docs/sve.geojson"))
+odkc_ex_2019$svs %>% geojsonio::geojson_write(file = here::here("docs/svs.geojson"))
+odkc_ex_2019$sve %>% geojsonio::geojson_write(file = here::here("docs/sve.geojson"))
 ```
 
 ## What should happen
@@ -193,9 +193,9 @@ sve_na = dplyr::filter(odkc_ex_2019$sve, is.na(site_id))
 
 if (nrow(svs_na) > 0 && nrow(sve_na) > 0){
 wastdr::map_sv_odkc( 
-  svs = dplyr::filter(odkc_ex$svs, is.na(site_id)),
-  sve = dplyr::filter(odkc_ex$sve, is.na(site_id)), 
-  sites = odkc_ex$sites
+  svs = dplyr::filter(odkc_ex_2019$svs, is.na(site_id)),
+  sve = dplyr::filter(odkc_ex_2019$sve, is.na(site_id)), 
+  sites = odkc_ex_2019$sites
 )} else wastdr::wastdr_msg_noop("No SVS and SVE outside of known sites found.")
 ```
 

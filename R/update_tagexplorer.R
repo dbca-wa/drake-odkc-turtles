@@ -14,8 +14,8 @@
 #'
 #' @param wastd_data The output of `wastdr::download_wastd_turtledata()`..
 #' @param doc_id The Google Sheet ID, default: `Sys.getenv("TURTLE_SHEET")`.
-#' @param google_email A Google email with write permission to the sheet,
-#'   default: `Sys.getenv("GOOGLE_EMAIL")`.
+#' @param service_account_token The file path to aGoogle service account token
+#'   with the Google Sheets API enabled, default: `Sys.getenv("GSA_TOKEN")`.
 #' @return A list with keys:
 #'
 #' * `tags` The selected columns and (all) rows of `wastd_data$turtle_tags`.
@@ -25,19 +25,13 @@
 update_tagexplorer <- function(
   wastd_data,
   doc_id = Sys.getenv("TURTLE_SHEET"),
-  google_email = Sys.getenv("GOOGLE_EMAIL")
+  service_account_token = Sys.getenv("GSA_TOKEN")
   ){
-  # options(gargle_oauth_cache = here::here("data/.secrets"))
-  # gargle::gargle_oauth_cache()
-  # Option 1:
-  # googledrive::drive_auth() # Generate auth token
-  # Option 2:
-  options(gargle_oauth_email = TRUE, gargle_oob_default=TRUE)
-  googlesheets4::gs4_auth()
-  # googlesheets4::gs4_auth(
-  #   email = google_email,
-  #   use_oob=TRUE,
-  #   cache = here::here("data/.secrets"))
+  #
+  # googledrive::drive_auth(path = service_account_token)
+  #
+  googlesheets4::gs4_auth_configure(api_key = Sys.getenv("GOOGLE_MAPS_APIKEY"))
+
 
   tags <- wastd_data$turtle_tags %>%
     dplyr::select(

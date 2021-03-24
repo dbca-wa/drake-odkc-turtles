@@ -12,6 +12,8 @@
 #' drake::loadd("wastd_data")
 #' }
 wastd_reports <- function() {
+  options(gargle_oauth_cache = "~/.config/secrets",
+          gargle_oauth_email = Sys.getenv("GOOGLE_EMAIL"))
   drake::drake_plan(
     wastd_data = wastdr::download_wastd_turtledata(),
     wastd_reports = etlTurtleNesting::generate_wastd_reports(wastd_data),

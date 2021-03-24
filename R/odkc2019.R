@@ -96,7 +96,7 @@ odkc2019 <- function() {
     # Source data transformed into target format
     odkc_tf_2019 = odkc_as_wastd(odkc_ex_2019, user_mapping_2019),
     # Sites
-    site_qa_2019 = generate_qa_sites_report(odkc_ex_2019, odkc_tf_2019, odkc_yr),
+    site_qa_2019 = generate_qa_sites_report_2019(odkc_ex_2019, odkc_tf_2019, odkc_yr),
 
     # ------------------------------------------------------------------------ #
     # LOAD
