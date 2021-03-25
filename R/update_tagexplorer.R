@@ -24,13 +24,13 @@
 #' @export
 update_tagexplorer <- function(
   wastd_data,
-  doc_id = Sys.getenv("TURTLE_SHEET"),
-  service_account_token = Sys.getenv("GSA_TOKEN")
+  doc_id = Sys.getenv("TURTLE_SHEET")
+  # service_account_token = Sys.getenv("GSA_TOKEN")
   ){
   #
   # googledrive::drive_auth(path = service_account_token)
   #
-  googlesheets4::gs4_auth_configure(api_key = Sys.getenv("GOOGLE_MAPS_APIKEY"))
+  # googlesheets4::gs4_auth_configure(api_key = Sys.getenv("GOOGLE_MAPS_APIKEY"))
 
 
   tags <- wastd_data$turtle_tags %>%
