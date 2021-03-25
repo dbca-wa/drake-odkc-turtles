@@ -129,15 +129,8 @@ or predation of turtle nests, whereas "other" refers to sightings of general
 disturbance or presence of predators.
 
 ```{r dist_map_2020}
-tracks_min_admin <- x$tracks %>% 
-  dplyr::select(species, source_id, absolute_admin_url)
-
 x$nest_dist %>% 
   wastdr::filter_wastd_season(2020) %>%
-  # dplyr::left_join(tracks_min_admin, by=c("encounter_source_id" = "source_id")) %>% 
-  dplyr::rename(
-    absolute_admin_url = encounter_absolute_admin_url
-  ) %>% 
   wastdr::map_dist()
 ```
 
@@ -226,33 +219,22 @@ x$tracks %>%
 Tagged nests are exported as individual records of encounters with
 tagged nests (including initial tagging and re-sighting). 
 We show the season tallies, and export the individual records as 
-`nest_tags_with_encounters.csv`.
+`nest_tags.csv`.
 
 ```{r nests_tagged}
-tracks_min <- x$tracks %>% 
-  dplyr::select(species, source_id)
-
-wastd_tagged_nests <- x$nest_tags %>% 
-  dplyr::left_join(tracks_min, by=c("encounter_source_id" = "source_id")) %>% 
-  wastdr::exclude_training_species() 
-
-wastd_tagged_nests %>%
-  readr::write_csv(here::here(fn, "nest_tags_with_encounters.csv"))
+wastd_tagged_nests <- x$nest_tags %>% wastdr::exclude_training_species() 
 ```
 
 ```{r}
 # Season tally
+# wastd_tagged_nests %>% rt
+
 wastd_tagged_nests %>% 
   dplyr::group_by(season, species) %>% 
   dplyr::tally() %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(-season) %>%
   rt
-```
-
-```{r, eval=FALSE}
-# Individual records
-wastd_tagged_nests %>% rt
 ```
 
 ## Number of nests found
@@ -286,14 +268,6 @@ For want of a better overview, we show an interactive table of all loggers here.
 The nest logger records are also exported as `nest_loggers.csv`.
 
 ```{r}
-# odkc_data$tracks_log %>% 
-#   wastdr::sf_as_tbl() %>% 
-#   dplyr::group_by(logger_id) %>% 
-#   dplyr::tally() %>% 
-#   dplyr::ungroup() %>%
-#   reactable::reactable(filterable = T, sortable = T)
-
-# x$tracks$logger_found %>% unique() # all NA
 x$nest_loggers %>% rt
 ```
 
@@ -307,12 +281,12 @@ This summary is exported as `nest_excavations_hatching_emergence_success.csv`.
 
 ```{r nest_excav}
 nest_excav <- x$nest_excavations %>%
-  dplyr::left_join(tracks_min, by=c("encounter_source_id" = "source_id")) %>% 
   wastdr::hatching_emergence_success() %>% 
   dplyr::arrange(-season)
 
 nest_excav %>% 
-  readr::write_csv(here::here(fn, "nest_excavations_hatching_emergence_success.csv"))
+  readr::write_csv(
+    here::here(fn, "nest_excavations_hatching_emergence_success.csv"))
 
 nest_excav %>% rt
 ```
