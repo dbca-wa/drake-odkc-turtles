@@ -4,11 +4,7 @@
 \alias{update_tagexplorer}
 \title{Update the Google Sheet "Turtle Tag Explorer"}
 \usage{
-update_tagexplorer(
-  wastd_data,
-  doc_id = Sys.getenv("TURTLE_SHEET"),
-  service_account_token = Sys.getenv("GSA_TOKEN")
-)
+update_tagexplorer(wastd_data, doc_id = Sys.getenv("TURTLE_SHEET"))
 }
 \arguments{
 \item{wastd_data}{The output of \code{wastdr::download_wastd_turtledata()}..}

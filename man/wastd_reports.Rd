@@ -7,7 +7,8 @@
 wastd_reports()
 }
 \description{
-Generate and disseminate WAStD reports
+Writing to Google Sheets requires a Google Service Account Token to be
+present at \verb{~/.config/gcloud/application_default_credentials.json}.
 }
 \examples{
 \dontrun{
@@ -19,4 +20,7 @@ drake::make(etlTurtleNesting::wastd_reports(), lock_envir = FALSE)
 
 drake::loadd("wastd_data")
 }
+}
+\seealso{
+https://gargle.r-lib.org/articles/how-gargle-gets-tokens.html#credentials_app_default
 }
