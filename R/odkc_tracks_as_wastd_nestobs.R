@@ -37,7 +37,7 @@ odkc_tracks_as_wastd_nestobs <- function(data) {
       )
     ) %>%
     dplyr::filter_at(
-      dplyr::vars(-source, -source_id, -encounter_source, -encounter_source_id),
+      dplyr::vars(-source, -source_id, -encounter_source, -encounter_source_id, -comments),
       dplyr::any_vars(!is.na(.))
     )
 }
