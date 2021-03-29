@@ -10,9 +10,6 @@ update_tagexplorer(wastd_data, doc_id = Sys.getenv("TURTLE_SHEET"))
 \item{wastd_data}{The output of \code{wastdr::download_wastd_turtledata()}..}
 
 \item{doc_id}{The Google Sheet ID, default: \code{Sys.getenv("TURTLE_SHEET")}.}
-
-\item{service_account_token}{The file path to aGoogle service account token
-with the Google Sheets API enabled, default: \code{Sys.getenv("GSA_TOKEN")}.}
 }
 \value{
 A list with keys:

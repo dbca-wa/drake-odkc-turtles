@@ -16,7 +16,7 @@
 #' output_file = here::here("vignettes/wastd_del.html"))
 #' }
 generate_wastd_reports <- function(wastd_data){
-  for (a in unique(wastd_data$areas$area_name)) {
+  for (a in c(unique(wastd_data$areas$area_name), "Other")) {
     fn <- here::here("vignettes", glue::glue("{wastdr::urlize(a)}.html"))
     wastdr::wastdr_msg_info(glue::glue("Rendering report for {a} to {fn}..."))
     rmarkdown::render(

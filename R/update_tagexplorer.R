@@ -14,8 +14,6 @@
 #'
 #' @param wastd_data The output of `wastdr::download_wastd_turtledata()`..
 #' @param doc_id The Google Sheet ID, default: `Sys.getenv("TURTLE_SHEET")`.
-#' @param service_account_token The file path to aGoogle service account token
-#'   with the Google Sheets API enabled, default: `Sys.getenv("GSA_TOKEN")`.
 #' @return A list with keys:
 #'
 #' * `tags` The selected columns and (all) rows of `wastd_data$turtle_tags`.
@@ -25,7 +23,6 @@
 update_tagexplorer <- function(
   wastd_data,
   doc_id = Sys.getenv("TURTLE_SHEET")
-  # service_account_token = Sys.getenv("GSA_TOKEN")
   ){
   #
   # googledrive::drive_auth(path = service_account_token)
@@ -67,8 +64,8 @@ update_tagexplorer <- function(
 
   wastdr::wastdr_msg_info("Updating Google Sheets 'Turtle Tag Explorer': Meta")
   meta <- tibble::tibble(
-    data_retrieved = wastd_data$downloaded_on,
-    sheet_updated = Sys.time(),
+    data_retrieved_utc = wastd_data$downloaded_on,
+    sheet_updated_utc = Sys.time(),
     number_of_records = nrow(wastd_data$turtle_tags)
   ) %>%
     googlesheets4::sheet_write(Sys.getenv("TURTLE_SHEET"), sheet = "Metadata")
