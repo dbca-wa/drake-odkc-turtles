@@ -4,11 +4,13 @@
 \alias{notify_teams_data}
 \title{Notify a Team's channel about refreshed data.}
 \usage{
-notify_teams_data(team_name, channel_name = "Data")
+notify_teams_data(team_name, drive_item, channel_name = "Data")
 }
 \arguments{
 \item{team_name}{An existing Team name, e.g. "TurtleData", "TurtlesRioTinto",
 "TurtlesC4H", "TurtlesPendoley".}
+
+\item{drive_item}{The MS SharePoint Drive item (a folder)}
 
 \item{channel_name}{An existing Teams channel name, default: "Data".}
 }

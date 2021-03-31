@@ -21,11 +21,11 @@ upload_item_to_sharepoint <- function(local_file_path,
   }
 
   # Destination path shall exclude abs path up to local_root_rel
-  dest_pth <- src_fn %>%
+  dest_pth <- local_file_path %>%
     fs::path_dir() %>%
     stringr::str_replace(local_root_abs, "")
 
-  dest_fn <- "{dest_pth}/{fs::path_file(src_fn)}" %>%
+  dest_fn <- "{dest_pth}/{fs::path_file(local_file_path)}" %>%
     glue::glue() %>%  as.character()
 
   "Target {dest_fn}" %>%
@@ -34,17 +34,17 @@ upload_item_to_sharepoint <- function(local_file_path,
   # Catch file already exists
   if ("ms_drive_item" %in% try(class(dst$get_item(dest_fn)), silent=TRUE)) {
     "Skip existing {dest_fn}" %>%
-      glue::glue() %>% wastdr::wastdr_msg_success(msg)
+      glue::glue() %>% wastdr::wastdr_msg_success()
     return()
   }
 
   if (fs::is_dir(src_fn)) {
     x <- dst$create_folder(dest_fn)
     "Created folder {dest_fn}" %>%
-      glue::glue() %>% wastdr::wastdr_msg_success(msg)
+      glue::glue() %>% wastdr::wastdr_msg_success()
   } else {
     x <- dst$upload(src = src_fn, dest = dest_fn)
     "Created file {dest_fn}" %>%
-      glue::glue() %>% wastdr::wastdr_msg_success(msg)
+      glue::glue() %>% wastdr::wastdr_msg_success()
   }
 }

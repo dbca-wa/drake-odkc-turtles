@@ -16,7 +16,7 @@ upload_to_sharepoint <- function(){
   dst <- get_todays_folder_sharepoint("TurtleData")
   source_files <- fs::dir_ls(here::here("inst/reports"), recurse = TRUE)
   for (src_fn in source_files) {upload_item_to_sharepoint(src_fn, dst)}
-  notify_teams_data("TurtleData")
+  notify_teams_data("TurtleData", dst)
 
   # Upload DEL / WPTP to Rio
   dst_rio <- get_todays_folder_sharepoint("Turtles Rio Tinto")
@@ -26,7 +26,7 @@ upload_to_sharepoint <- function(){
   for (src_fn in source_files_del) {upload_item_to_sharepoint(src_fn, dst_rio)}
   for (src_fn in source_files_wptp) {upload_item_to_sharepoint(src_fn, dst_rio)}
   for (src_fn in source_files_qa) {upload_item_to_sharepoint(src_fn, dst_rio)}
-  notify_teams_data("Turtles Rio Tinto")
+  notify_teams_data("Turtles Rio Tinto", dst_rio)
 
   # Upload PtH to C4H
   # shpt <- Microsoft365R::get_sharepoint_site("Turtles C4H")
@@ -35,7 +35,7 @@ upload_to_sharepoint <- function(){
   source_files_qa <- fs::dir_ls(here::here("inst/reports"), regex="qa_")
   for (src_fn in source_files_pth) {upload_item_to_sharepoint(src_fn, dst_cfh)}
   for (src_fn in source_files_qa) {upload_item_to_sharepoint(src_fn, dst_cfh)}
-  notify_teams_data("Turtles C4H")
+  notify_teams_data("Turtles C4H", dst_cfh)
 
   # Upload what to Pendoley?
   # dst_pen <- get_todays_folder_sharepoint("Turtles Pendoley")
