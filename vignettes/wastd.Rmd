@@ -48,6 +48,23 @@ x <- wastd_data %>%
 ```
 
 # Overview
+This top level summary is exported as `just_the_data_thanks.csv` and
+shows totals of tracks, disturbance / predation, live sightings and strandings 
+plus track tallies grouped and sorted per area, site, and calendar date (AWST).
+Individually encountered tracks are split up by nesting success. 
+Track tallies, which are only collected in specific places like Cape Domett,
+are counted but the number of tracks therein is not further expanded.
+
+A very detailed explanation of the columns in this table is hosted 
+[here]().
+
+```{r top_level_summary}
+summarise_wastd_data_per_day_site(x) %T>% 
+  readr::write_csv(here::here(fn, "just_the_data_thanks.csv")) %>% 
+  rt
+```
+
+
 
 This report is a story **about** data. It explains, visualises, and
 rudimentarily summarises the data which is exported to CSV and various
