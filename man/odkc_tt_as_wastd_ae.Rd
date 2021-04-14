@@ -2,34 +2,34 @@
 % Please edit documentation in R/odkc_tt_as_wastd_ae.R
 \name{odkc_tt_as_wastd_ae}
 \alias{odkc_tt_as_wastd_ae}
-\title{Transform odkc_data$tsi into WAStD AnimalEncounters.}
+\title{Transform odkc_data$tt into WAStD AnimalEncounters.}
 \usage{
-odkc_tt_as_wastd_ae(data, user_mapping)
+odkc_tt_as_wastd_ae(data, user_mapping, tz = ruODK::get_default_tz())
 }
 \arguments{
-\item{data}{The tibble of Turtle Sightings,
-e.g. \code{odkc_data$tsi}.}
+\item{data}{An object of class "odkc_turtledata".}
 
 \item{user_mapping}{The output of \code{\link{make_user_mapping}()},
 containing at least columns \code{pk} (WAStD User PK) and
 \code{odkc_username} (as written in odkc data field \code{reporter}).}
+
+\item{tz}{A timezone, default: \code{ruODK::get_default_tz()}.}
 }
 \value{
-A tibble suitable to
-\code{\link{wastd_POST}("animal-encounters")}
+A tibble suitable to \code{\link{wastd_POST}("animal-encounters")}
 }
 \description{
-Transform odkc_data$tsi into WAStD AnimalEncounters.
+Transform odkc_data$tt into WAStD AnimalEncounters.
 }
 \examples{
 \dontrun{
 data("odkc_data", package = "wastdr")
 data("wastd_data", package = "wastdr")
-user_mapping <- NULL # see odkc_plan for actual user mapping
-ae <- odkc_tt_as_wastd_ae(odkc_ex$tt, user_mapping)
+drake::loadd("user_mapping")
+ae <- odkc_tt_as_wastd_ae(odkc_data, user_mapping)
 
 ae \%>\%
-  wastd_POST("animal-encounters",
+  wastdr::wastd_POST("animal-encounters",
     api_url = Sys.getenv("WASTDR_API_DEV_URL"),
     api_token = Sys.getenv("WASTDR_API_DEV_TOKEN")
   )
