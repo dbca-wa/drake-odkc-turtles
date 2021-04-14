@@ -35,10 +35,5 @@ The given datetime corrected by the timedelta between \code{ref_was} and
 Repair a time offset
 }
 \examples{
-repair_time("2010-03-22 20:23:47 +08")
 repair_time("2010-03-03 18:13:01 +08")
-repair_time("2010-03-03 18:30:53 +08")
-repair_time("2010-03-03 18:49:25 +08")
-repair_time("2010-03-23 01:49:49 +00")
-
 }

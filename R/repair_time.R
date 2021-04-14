@@ -15,12 +15,7 @@
 #'   `ref_should`.
 #' @export
 #' @examples
-#' repair_time("2010-03-22 20:23:47 +08")
 #' repair_time("2010-03-03 18:13:01 +08")
-#' repair_time("2010-03-03 18:30:53 +08")
-#' repair_time("2010-03-03 18:49:25 +08")
-#' repair_time("2010-03-23 01:49:49 +00")
-#'
 repair_time <- function(dt,
                         ref_was = "2010-03-22 20:08:00 +08",
                         ref_should = "2020-12-28 07:08:00 +08",
