@@ -21,8 +21,24 @@
 #' @param wastd_users A tibble of WAStD users
 #' @export
 make_user_mapping <- function(odkc_data, wastd_users) {
+  if (!is.null(odkc_data$tt)) {
+    tagging_names <- unique(
+      c(
+        odkc_data$tt$encounter_handler,
+        odkc_data$tt$ft1_ft1_handled_by,
+        odkc_data$tt$ft2_ft2_handled_by,
+        odkc_data$tt$ft3_ft3_handled_by,
+        odkc_data$tt$morphometrics_morphometrics_handled_by,
+        odkc_data$tt_tag$tag_handled_by
+      )
+    )
+  } else {
+    tagging_names <- c()
+  }
+
   odkc_reporters <- unique(
     c(
+      tagging_names,
       odkc_data$tracks$reporter,
       odkc_data$track_tally$reporter,
       odkc_data$dist$reporter,
