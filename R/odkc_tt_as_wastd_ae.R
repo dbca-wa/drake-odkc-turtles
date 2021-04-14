@@ -9,14 +9,11 @@
 #' \dontrun{
 #' data("odkc_data", package = "wastdr")
 #' data("wastd_data", package = "wastdr")
+#' au <- Sys.getenv("WASTDR_API_DEV_URL")
+#' at <- Sys.getenv("WASTDR_API_DEV_TOKEN")
 #' drake::loadd("user_mapping")
 #' ae <- odkc_tt_as_wastd_ae(odkc_data, user_mapping)
-#'
-#' ae %>%
-#'   wastdr::wastd_POST("animal-encounters",
-#'     api_url = Sys.getenv("WASTDR_API_DEV_URL"),
-#'     api_token = Sys.getenv("WASTDR_API_DEV_TOKEN")
-#'   )
+#' ae %>% wastdr::wastd_POST("animal-encounters", api_url = au, api_token = at)
 #' }
 odkc_tt_as_wastd_ae <- function(data,
                                 user_mapping,
@@ -99,23 +96,29 @@ odkc_tt_as_wastd_ae <- function(data,
       source_id = id,
       observer = reporter,
       reporter = reporter,
-      comments = glue::glue(
+      behaviour = glue::glue(
         "Form {meta_instance_name} filled in from {observation_start_time} to ",
-        "{observation_end_time} in capture mode {encounter_capture_mode}\n",
+        "{observation_end_time} in capture mode '{encounter_capture_mode}'.\n",
         "Record submitted on {system_submission_date} ",
-        "by {system_submitter_name} from device {device_id}\n",
+        "by {system_submitter_name} from device {device_id}.\n",
+        "Record initiated at {start_location_latitude} ",
+        "{start_location_longitude}.\n",
         "Photos expected: {system_attachments_expected}, ",
-        "present: {system_attachments_present}\n",
-        "Nesting success: {wastdr::humanize(nest_observed_nesting_success)}\n",
+        "present: {system_attachments_present}.\n",
+        "Nesting success: {wastdr::humanize(nest_observed_nesting_success)}.\n",
         "Nesting disturbed: {nest_nesting_disturbed}, ",
-        "cause {nest_nesting_disturbance_cause}\n",
-        "Eggs counted: {nest_eggs_counted}, {nest_egg_count}",
-        " (+/- {nest_egg_count_accuracy})\n",
+        "cause {nest_nesting_disturbance_cause}.\n",
+        "Eggs {nest_egg_count_accuracy}: {nest_eggs_counted}, {nest_egg_count}.\n",
         # nest_more_tags
         # nest_more_loggers
-        #
         "Datasheet comments: {datasheet_datasheet_comments}"
       ),
+      # manually backfilled:
+      # manual_nest_location_lat           (if handheld GPS used)
+      # manual_nest_location_lon
+      # manual_nest_location_map_longitude (if offline map used)
+      # manual_nest_location_map_latitude
+      # manual_nest_location_time
       when = lubridate::format_ISO8601(observation_start_time, usetz = TRUE),
       where = glue::glue(
         "POINT ({realtime_nest_location_longitude} ",
@@ -128,7 +131,6 @@ odkc_tt_as_wastd_ae <- function(data,
       sex = nest_sex %>% tidyr::replace_na("na"),
       health = "alive",
       maturity = "adult", # in-water rodeo catch tagging could be subadult
-      # behaviour = "", # free text
       habitat = nest_habitat,
       activity = "general-breeding-activity", # models.NESTING_ACTIVITY_CHOICES
       nesting_event = "present",
@@ -150,4 +152,4 @@ odkc_tt_as_wastd_ae <- function(data,
     invisible()
 }
 
-# usethis::use_test("odkc_tsi_as_wastd_ae")
+# usethis::use_test("odkc_tt_as_wastd_ae")

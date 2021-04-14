@@ -25,13 +25,10 @@ Transform odkc_data$tt into WAStD AnimalEncounters.
 \dontrun{
 data("odkc_data", package = "wastdr")
 data("wastd_data", package = "wastdr")
+au <- Sys.getenv("WASTDR_API_DEV_URL")
+at <- Sys.getenv("WASTDR_API_DEV_TOKEN")
 drake::loadd("user_mapping")
 ae <- odkc_tt_as_wastd_ae(odkc_data, user_mapping)
-
-ae \%>\%
-  wastdr::wastd_POST("animal-encounters",
-    api_url = Sys.getenv("WASTDR_API_DEV_URL"),
-    api_token = Sys.getenv("WASTDR_API_DEV_TOKEN")
-  )
+ae \%>\% wastdr::wastd_POST("animal-encounters", api_url = au, api_token = at)
 }
 }
