@@ -84,6 +84,7 @@ odkc_tt_as_wastd_ae <- function(data,
   # nest_eggs_counted nest_egg_count nest_egg_count_accuracy
   #
   # Media
+  # ft1_ft1_photo ft2_ft2_photo ft3_ft3_photo biopsy_biopsy_photo
   # "datasheet_photo_datasheet_front"
   # [77] "datasheet_photo_datasheet_rear"
 
@@ -113,19 +114,49 @@ odkc_tt_as_wastd_ae <- function(data,
         # nest_more_loggers
         "Datasheet comments: {datasheet_datasheet_comments}"
       ),
-      # manually backfilled:
-      # manual_nest_location_lat           (if handheld GPS used)
-      # manual_nest_location_lon
-      # manual_nest_location_map_longitude (if offline map used)
-      # manual_nest_location_map_latitude
-      # manual_nest_location_time
-      when = lubridate::format_ISO8601(observation_start_time, usetz = TRUE),
-      where = glue::glue(
-        "POINT ({realtime_nest_location_longitude} ",
-        "{realtime_nest_location_latitude})"
+      when = dplyr::case_when(
+        !is.na(manual_time) ~ lubridate::format_ISO8601(manual_time, usetz = TRUE),
+        TRUE ~ lubridate::format_ISO8601(observation_start_time, usetz = TRUE)
+      ),
+      where = dplyr::case_when(
+        # Manually backfilled coordinates using coordinate fields
+        (encounter_capture_mode == "new" &
+           !is.na(manual_nest_location_lat) &
+           !is.na(manual_nest_location_lon)
+         ) ~ glue::glue(
+          "POINT ({manual_nest_location_lon} ",
+          "{manual_nest_location_lat})"
+         ),
+
+        # Manually backfilled coordinates using map widget
+        (encounter_capture_mode == "new" &
+           # If manual_nest_location_lat/lon given, previous clause catches
+           # is.na(manual_nest_location_lat) &
+           # is.na(manual_nest_location_lon) &
+           !is.na(manual_nest_location_map_latitude) &
+           !is.na(manual_nest_location_map_longitude)
+         ) ~ glue::glue(
+             "POINT ({manual_nest_location_map_longitude} ",
+             "{manual_nest_location_map_latitude})"
+         ),
+
+        # Geolocation captured in ODK
+        encounter_capture_mode != "new" ~ glue::glue(
+          "POINT ({realtime_nest_location_longitude} ",
+          "{realtime_nest_location_latitude})"
+        ),
+
+        # Fallback: start_geolocation from metadata
+        TRUE ~ glue::glue(
+          "POINT ({start_location_longitude} {start_location_latitude})"
+        )
       ),
       location_accuracy = "10",
-      location_accuracy_m = start_location_accuracy,
+      location_accuracy_m = dplyr::case_when(
+        !is.na(realtime_nest_location_accuracy) ~ as.numeric(realtime_nest_location_accuracy),
+        !is.na(manual_nest_location_map_accuracy) ~ as.numeric(manual_nest_location_map_accuracy),
+        TRUE ~ as.numeric(start_location_accuracy)
+      ),
       taxon = "Cheloniidae",
       species = nest_species %>% tidyr::replace_na("na"),
       sex = nest_sex %>% tidyr::replace_na("na"),

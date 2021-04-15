@@ -19,4 +19,17 @@ test_that("odkc_tt_as_wastd_ae works", {
     )
   }
 })
+
+test_that("odkc_tt_as_wastd_ae generates valid coordinates", {
+  data("odkc_data", package = "wastdr")
+  data("wastd_data", package = "wastdr")
+
+  user_mapping <- tibble::tibble(odkc_username = "test", pk = 1)
+
+  x <- odkc_data %>% odkc_tt_as_wastd_ae(user_mapping = user_mapping)
+
+  # If this fails, we have invalid WKT in x$where
+  testthat::expect_s3_class(sf::st_as_sf(x, wkt="where"), "sf")
+
+})
 # usethis::use_r("odkc_tt_as_wastd_ae")
