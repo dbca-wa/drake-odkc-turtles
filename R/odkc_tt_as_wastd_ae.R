@@ -39,11 +39,6 @@ odkc_tt_as_wastd_ae <- function(data,
   wastd_observers <- user_mapping %>%
     dplyr::transmute(observer = odkc_username, observer_id = pk)
 
-  # [21] "encounter_handler"                           "realtime_nest_location_longitude"
-  # [23] "realtime_nest_location_latitude"             "realtime_nest_location_altitude"
-  # [25] "realtime_nest_location_accuracy"             "realtime_nest_location"
-  # [27] "realtime_start_time_repeat"
-  #
   # TagObs:
   # "pit_pit1_status"
   # [29] "pit_pit2_status"
@@ -69,13 +64,6 @@ odkc_tt_as_wastd_ae <- function(data,
   # "biopsy_biopsy_name"
   # [55] "biopsy_biopsy_comments"
   #
-  #
-  # TurtleMorphObs
-  # [57] "morphometrics_curved_carapace_length_min_mm"
-  # "morphometrics_curved_carapace_width_mm"
-  # [59] "morphometrics_weight"
-  # "morphometrics_morphometrics_handled_by"
-  #
   # NestTagObs
   # [67] "nest_nest_tag_date"
   # [73] "nest_nest_tag_label"
@@ -83,11 +71,6 @@ odkc_tt_as_wastd_ae <- function(data,
   # NestObs
   # nest_eggs_counted nest_egg_count nest_egg_count_accuracy
   #
-  # Media
-  # ft1_ft1_photo ft2_ft2_photo ft3_ft3_photo biopsy_biopsy_photo
-  # "datasheet_photo_datasheet_front"
-  # [77] "datasheet_photo_datasheet_rear"
-
   # Transform data
   data$tt %>%
     wastdr::sf_as_tbl() %>%

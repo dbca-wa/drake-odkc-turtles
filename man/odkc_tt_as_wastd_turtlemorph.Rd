@@ -27,7 +27,7 @@ at <- Sys.getenv("WASTDR_API_DEV_TOKEN")
 drake::loadd("user_mapping")
 tmorph <- odkc_tt_as_wastd_turtlemorph(odkc_data$tt, user_mapping)
 
-tmorph \%>\%
+res <- tmorph \%>\%
   wastdr::wastd_POST("turtle-morphometrics", api_url = au, api_token = at)
 }
 }

@@ -14,7 +14,7 @@
 #' drake::loadd("user_mapping")
 #' tmorph <- odkc_tt_as_wastd_turtlemorph(odkc_data$tt, user_mapping)
 #'
-#' tmorph %>%
+#' res <- tmorph %>%
 #'   wastdr::wastd_POST("turtle-morphometrics", api_url = au, api_token = at)
 #' }
 odkc_tt_as_wastd_turtlemorph <- function(data, user_mapping) {
@@ -35,8 +35,13 @@ odkc_tt_as_wastd_turtlemorph <- function(data, user_mapping) {
       recorder = reporter,
       # WAStD TurtleMorphometrics has more fields, but TT only captures:
       curved_carapace_length_min_mm = morphometrics_curved_carapace_length_min_mm,
+      curved_carapace_length_mm = morphometrics_curved_carapace_length_max_mm,
       curved_carapace_width_mm = morphometrics_curved_carapace_width_mm,
-      body_weight_g = morphometrics_weight * 1000 # kg to g
+      body_weight_g = morphometrics_weight * 1000, # kg to g
+      maximum_head_width_mm = morphometrics_maximum_head_width_mm,
+      tail_length_carapace_mm = morphometrics_tail_length_carapace_mm,
+      tail_length_plastron_mm = morphometrics_tail_length_plastron_mm,
+      tail_length_vent_mm = morphometrics_tail_length_vent_mm
     ) %>%
     dplyr::left_join(wastd_handlers, by = "handler") %>% # wastd User PK
     dplyr::left_join(wastd_recorders, by = "recorder") %>% # wastd User PK

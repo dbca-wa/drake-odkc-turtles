@@ -88,9 +88,9 @@ odkc_as_wastd <- function(odkc_data, user_mapping) {
     # tt turtle tagging
     tt = odkc_tt_as_wastd_ae(odkc_data, user_mapping),
     tt_dmg = odkc_tt_dmg_as_wastd_turtledmg(odkc_data$tt_dmg),
-    # tt_tag = odkc_tt_tag_as_wastd_tagobs(odkc_data, user_mapping), # tt & tt_tag
-    tt_log = odkc_tt_as_wastd_loggerobs(odkc_data),
+    tt_log = odkc_tt_log_as_wastd_loggerobs(odkc_data$tt_log),
     tt_mor = odkc_tt_as_wastd_turtlemorph(odkc_data$tt, user_mapping),
+    # tt_tag = odkc_tt_tag_as_wastd_tagobs(odkc_data, user_mapping), # tt & tt_tag
     # tt_nto = odkc_tt_as_wastd_nesttagobs(odkc_data$tt),
     # tt_tno = odkc_tt_as_wastd_turtlenestobs(odkc_data$tt),
 
