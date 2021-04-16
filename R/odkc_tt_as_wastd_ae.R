@@ -39,31 +39,6 @@ odkc_tt_as_wastd_ae <- function(data,
   wastd_observers <- user_mapping %>%
     dplyr::transmute(observer = odkc_username, observer_id = pk)
 
-  # TagObs:
-  # "pit_pit1_status"
-  # [29] "pit_pit2_status"
-  # "pit_pit3_status"
-  # [31] "pit_pit3_location"
-  # "pit_pit_left_name"
-  # "pit_pit2_name"
-  #
-  # "ft1_ft1_name"
-  # [35] "ft1_ft1_status"                              "ft1_ft1_location"
-  # [37] "ft1_tag_1_barnacles"                         "ft1_tag_1_fix"
-  # [39] "ft1_ft1_handled_by"                          "ft1_tag_scar_locations"
-  # [41] "ft1_tag_sighted_but_unread"                  "ft1_ft1_comments"
-  #
-  # [43] "ft2_ft2_status"                              "ft2_ft2_location"
-  # [45] "ft2_tag_2_barnacles"                         "ft2_tag_2_fix"
-  # [47] "ft2_ft2_handled_by"                          "ft2_ft2_name"
-  #
-  # [49] "ft3_ft3_status"                              "ft3_tag_3_barnacles"
-  # [51] "ft3_tag_3_fix"                               "ft3_ft3_handled_by"
-  #
-  # [53] "biopsy_biopsy_location"
-  # "biopsy_biopsy_name"
-  # [55] "biopsy_biopsy_comments"
-  #
   # Transform data
   data$tt %>%
     wastdr::sf_as_tbl() %>%
