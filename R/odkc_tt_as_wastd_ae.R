@@ -64,9 +64,6 @@ odkc_tt_as_wastd_ae <- function(data,
   # "biopsy_biopsy_name"
   # [55] "biopsy_biopsy_comments"
   #
-  # NestObs
-  # nest_eggs_counted nest_egg_count nest_egg_count_accuracy
-  #
   # Transform data
   data$tt %>%
     wastdr::sf_as_tbl() %>%

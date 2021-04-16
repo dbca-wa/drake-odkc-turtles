@@ -92,7 +92,7 @@ odkc_as_wastd <- function(odkc_data, user_mapping) {
     tt_mor = odkc_tt_as_wastd_turtlemorph(odkc_data$tt, user_mapping),
     # tt_tag = odkc_tt_tag_as_wastd_tagobs(odkc_data, user_mapping), # tt & tt_tag
     tt_nto = odkc_tt_as_wastd_nesttagobs(odkc_data$tt),
-    # tt_tno = odkc_tt_as_wastd_turtlenestobs(odkc_data$tt),
+    tt_tno = odkc_tt_as_wastd_turtlenestobs(odkc_data$tt),
 
     # -------------------------------------------------------------------- #
     # https://github.com/dbca-wa/wastdr/issues/15
