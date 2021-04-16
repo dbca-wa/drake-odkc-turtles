@@ -22,6 +22,6 @@ data("odkc_data", package = "wastdr")
 au <- Sys.getenv("WASTDR_API_DEV_URL")
 at <- Sys.getenv("WASTDR_API_DEV_TOKEN")
 x <- odkc_tt_as_wastd_nesttagobs(odkc_data$tt)
-x \%>\% wastd_POST("nest-tag-observations", api_url = au, api_token = at)
+x \%>\% wastdr::wastd_POST("nest-tag-observations", api_url = au, api_token = at)
 }
 }

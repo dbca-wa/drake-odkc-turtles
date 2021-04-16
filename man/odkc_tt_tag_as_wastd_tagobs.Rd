@@ -27,6 +27,6 @@ au <- Sys.getenv("WASTDR_API_DEV_URL")
 at <- Sys.getenv("WASTDR_API_DEV_TOKEN")
 drake::loadd("user_mapping")
 x <- odkc_tt_tag_as_wastd_tagobs(odkc_data, user_mapping)
-x \%>\% wastd_POST("tag-observations", api_url = au, api_token = at)
+x \%>\% wastdr::wastd_POST("tag-observations", api_url = au, api_token = at)
 }
 }

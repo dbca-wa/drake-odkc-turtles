@@ -23,7 +23,7 @@ data("odkc_data", package = "wastdr")
 data("wastd_data", package = "wastdr")
 au <- Sys.getenv("WASTDR_API_DEV_URL")
 at <- Sys.getenv("WASTDR_API_DEV_TOKEN")
-x <- odkc_tt_as_wastd_loggerobs(odkc_data$tt_log)
-x \%>\% wastd_POST("logger-observations", api_url = au, api_token = at)
+x <- odkc_tt_log_as_wastd_loggerobs(odkc_data$tt_log)
+x \%>\% wastdr::wastd_POST("logger-observations", api_url = au, api_token = at)
 }
 }

@@ -10,7 +10,7 @@
 #' au <- Sys.getenv("WASTDR_API_DEV_URL")
 #' at <- Sys.getenv("WASTDR_API_DEV_TOKEN")
 #' x <- odkc_tt_as_wastd_turtlenestobs(odkc_data$tt)
-#' x %>% wastd_POST("turtle-nest-excavations", api_url = au, api_token = at)
+#' x %>% wastdr::wastd_POST("turtle-nest-excavations", api_url = au, api_token = at)
 #' }
 odkc_tt_as_wastd_turtlenestobs <- function(data) {
   data %>%
@@ -22,7 +22,7 @@ odkc_tt_as_wastd_turtlenestobs <- function(data) {
       encounter_source_id = id,
       egg_count = nest_egg_count,
       comments = glue::glue(
-        "The observed number of eggs were {nest_egg_count_accuracy}."
+        "The observed number of eggs was {nest_egg_count_accuracy}."
       )
     ) %>%
     dplyr::filter_at(
