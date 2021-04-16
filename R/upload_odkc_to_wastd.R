@@ -222,6 +222,16 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
+    # Tagging > AE ------------------------------------------------------------#
+    # TODO if existing
+    # tt
+    # tt_dmg
+    # tt_log
+    # tt_mor
+    # tt_tag
+    # tt_nto
+    # tt_tno
+
     # tracks_log > LE ---------------------------------------------------------#
 
     # le = wastdr::wastd_create_update_skip(

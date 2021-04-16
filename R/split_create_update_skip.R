@@ -177,6 +177,16 @@ split_create_update_skip <- function(odkc_prep, wastd_data) {
     ae_tsi_skip = odkc_prep$ae_tsi %>%
       dplyr::semi_join(enc_skip, by = "source_id"),
 
+    # Tagging > AE ------------------------------------------------------------#
+    # TODO if existing
+    # tt
+    # tt_dmg
+    # tt_log
+    # tt_mor
+    # tt_tag
+    # tt_nto
+    # tt_tno
+
     # Surveys -----------------------------------------------------------------#
     svy_create = odkc_prep$surveys %>%
       dplyr::anti_join(wastd_data$surveys, by = "source_id"),

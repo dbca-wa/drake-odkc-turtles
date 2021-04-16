@@ -64,10 +64,6 @@ odkc_tt_as_wastd_ae <- function(data,
   # "biopsy_biopsy_name"
   # [55] "biopsy_biopsy_comments"
   #
-  # NestTagObs
-  # [67] "nest_nest_tag_date"
-  # [73] "nest_nest_tag_label"
-  #
   # NestObs
   # nest_eggs_counted nest_egg_count nest_egg_count_accuracy
   #
