@@ -23,8 +23,6 @@ data("wastd_data", package = "wastdr")
 au <- Sys.getenv("WASTDR_API_DEV_URL")
 at <- Sys.getenv("WASTDR_API_DEV_TOKEN")
 x <- odkc_tt_dmg_as_wastd_turtledmg(odkc_data$tt_dmg)
-x \%>\%
-  wastdr::wastd_POST("turtle-damage-observations",
-  api_url = au, api_token = at)
+x \%>\% wastdr::wastd_POST("turtle-damage-observations", api_url = au, api_token = at)
 }
 }
