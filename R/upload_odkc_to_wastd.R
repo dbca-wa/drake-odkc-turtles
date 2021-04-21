@@ -23,7 +23,7 @@ upload_odkc_to_wastd <- function(data,
                                api_url = wastdr::get_wastdr_api_url(),
                                api_token = wastdr::get_wastdr_api_token(),
                                verbose = wastdr::get_wastdr_verbose()) {
-  list(
+  res <- list(
     # Tracks ------------------------------------------------------------------#
     tne = wastdr::wastd_create_update_skip(
       data$tne_create,
@@ -60,7 +60,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
 
     tn_eggs = wastdr::wastd_create_update_skip(
       data$tn_eggs_create,
@@ -222,30 +221,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
-    # Tagging > AE ------------------------------------------------------------#
-    # TODO if existing
-    # tt
-    # tt_dmg
-    # tt_log
-    # tt_mor
-    # tt_tag
-    # tt_nto
-    # tt_tno
-
-    # tracks_log > LE ---------------------------------------------------------#
-
-    # le = wastdr::wastd_create_update_skip(
-    #   data$le_create,
-    #   data$le_update,
-    #   data$le_skip,
-    #   update_existing = update_existing,
-    #   serializer = "logger-encounters",
-    #   label = "Logger Encounters",
-    #   api_url = api_url,
-    #   api_token = api_token,
-    #   verbose = verbose
-    # ),
-
+    # tracks_log > LO ---------------------------------------------------------#
     lo = wastdr::wastd_create_update_skip(
       data$lo_create,
       data$lo_update,
@@ -282,6 +258,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     ),
 
+
     svy = wastdr::wastd_create_update_skip(
       #upload_surveys(
       data$svy_create,
@@ -309,4 +286,106 @@ upload_odkc_to_wastd <- function(data,
 
 
   )
+
+  # Tagging > AE ------------------------------------------------------------#
+  if("tt_create" %in% names(data)){
+
+    res$tt = wastdr::wastd_create_update_skip(
+      data$tt_create,
+      data$tt_update,
+      data$tt_skip,
+      update_existing = update_existing,
+      serializer = "animal-encounters",
+      label = "Animal Encounters (TT)",
+      api_url = api_url,
+      api_token = api_token,
+      verbose = verbose
+    )
+
+    res$tt_dmg = wastdr::wastd_create_update_skip(
+      data$tt_dmg_create,
+      data$tt_dmg_update,
+      data$tt_dmg_skip,
+      update_existing = update_existing,
+      serializer = "turtle-damage-observations",
+      label = "TurtleDamageObservations (TT)",
+      api_url = api_url,
+      api_token = api_token,
+      verbose = verbose
+    )
+
+    res$tt_tsc = wastdr::wastd_create_update_skip(
+      data$tt_tsc_create,
+      data$tt_tsc_update,
+      data$tt_tsc_skip,
+      update_existing = update_existing,
+      serializer = "turtle-damage-observations",
+      label = "TurtleDamageObservations (TT scars/missed)",
+      api_url = api_url,
+      api_token = api_token,
+      verbose = verbose
+    )
+
+    res$tt_log = wastdr::wastd_create_update_skip(
+      data$tt_log_create,
+      data$tt_log_update,
+      data$tt_log_skip,
+      update_existing = update_existing,
+      serializer = "logger-observations",
+      label = "Logger Observations (TT)",
+      api_url = api_url,
+      api_token = api_token,
+      verbose = verbose
+    )
+
+    res$tt_mor = wastdr::wastd_create_update_skip(
+      data$tt_mor_create,
+      data$tt_mor_update,
+      data$tt_mor_skip,
+      update_existing = update_existing,
+      serializer = "turtle-morphometrics",
+      label = "TurtleMorphometrics (TT)",
+      api_url = api_url,
+      api_token = api_token,
+      verbose = verbose
+    )
+
+    res$tt_tag = wastdr::wastd_create_update_skip(
+      data$tt_tag_create,
+      data$tt_tag_update,
+      data$tt_tag_skip,
+      update_existing = update_existing,
+      serializer = "tag-observations",
+      label = "TagObservations",
+      api_url = api_url,
+      api_token = api_token,
+      verbose = verbose
+    )
+
+    res$tt_nto = wastdr::wastd_create_update_skip(
+      data$tt_nto_create,
+      data$tt_nto_update,
+      data$tt_nto_skip,
+      update_existing = update_existing,
+      serializer = "nest-tag-observations",
+      label = "TurtleNestTagObservations (TT)",
+      api_url = api_url,
+      api_token = api_token,
+      verbose = verbose
+    )
+
+    res$tt_tno = wastdr::wastd_create_update_skip(
+      data$tt_tno_create,
+      data$tt_tno_update,
+      data$tt_tno_skip,
+      update_existing = update_existing,
+      serializer = "turtle-nest-excavations",
+      label = "TurtleNestObservations (TT)",
+      api_url = api_url,
+      api_token = api_token,
+      verbose = verbose
+    )
+  }
+
+  res
 }

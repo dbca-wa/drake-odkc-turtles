@@ -37,7 +37,7 @@
 #' drake::clean()
 #' drake::clean("wastd_users") # after updating WAStD user aliases
 #' drake::clean("upload_to_wastd")
-#' drake::clean("odkc_ex")
+#' drake::clean("odkc_up")
 #' drake::clean("upload_to_wastd")
 #' drake::make(plan = odkc2020(), targets = c("upload_to_wastd"))
 #' drake::make(odkc2020(), lock_envir = FALSE)
