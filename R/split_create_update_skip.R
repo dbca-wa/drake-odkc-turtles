@@ -143,7 +143,7 @@ split_create_update_skip <- function(odkc_prep, wastd_data) {
       dplyr::semi_join(wastd_data$media, by = "source_id")
   )
 
-  if ("tt" %in% names(odkc_prep)) {
+  if (!is.null(odkc_prep$tt)) {
     # Tagging > AE ------------------------------------------------------------#
     # AE
     res$tt_create = odkc_prep$tt %>% enc_create()

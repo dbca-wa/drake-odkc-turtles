@@ -7,7 +7,7 @@ odkc_as_wastd <- function(odkc_data, user_mapping) {
   # TODO: check that each table and each field of odkc_data has been handled
   # TODO: add base_name to encounter/fast/src routers
 
-  list(
+  res <- list(
     # -------------------------------------------------------------------- #
     # https://wastd.dbca.wa.gov.au/api/1/turtle-nest-encounters/
     # https://github.com/dbca-wa/wastdr/issues/10
@@ -84,16 +84,7 @@ odkc_as_wastd <- function(odkc_data, user_mapping) {
     tto = odkc_tt_as_wastd_tto(odkc_data$track_tally),
     ttd = odkc_tt_as_wastd_tndto(odkc_data$track_tally_dist),
 
-    # -------------------------------------------------------------------- #
-    # tt turtle tagging
-    tt = odkc_tt_as_wastd_ae(odkc_data, user_mapping),
-    tt_dmg = odkc_tt_dmg_as_wastd_turtledmg(odkc_data$tt_dmg),
-    tt_tsc = odkc_tt_as_wastd_turtledmg(odkc_data$tt),
-    tt_log = odkc_tt_log_as_wastd_loggerobs(odkc_data$tt_log),
-    tt_mor = odkc_tt_as_wastd_turtlemorph(odkc_data$tt, user_mapping),
-    tt_tag = odkc_tt_tag_as_wastd_tagobs(odkc_data, user_mapping),
-    tt_nto = odkc_tt_as_wastd_nesttagobs(odkc_data$tt),
-    tt_tno = odkc_tt_as_wastd_turtlenestobs(odkc_data$tt),
+
 
     # -------------------------------------------------------------------- #
     # https://github.com/dbca-wa/wastdr/issues/15
@@ -108,4 +99,19 @@ odkc_as_wastd <- function(odkc_data, user_mapping) {
     # https://wastd.dbca.wa.gov.au/api/1/media-attachments/
     media = odkc_as_media(odkc_data)
   )
+
+  if(!is.null(odkc_data$tt)){
+    # -------------------------------------------------------------------- #
+    # tt turtle tagging
+    res$tt = odkc_tt_as_wastd_ae(odkc_data, user_mapping)
+    res$tt_dmg = odkc_tt_dmg_as_wastd_turtledmg(odkc_data$tt_dmg)
+    res$tt_tsc = odkc_tt_as_wastd_turtledmg(odkc_data$tt)
+    res$tt_log = odkc_tt_log_as_wastd_loggerobs(odkc_data$tt_log)
+    res$tt_mor = odkc_tt_as_wastd_turtlemorph(odkc_data$tt, user_mapping)
+    res$tt_tag = odkc_tt_tag_as_wastd_tagobs(odkc_data, user_mapping)
+    res$tt_nto = odkc_tt_as_wastd_nesttagobs(odkc_data$tt)
+    res$tt_tno = odkc_tt_as_wastd_turtlenestobs(odkc_data$tt)
+  }
+
+  res
 }
