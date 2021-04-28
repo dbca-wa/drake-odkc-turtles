@@ -57,6 +57,34 @@ annotate_user_mapping <- function(user_mapping){
         ) %>%
         tibble::as_tibble()
 }
+#' @export
+annotate_user_mapping_w2 <- function(user_mapping){
+    user_mapping %>%
+        dplyr::arrange(-dist, username) %>%
+        dplyr::rowwise() %>%
+        dplyr::mutate(
+            wastd_matched = glue::glue(
+                '[{name}](https://wastd.dbca.wa.gov.au/admin/users/user/{pk})'
+            ),
+            search_wastd = legacy_username %>% make_search_links
+        ) %>%
+        dplyr::select(
+            legacy_username,
+            legacy_un_trim,
+            wastd_matched,
+            search_wastd,
+            dist,
+            role,
+            pk,
+            username,
+            name,
+            nickname,
+            aliases,
+            email,
+            phone
+        ) %>%
+        tibble::as_tibble()
+}
 
 # # Create user agent
 # a <- user_mapping %>%

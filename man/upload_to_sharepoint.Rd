@@ -4,7 +4,12 @@
 \alias{upload_to_sharepoint}
 \title{Upload all outputs to various SharePoint sites}
 \usage{
-upload_to_sharepoint()
+upload_to_sharepoint(wastd_reports = NULL)
+}
+\arguments{
+\item{wastd_reports}{The result from \code{generate_wastd_reports()}
+is used here to declare a dependency of this step to the reports being
+generated.}
 }
 \description{
 Upload all outputs to various SharePoint sites

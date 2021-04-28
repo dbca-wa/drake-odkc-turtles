@@ -1,7 +1,10 @@
 #' Upload all outputs to various SharePoint sites
 #'
+#' @param wastd_reports The result from `generate_wastd_reports()`
+#'   is used here to declare a dependency of this step to the reports being
+#'   generated.
 #' @export
-upload_to_sharepoint <- function(){
+upload_to_sharepoint <- function(wastd_reports = NULL){
   # https://github.com/Azure/AzureR
   # https://github.com/Azure/Microsoft365R
   # devtools::install_github("Azure/Microsoft365R")

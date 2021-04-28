@@ -15,7 +15,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 params:
-  area_name: 'Cape Domett'
+  area_name: 'Troughton Island'
 editor_options: 
   markdown: 
     wrap: 72
@@ -240,8 +240,7 @@ We show the season tallies, and export the individual records as
 
 ```{r nests_tagged}
 wastd_tagged_nests <- x$nest_tags %>% 
-  wastdr::exclude_training_species() %>% 
-  dplyr::rename(species = encounter_species)
+  wastdr::exclude_training_species()
 ```
 
 ```{r}

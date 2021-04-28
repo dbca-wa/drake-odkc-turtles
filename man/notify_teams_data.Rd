@@ -4,7 +4,7 @@
 \alias{notify_teams_data}
 \title{Notify a Team's channel about refreshed data.}
 \usage{
-notify_teams_data(team_name, drive_item, channel_name = "Data")
+notify_teams_data(team_name, drive_item, channel_name = "General")
 }
 \arguments{
 \item{team_name}{An existing Team name, e.g. "TurtleData", "TurtlesRioTinto",
