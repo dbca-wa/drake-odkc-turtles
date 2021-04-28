@@ -74,7 +74,7 @@ wamtram <- function() {
 
     # QA Reports: inspect user mappings - flag dissimilar matches
     # https://github.com/dbca-wa/wastdr/issues/21
-    user_qa = generate_qa_users_report_w2(user_mapping, w2_yr)
+    user_qa = generate_qa_users_report_w2(user_mapping, w2_yr, w2_data)
     # Source data transformed into target format
     # odkc_tf = w2_as_wastd(odkc_ex, user_mapping),
     # Sites

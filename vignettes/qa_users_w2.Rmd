@@ -156,14 +156,34 @@ Your actions:
         lower dissimilarity measure (or even drop off the validation shortlist).
 
 ```{r user_table, echo=FALSE}
-a %>%
+validation_data <- 
+  a %>%
   pointblank::get_data_extracts() %>%
   magrittr::extract2(1) %>%
   dplyr::rowwise() %>% 
   # dplyr::mutate(active_at = get_user_area(odkc_ex, odkc_username)) %>% 
   dplyr::arrange(
     # active_at, 
-    -dist) %>% 
+    -dist)
+
+# Create missing users in WAStD
+# Run manually when necessary
+# 
+#  missing_users <- validation_data %>% 
+#   dplyr::select(legacy_userid) %>% 
+#   dplyr::arrange(legacy_userid) %>%
+#   dplyr::distinct(legacy_userid) %>% 
+#   dplyr::left_join(w2_data$persons, by = c("legacy_userid"="person_id")) %>% 
+#   dplyr::transmute(
+#     username = clean_name %>% wastdr::urlize() %>% stringr::str_replace_all("-", "_"),
+#     name = clean_name,
+#     # phone = mobile, # NA
+#     # email = clean_email, # NA
+#     role = glue::glue("{specialty} {comments}")
+#   )
+#  missing_users %>% wastdr::wastd_bulk_post("users", verbose = TRUE)
+
+validation_data %>% 
   gt::gt() %>%
   gt::fmt_markdown(columns = TRUE) %>%
   gt::cols_label(
