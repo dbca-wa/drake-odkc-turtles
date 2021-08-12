@@ -12,5 +12,17 @@ is used here to declare a dependency of this step to the reports being
 generated.}
 }
 \description{
-Upload all outputs to various SharePoint sites
+Refresh tokens:
+}
+\details{
+See https://github.com/Azure/Microsoft365R/blob/master/vignettes/auth.Rmd
+If token expires, run the next two lines by hand:
+
+options(microsoft365r_use_cli_app_id=TRUE)
+teams <- list_teams()
+
+Reset tokens:
+
+AzureAuth::clean_token_directory()
+AzureGraph::delete_graph_login(tenant="dbca")
 }

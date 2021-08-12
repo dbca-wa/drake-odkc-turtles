@@ -1,5 +1,18 @@
 #' Upload all outputs to various SharePoint sites
 #'
+#' Refresh tokens:
+#'
+#' See https://github.com/Azure/Microsoft365R/blob/master/vignettes/auth.Rmd
+#' If token expires, run the next two lines by hand:
+#'
+#' options(microsoft365r_use_cli_app_id=TRUE)
+#' teams <- list_teams()
+#'
+#' Reset tokens:
+#'
+#' AzureAuth::clean_token_directory()
+#' AzureGraph::delete_graph_login(tenant="dbca")
+#'
 #' @param wastd_reports The result from `generate_wastd_reports()`
 #'   is used here to declare a dependency of this step to the reports being
 #'   generated.
@@ -13,7 +26,13 @@ upload_to_sharepoint <- function(wastd_reports = NULL){
   library(Microsoft365R)
 
   # Trigger authentication
+  # See https://github.com/Azure/Microsoft365R/blob/master/vignettes/auth.Rmd
+  # If token expires, run the next two lines by hand:
+  # options(microsoft365r_use_cli_app_id=TRUE)
   teams <- list_teams()
+  # If tokens are stale:
+  # AzureAuth::clean_token_directory()
+  # AzureGraph::delete_graph_login(tenant="dbca")
 
   # Upload all files to internal group TurtleData
   dst <- get_todays_folder_sharepoint("TurtleData")
