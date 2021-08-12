@@ -1,0 +1,76 @@
+---
+title: "Report Title"
+author: "Report Author"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    fig_width: 10
+    fig_height: 6
+    code_folding: show
+    theme: lumen
+  pdf_document:
+    latex_engine: xelatex
+  word_document: default
+---
+
+```{r}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(fs)
+library(ruODK)
+
+ruODK::ru_setup(
+  pid=27,
+  tz = "Australia/Perth",
+  odkc_version = Sys.getenv("ODKC_TEST_VERSION"),
+  verbose = TRUE,
+  url = Sys.getenv("ODKC_TEST_URL"),
+  un = Sys.getenv("ODKC_TEST_UN"),
+  pw = Sys.getenv("ODKC_TEST_PW")
+)
+
+loc <- fs::path("media_plant_health")
+loc_media <- fs::path(loc, "media")
+fs::dir_create(loc)
+fs::dir_create(loc_media)
+
+dl_and_save <- function(fid, loc){
+  ruODK::odata_submission_get(
+    fid=fid, local_dir = loc, download=TRUE, wkt=TRUE) %>%
+    readr::write_csv(fs::path(loc, glue::glue(fid, ".csv")))
+}
+
+dl_and_save("build_Sick-Plants-0-1_1580445581", loc)
+dl_and_save("build_Vesta-0-1_1598262333", loc)
+dl_and_save("build_Vesta-0-2_1598430994", loc)
+dl_and_save("build_Vesta-0-2_1615456046", loc)
+dl_and_save("build_Vesta-GWW_1613399302", loc)
+dl_and_save("build_Vesta-GWW_1611913670", loc)
+
+# ft <- ruODK::odata_service_get(fid="build_OzCBI-forest-woodland_1614150793")
+# data <- ruODK::odata_submission_get(
+#   table = ft$url[1], 
+#   local_dir = loc, 
+#   wkt = TRUE
+# )
+# 
+# data_sub1 <- ruODK::odata_submission_get(
+#   table = ft$url[2], 
+#   local_dir = loc
+# ) %>%
+#   dplyr::left_join(
+#     data, 
+#     by = c("submissions_id" = "id")
+#   )
+# 
+# data_sub2 <- ruODK::odata_submission_get(
+#   table = ft$url[3], 
+#   local_dir = loc
+# ) %>%
+#   dplyr::left_join(
+#     data, 
+#     by = c("submissions_id" = "id")
+# )
+```

@@ -1,0 +1,107 @@
+---
+title: "Flora Quadrats"
+author: "Florian Mayer, DBCA"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    fig_width: 10
+    fig_height: 6
+    code_folding: show
+    theme: lumen
+  pdf_document:
+    latex_engine: xelatex
+  word_document: default
+---
+
+```{r}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(fs)
+library(ruODK)
+
+ruODK::ru_setup(
+  pid=3,
+  tz = "Australia/Perth",
+  odkc_version = Sys.getenv("ODKC_TEST_VERSION"),
+  verbose = TRUE,
+  url = Sys.getenv("ODKC_TEST_URL"),
+  un = Sys.getenv("ODKC_TEST_UN"),
+  pw = Sys.getenv("ODKC_TEST_PW")
+)
+
+loc <- fs::path("flora_quadrats")
+loc_media <- fs::path(loc, "media")
+fs::dir_create(loc)
+fs::dir_create(loc_media)
+
+fid <- "build_Flora-Quadrat-0-3_1559789150"
+ft <- ruODK::odata_service_get(fid=fid)
+data <- ruODK::odata_submission_get(
+  table = ft$url[1],
+  fid = fid,
+  local_dir = loc_media,
+  wkt = TRUE,
+  download = TRUE
+) %>%
+    readr::write_csv(fs::path(loc, glue::glue(fid, ".csv")))
+
+data_sub1 <- ruODK::odata_submission_get(
+  table = ft$url[2],
+  fid=fid,
+  local_dir = loc_media
+) %>%
+  dplyr::left_join(
+    data,
+    by = c("submissions_id" = "id")
+  ) %>%
+    readr::write_csv(fs::path(loc, glue::glue(fid, "_strata.csv")))
+
+
+data_sub2 <- ruODK::odata_submission_get(
+  table = ft$url[3],
+  fid=fid,
+  local_dir = loc_media
+) %>%
+  dplyr::left_join(
+    data,
+    by = c("submissions_id" = "id")
+)%>%
+    readr::write_csv(fs::path(loc, glue::glue(fid, "_taxa.csv")))
+
+
+fid <- "build_Flora-Quadrat-0-4_1586245110"
+ft <- ruODK::odata_service_get(fid=fid)
+data <- ruODK::odata_submission_get(
+  table = ft$url[1],
+  fid = fid,
+  local_dir = loc_media,
+  wkt = TRUE,
+  download = TRUE
+) %>%
+    readr::write_csv(fs::path(loc, glue::glue(fid, ".csv")))
+
+data_sub1 <- ruODK::odata_submission_get(
+  table = ft$url[2],
+  fid=fid,
+  local_dir = loc_media
+) %>%
+  dplyr::left_join(
+    data,
+    by = c("submissions_id" = "id")
+  ) %>%
+    readr::write_csv(fs::path(loc, glue::glue(fid, "_strata.csv")))
+
+
+data_sub2 <- ruODK::odata_submission_get(
+  table = ft$url[3],
+  fid=fid,
+  local_dir = loc_media
+) %>%
+  dplyr::left_join(
+    data,
+    by = c("submissions_id" = "id")
+)%>%
+    readr::write_csv(fs::path(loc, glue::glue(fid, "_taxa.csv")))
+```

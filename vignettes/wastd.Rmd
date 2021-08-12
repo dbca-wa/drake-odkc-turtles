@@ -15,7 +15,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 params:
-  area_name: 'Troughton Island'
+  area_name: 'Ningaloo'
 editor_options: 
   markdown: 
     wrap: 72
@@ -30,7 +30,21 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 options(rmarkdown.html_vignette.check_title = FALSE)
 library(wastdr)
 drake::loadd("wastd_data")
-rt <- . %>% reactable::reactable(filterable = T, sortable = T, searchable = T)
+rt <- . %>% 
+  reactable::reactable(
+    ., 
+    filterable = T, 
+    sortable = T, 
+    searchable = T
+  )
+rt_wastd <- . %>% 
+  reactable::reactable(
+    ., 
+    filterable = T, 
+    sortable = T, 
+    searchable = T,
+    columns = list(wastd = reactable::colDef(html=TRUE))
+  )
 ```
 
 ```{r prepare_export}
@@ -75,6 +89,7 @@ welcome [here](https://github.com/dbca-wa/wastdr/issues).
 
 ```{r export_data}
 x %>% wastdr::export_wastd_turtledata(outdir = fn, filename = zipfn)
+# readRDS(fs::path(fn, "wastd_data.rds")) to restore x
 ```
 
 # Data
@@ -365,6 +380,30 @@ survey_season_stats %>%
   readr::write_csv(here::here(fn, "survey_season_stats.csv"))
 
 survey_season_stats %>% rt
+```
+
+## QA: Duplicate production surveys
+
+The following table shows days and sites for which more than one production survey
+exists in WAStD.
+Typically, only one of them should be a "production" survey, 
+and all other surveys could be marked and closed as duplicates.
+
+```{r}
+x$surveys %>% 
+  wastdr::filter_realsurveys() %>% 
+  dplyr::group_by(season, calendar_date_awst, site_name, site_id) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(-season, -n) %>%
+  dplyr::filter(n>1) %>% 
+  dplyr::mutate(
+    wastd=glue::glue(
+      "<a href=\"https://wastd.dbca.wa.gov.au/observations/surveys/",
+      "?site={site_id}&survey_date={calendar_date_awst}\">QA surveys</a>"
+    )
+  ) %>% 
+  rt_wastd
 ```
 
 ## Number of volunteers each year

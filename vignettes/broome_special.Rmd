@@ -1,0 +1,140 @@
+---
+title: "WA Sea Turtle Database (WAStD) analysis - Broome special"
+date: "`r Sys.time()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    fig_width: 10
+    fig_height: 6
+    code_folding: hide
+    theme: lumen
+vignette: >
+  %\VignetteIndexEntry{wastd}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+params:
+  area_name: 'Cable Beach Broome'
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{css, echo=FALSE}
+body, .main-container {max-width: 100%; margin-left: auto; margin-right: auto;}
+```
+
+```{r setup}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+options(rmarkdown.html_vignette.check_title = FALSE)
+library(wastdr)
+# install.packages('leaflet.extras')
+library(leaflet.extras)
+drake::loadd("wastd_data")
+rt <- . %>% reactable::reactable(filterable = T, sortable = T, searchable = T)
+
+x <- wastd_data %>% 
+  wastdr::filter_wastd_turtledata(area_name = params$area_name)
+```
+
+```{r prepare_export}
+zipfn <- wastdr::urlize(params$area_name)
+fn <- here::here("inst/reports", zipfn)
+if (!fs::file_exists(fn)) {
+  "Creating dir {fn}" %>% glue::glue() %>% wastdr::wastdr_msg_info()
+  fs::dir_create(fn, recurse = TRUE)
+}
+```
+
+# Turtle Nests last season 
+A eat map of the turtle nests along Cable Beach last season.
+
+* All species
+* Season 2020-21
+* Location Cable Beach, all sectors
+
+### All nesting data
+Including and tallied per area (Broome), seasons (all) and species (all).
+This is to get an overview of the data available.
+
+```{r nesting_overview}
+x$tracks %>% 
+  wastdr::nesting_type_by_area_season_species() %>% 
+  rt
+```
+
+### Nests of season 2020-21
+Only tracks with nests are shown for only the current season (2020-21).
+Nests are shown as clusters, which expand when zoomed in or clicked upon.
+These clusters are not a heatmap, and resolve down to the invividual nests.
+
+```{r nesting_map_2020}
+nests <- x$tracks %>% 
+  filter_wastd_season(2020) %>% 
+  filter_realspecies() %>% 
+  dplyr::filter(nest_type == "successful-crawl")
+  
+# map2020 <- nests %>% map_tracks(cluster = F, sites = x$sites)
+# leaflet.extras::addHeatmap(map2020, data = nests)
+
+nests %>% 
+  map_tracks(cluster = F, sites = x$sites) %>%
+  leaflet.extras::addHeatmap(data = nests)
+```
+```{r, fig.height=7}
+nests <- x$tracks %>% 
+  filter_realspecies() %>% 
+  dplyr::filter(nest_type == "successful-crawl") %>% 
+  dplyr::mutate(doy = as.numeric(format(datetime, "%j")))
+
+library(ggplot2)
+library(ggTimeSeries)
+
+ggplot_calendar_heatmap(nests, "datetime", "latitude") +
+  scale_fill_continuous(low = 'green', high = 'red') + 
+  facet_wrap(facets = season ~ ., ncol=1)
+
+ggplot(nests, aes(doy, latitude, colour = species)) +
+  geom_point() +
+  facet_wrap(facets = season ~ ., ncol=1)
+```
+
+
+### Nests of season 2019-20
+Only tracks with nests are shown for only the season of 2019-20.
+Nests are shown as clusters, which expand when zoomed in or clicked upon.
+
+```{r nesting_map_2019}
+x$tracks %>% 
+  filter_wastd_season(2019) %>% 
+  filter_realspecies() %>% 
+  dplyr::filter(nest_type == "successful-crawl") %>% 
+  map_tracks(cluster = T, sites = x$sites)
+```
+
+
+### Nests of season 2018-19
+Only tracks with nests are shown for only the season of 2018-19.
+Nests are shown as clusters, which expand when zoomed in or clicked upon.
+
+```{r nesting_map_2018}
+x$tracks %>% 
+  filter_wastd_season(2018) %>% 
+  filter_realspecies() %>% 
+  dplyr::filter(nest_type == "successful-crawl") %>% 
+  map_tracks(cluster = T, sites = x$sites)
+```
+
+
+### Nests of season 2017-18
+Only tracks with nests are shown for only the season of 2017-18.
+Nests are shown as clusters, which expand when zoomed in or clicked upon.
+
+```{r nesting_map_2017}
+x$tracks %>% 
+  filter_wastd_season(2017) %>% 
+  filter_realspecies() %>% 
+  dplyr::filter(nest_type == "successful-crawl") %>% 
+  map_tracks(cluster = T, sites = x$sites)
+```

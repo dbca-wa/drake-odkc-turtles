@@ -1,0 +1,71 @@
+---
+title: "Tagged Turtle Inquiry"
+author: "Florian Mayer, DBCA"
+date: "`r Sys.Date()`"
+output: html_document
+params:
+  flipper_tag: "WB20243"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(wastdr)
+library(etlTurtleNesting)
+load(here::here("data/w2.RData"))
+```
+
+Data current as of `r wamtram_data$downloaded_on`.
+
+## History of Flipper Tag `r params$flipper_tag`
+```{r}
+obs_ft <- wamtram_data$obs_flipper_tags %>% 
+  dplyr::filter(tag_name==params$flipper_tag) 
+
+obs_ft %>% reactable::reactable()
+```
+
+## Encounters involving Flipper Tag `r params$flipper_tag`
+```{r}
+obs_ids <- obs_ft %>% dplyr::select(observation_id)
+
+turtle_enc <- wamtram_data$enc %>% 
+  dplyr::right_join(obs_ids, by="observation_id") 
+
+turtle_enc %>% reactable::reactable()
+```
+
+## Reconstructed record of encountered turtle
+```{r}
+turtle_ids <- turtle_enc %>% dplyr::select(turtle_id)
+
+turtle_records <- wamtram_data$reconstructed_turtles %>% 
+  dplyr::right_join(turtle_ids, by="turtle_id")
+  
+turtle_records %>% reactable::reactable()
+```
+
+## All encounters with observed turtle(s)
+```{r}
+all_enc <- wamtram_data$enc %>% 
+  dplyr::right_join(turtle_ids, by="turtle_id")
+
+all_enc %>% reactable::reactable()
+
+leaflet::leaflet(width = 800, height = 600) %>%
+    leaflet::addProviderTiles("Esri.WorldImagery", group = "Aerial") %>%
+    leaflet::addProviderTiles("OpenStreetMap.Mapnik", group = "Place names") %>%
+    leaflet::clearBounds(.) %>%
+        leaflet::addAwesomeMarkers(
+          data = all_enc,
+          lng = ~longitude, lat = ~latitude,
+          icon = leaflet::makeAwesomeIcon(
+            text = ~species_code,
+            markerColor = "red"
+          ),
+          label = ~ glue::glue("{species_code} {observation_datetime_gmt08}"),
+          popup = ~ glue::glue("{species_code} {observation_datetime_gmt08}")
+        ) %>% 
+    leaflet::addLayersControl(
+      baseGroups = c("Aerial", "Place names")
+    )
+```

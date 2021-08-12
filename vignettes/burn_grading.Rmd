@@ -1,0 +1,55 @@
+---
+title: "Burn Grading"
+author: "Florian Mayer, DBCA"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    fig_width: 10
+    fig_height: 6
+    code_folding: show
+    theme: lumen
+  pdf_document:
+    latex_engine: xelatex
+  word_document: default
+---
+
+```{r}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(fs)
+library(glue)
+library(ruODK)
+
+ruODK::ru_setup(
+  pid=27,
+  tz = "Australia/Perth",
+  odkc_version = Sys.getenv("ODKC_TEST_VERSION"),
+  verbose = TRUE,
+  url = Sys.getenv("ODKC_TEST_URL"),
+  un = Sys.getenv("ODKC_TEST_UN"),
+  pw = Sys.getenv("ODKC_TEST_PW")
+)
+
+loc <- fs::path("burn_grading")
+loc_media <- fs::path(loc, "media")
+fs::dir_create(loc)
+fs::dir_create(loc_media)
+
+dl_and_save <- function(fid, loc, loc_media){
+  ruODK::odata_submission_get(
+    fid=fid, local_dir = loc_media, download=TRUE, wkt=TRUE) %>%
+    readr::write_csv(fs::path(loc, glue::glue(fid, ".csv")))
+}
+
+dl_and_save("build_Burn-Grading-0-2_1584663066", loc, loc_media)
+dl_and_save("build_Burn-Grading-0-2_1584343604", loc, loc_media)
+dl_and_save("build_Burn-Grading-0-3_1603767662", loc, loc_media)
+dl_and_save("build_Burn-Grading-0-3_1590127196", loc, loc_media)
+dl_and_save("build_Burn-Grading-Heath-0-1_1584347291", loc, loc_media)
+dl_and_save("build_Burn-Grading-Heath-0-3_1590126413", loc, loc_media)
+dl_and_save("build_GeoCBI-original_1603767153", loc, loc_media)
+dl_and_save("build_Heath-OzCBI_1614150395", loc, loc_media)
+dl_and_save("build_OzCBI-forest-woodland_1614150793", loc, loc_media)
+```
