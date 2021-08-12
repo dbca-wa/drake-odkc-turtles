@@ -1,4 +1,4 @@
-#' Top-level Turtle TAgging data import Drake Plan
+#' Top-level Turtle Tagging data import Drake Plan
 #'
 #' * Download all turtle tagging data (no attachments)
 #' * Load existing nesting records from WAStD: load only a minimal set of
@@ -53,8 +53,8 @@ wamtram <- function() {
 
     # ------------------------------------------------------------------------ #
     # EXTRACT
+    # save(w2_data, file="data/w2.RData", compress="xz")
     # load("data/w2.RData")
-    # w2_data <- wamtram_data
     w2_data = wastdr::download_w2_data(
       ord = c("YmdHMS", "Ymd"),
       tz = "Australia/Perth",
@@ -75,6 +75,10 @@ wamtram <- function() {
     # QA Reports: inspect user mappings - flag dissimilar matches
     # https://github.com/dbca-wa/wastdr/issues/21
     user_qa = generate_qa_users_report_w2(user_mapping, w2_yr, w2_data)
+
+    # Resume:
+    # load("data/w2dev.RData")
+    #
     # Source data transformed into target format
     # odkc_tf = w2_as_wastd(odkc_ex, user_mapping),
     # Sites

@@ -2,7 +2,7 @@
 % Please edit documentation in R/wamtram.R
 \name{wamtram}
 \alias{wamtram}
-\title{Top-level Turtle TAgging data import Drake Plan}
+\title{Top-level Turtle Tagging data import Drake Plan}
 \usage{
 wamtram()
 }
