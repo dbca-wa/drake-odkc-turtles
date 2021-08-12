@@ -31,23 +31,23 @@ ruODK::ru_setup(
   pw = Sys.getenv("ODKC_TEST_PW")
 )
 
-loc <- fs::path("media_plant_health")
+loc <- fs::path("plant_health")
 loc_media <- fs::path(loc, "media")
 fs::dir_create(loc)
 fs::dir_create(loc_media)
 
-dl_and_save <- function(fid, loc){
+dl_and_save <- function(fid, loc, loc_media){
   ruODK::odata_submission_get(
-    fid=fid, local_dir = loc, download=TRUE, wkt=TRUE) %>%
+    fid=fid, local_dir = loc_media, download=TRUE, wkt=TRUE) %>%
     readr::write_csv(fs::path(loc, glue::glue(fid, ".csv")))
 }
 
-dl_and_save("build_Sick-Plants-0-1_1580445581", loc)
-dl_and_save("build_Vesta-0-1_1598262333", loc)
-dl_and_save("build_Vesta-0-2_1598430994", loc)
-dl_and_save("build_Vesta-0-2_1615456046", loc)
-dl_and_save("build_Vesta-GWW_1613399302", loc)
-dl_and_save("build_Vesta-GWW_1611913670", loc)
+dl_and_save("build_Sick-Plants-0-1_1580445581", loc, loc_media)
+dl_and_save("build_Vesta-0-1_1598262333", loc, loc_media)
+dl_and_save("build_Vesta-0-2_1598430994", loc, loc_media)
+dl_and_save("build_Vesta-0-2_1615456046", loc, loc_media)
+dl_and_save("build_Vesta-GWW_1613399302", loc, loc_media)
+dl_and_save("build_Vesta-GWW_1611913670", loc, loc_media)
 
 # ft <- ruODK::odata_service_get(fid="build_OzCBI-forest-woodland_1614150793")
 # data <- ruODK::odata_submission_get(
