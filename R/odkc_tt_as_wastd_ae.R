@@ -53,8 +53,8 @@ odkc_tt_as_wastd_ae <- function(data,
         "{observation_end_time} in capture mode '{encounter_capture_mode}'.\n",
         "Record submitted on {system_submission_date} ",
         "by {system_submitter_name} from device {device_id}.\n",
-        "Record initiated at {start_location_latitude} ",
-        "{start_location_longitude}.\n",
+        "Record initiated at {start_geopoint_latitude} ",
+        "{start_geopoint_longitude}.\n",
         "Photos expected: {system_attachments_expected}, ",
         "present: {system_attachments_present}.\n",
         "Nesting success: {wastdr::humanize(nest_observed_nesting_success)}.\n",
@@ -99,14 +99,14 @@ odkc_tt_as_wastd_ae <- function(data,
 
         # Fallback: start_geolocation from metadata
         TRUE ~ glue::glue(
-          "POINT ({start_location_longitude} {start_location_latitude})"
+          "POINT ({start_geopoint_longitude} {start_geopoint_latitude})"
         )
       ),
       location_accuracy = "10",
       location_accuracy_m = dplyr::case_when(
         !is.na(realtime_nest_location_accuracy) ~ as.numeric(realtime_nest_location_accuracy),
         !is.na(manual_nest_location_map_accuracy) ~ as.numeric(manual_nest_location_map_accuracy),
-        TRUE ~ as.numeric(start_location_accuracy)
+        TRUE ~ as.numeric(start_geopoint_accuracy)
       ),
       taxon = "Cheloniidae",
       species = nest_species %>% tidyr::replace_na("na"),
