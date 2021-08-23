@@ -7,12 +7,9 @@
 #' }
 generate_qa_users_report <- function(odkc_ex, user_mapping, year){
   wastdr::wastdr_msg_info(glue::glue("Rendering QA for users in {year}..."))
-  fn <- here::here("vignettes", glue::glue("qa_users{year}.html"))
-  site_qa  = rmarkdown::render(
-    knitr_in("vignettes/qa_users.Rmd"),
-    output_file = fn,
-    quiet=FALSE
-  )
-  wastdr::wastdr_msg_success(glue::glue("Report {fn} copied to inst/reports."))
-  fs::file_copy(fn, here::here("inst/reports/"), overwrite = TRUE)
+  fn_out <- here::here("vignettes", glue::glue("qa_users{year}.html"))
+  fn_in <- here::here("vignettes", "qa_users.Rmd")
+  user_qa_report  = rmarkdown::render(fn_in, output_file = fn_out, quiet=FALSE)
+  wastdr::wastdr_msg_success(glue::glue("Report {fn_out} copied to inst/reports."))
+  fs::file_copy(fn_out, here::here("inst/reports/"), overwrite = TRUE)
 }
