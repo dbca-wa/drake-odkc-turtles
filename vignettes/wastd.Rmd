@@ -35,15 +35,8 @@ rt <- . %>%
     ., 
     filterable = T, 
     sortable = T, 
-    searchable = T
-  )
-rt_wastd <- . %>% 
-  reactable::reactable(
-    ., 
-    filterable = T, 
-    sortable = T, 
     searchable = T,
-    columns = list(wastd = reactable::colDef(html=TRUE))
+    defaultColDef = colDef(html = TRUE)
   )
 ```
 
@@ -390,20 +383,7 @@ Typically, only one of them should be a "production" survey,
 and all other surveys could be marked and closed as duplicates.
 
 ```{r}
-x$surveys %>% 
-  wastdr::filter_realsurveys() %>% 
-  dplyr::group_by(season, calendar_date_awst, site_name, site_id) %>% 
-  dplyr::tally() %>% 
-  dplyr::ungroup() %>% 
-  dplyr::arrange(-season, -n) %>%
-  dplyr::filter(n>1) %>% 
-  dplyr::mutate(
-    wastd=glue::glue(
-      "<a href=\"https://wastd.dbca.wa.gov.au/observations/surveys/",
-      "?site={site_id}&survey_date={calendar_date_awst}\">QA surveys</a>"
-    )
-  ) %>% 
-  rt_wastd
+x$surveys %>% wastdr::duplicate_surveys() %>% rt
 ```
 
 ## Number of volunteers each year

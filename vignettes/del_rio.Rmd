@@ -36,13 +36,6 @@ rt <- . %>%
     ., 
     filterable = T, 
     sortable = T, 
-    searchable = T
-  )
-rt_wastd <- . %>% 
-  reactable::reactable(
-    ., 
-    filterable = T, 
-    sortable = T, 
     searchable = T,
     columns = list(wastd = reactable::colDef(html=TRUE))
   )
@@ -54,19 +47,21 @@ if (!fs::file_exists(fn)) {
   fs::dir_create(fn, recurse = TRUE)
 }
 
-placename <- "Delambre"
-prefix <- "DEL"
+pn <- params$area_name
+pf <- "DEL"
+ld <- here::here("inst/reports/delambre-island")
 
 x <- wastd_data %>% 
   wastdr::filter_wastd_turtledata(area_name = params$area_name)
 ```
 
 # Data
-In this report, we present combined Turtle Monitoring data from WAStD and
-filter the data to the location `r params$area_name`.
 
-The data was downloaded from WAStD on `r wastd_data$downloaded_on` and reflects
-all QA operations up to this date.
+In this report, we present combined Turtle Monitoring data from WAStD
+and filter the data to the location `r params$area_name`.
+
+The data was downloaded from WAStD on `r wastd_data$downloaded_on` and
+reflects all QA operations up to this date.
 
 # Survey effort
 
@@ -79,47 +74,103 @@ x$surveys %>%
   ) %>% 
   gt::tab_header("Multi-season survey stats")
 
-x$surveys %>%
-      wastdr::surveys_per_site_name_and_date(.) %>%
-      ggTimeSeries::ggplot_calendar_heatmap("turtle_date", "n") +
-      ggplot2::scale_fill_binned(low = "green", high = "red", ) +
-      ggplot2::facet_grid(rows = ggplot2::vars(Year)) +
-      ggplot2::ggtitle(glue::glue("Survey effort at {placename}")) +
-      ggplot2::xlab(NULL) + ggplot2::ylab(NULL) +
-      ggplot2::theme_classic() 
+x$surveys %>% surveys_per_site_name_and_date() %>% rt
+x$surveys %>% survey_hours_per_site_name_and_date() %>% rt
+x$surveys %>% survey_hours_per_person() %>% rt
+x$surveys %>% list_survey_count()
+x$surveys %>% plot_survey_count(placename = pl, prefix = pr, export = FALSE)
+x$surveys %>% list_survey_effort()
+x$surveys %>% plot_survey_effort(placename = pl, prefix = pr, export = FALSE)
+x$surveys %>% survey_hours_heatmap(placename = pl, prefix = pr, export = FALSE)
+x$surveys %>% survey_count_heatmap(placename = pl, prefix = pr, export = FALSE)
+x$surveys %>% survey_season_stats() %>% rt
+x$surveys %>% survey_season_site_stats() %>% rt
+x$surveys %>% survey_show_detail() %>% rt
 ```
+
 # Nesting
 
+## Season overview
+```{r nesting_overview}
+x %>% wastdr::summarise_wastd_data_per_day_site() %>% rt
+# visualise above
+# same but group by season, not day
+```
+
+<!-- SFO https://github.com/dbca-wa/wastd/issues/177
+
+TABLE:
+
+-   Total, mean, SD and range number of processed turtles
+-   Total, mean, SD and range number of unique individuals
+-   Total, mean, SD and range number of new turtles \* Total, mean, SD
+    and range number of remigrants
+-   Mean, SD, range of number of missed turtles per night, and
+    percentage of missed turtles per night (compared to number of
+    processed turtles)
+-   Total, mean, SD and range number of nests (need to discuss
+    methodology to QA data to identify nests)
+-   Total, mean, SD and range number of false crawls
+-   mean, SD and range nesting success
+-   keep figure “Number of processed turtles per day” but add number of missed turtles per day to the figure, staked histograms
+-   add figure “Number of new and remigrant turtles per day” : show the number of new turtles and remigrants each day (unique sighting, not observations)
+-   add figure “Nesting success”: show the number of false crawls and nests each day + dashed line showing the mean
+
+Inter-nesting interval and clutch frequency
+
+TABLE:
+
+-   mean, SD, range of inter-nesting interval in days + number of animals
+-   mean, SD, range of clutch frequency
+-   hide figure “nesting intervals”
+-   add figure “Clutch Frequency”: show estimated number of turtles that lay 1 clutch, 2 clutches, 3 clutches, etc
+ -->
+ 
 ## Total turtles per night
 
 ## Nesting females
 
 ## Processed vs missed
-Proportion of processed vs missed turtles
-* Time series: y=number, x=date, group=processed/missed
-* Time series: y=proportion of processed, x=season
+
+Proportion of processed vs missed turtles \* Time series: y=number,
+x=date, group=processed/missed \* Time series: y=proportion of
+processed, x=season
 
 ## Recaptured vs new
 
+## Remigrants
+-   Add figure “remigration interval”: show the number of remigrants coming back after 1,2,3, 4+ years
+-   Add text about remigrant turtles coming for other rookeries
+
 ## Morphometrics
+-   TABLE with mean, SD, range for CCl, CCW and weight
 
 ## Nesting success
 
 ## Hatching and emergence success
 
-## Sand temperatures
+Replace “Hatching and emergence success” by “Incubation success and hatchling production”
+make sure tables fit on landscape A4 format
+keep table
+add map showing locations of hatched nests throughout the season
+add map showing location of excavated nests and their hatching success. Hatching success can be shown in categories
+add histogram showing proportion of nests in each hatching success categories
 
+
+## Sand temperatures
 
 # Connectivity
 
-
 ## Connections to foraging grounds
+
 ### Tag recoveries
+
 Tags from Delambre rookery found elsewhere (individual)
 
 ### Satellite tracking
 
 ## Pressures and Threats
-### Injuries of tagged turtles
-### Predation and Disturbance
 
+### Injuries of tagged turtles
+
+### Predation and Disturbance
