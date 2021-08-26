@@ -30,14 +30,104 @@ body, .main-container {max-width: 100%; margin-left: auto; margin-right: auto;}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 options(rmarkdown.html_vignette.check_title = FALSE)
 library(wastdr)
+
+# WAStD data from ETL
 drake::loadd("wastd_data")
+
+# WAMTRAM data from manual export
+# https://dpaw.sharepoint.com/teams/TurtlesRioTinto/Shared%20Documents/Forms/AllItems.aspx?viewid=737abde6%2D72b7%2D4293%2D92d3%2D4e1db0bfaf3a&id=%2Fteams%2FTurtlesRioTinto%2FShared%20Documents%2FGeneral%2F2021%2D03%2D26%20DEL%20and%20WPTP%2FTagging%20data%20export%20%2D%20new%20format
+# data export new format saved to data/wamtram.csv
+species_lookup <- tibble::tribble(
+  ~ species_code, ~ species,
+  "HK", "eretmochelys-imbricata",
+  "FB", "natator-depressus",
+  "LB", "dermochelys-coriacea", 
+  "GN", "chelonia-mydas"
+) 
+
+w2 <- here::here("data/wamtram.csv") %>% 
+  readr::read_csv() %>% 
+  janitor::clean_names() %>% 
+  dplyr::left_join(species_lookup, by="species_code") %>% 
+  dplyr::mutate(
+    o_time = observed_time %>% tidyr::replace_na("00:00:00") %>% as.character(),
+    o_datetime = glue::glue("{observation_date} {o_time} +08:00"),
+    encounter_datetime_utc = lubridate::parse_date_time(
+      o_datetime, 
+      orders = c("dmYHMSz", "dmYz"), 
+      tz="UTC"
+      ) %>% lubridate::with_tz("UTC")
+  ) %>% 
+  wastdr::add_dates(date_col = "encounter_datetime_utc", parse_date = FALSE)
+
+# Verify that dates are correct:
+# w2 %>% 
+#   dplyr::select(
+#     observation_date, 
+#     observed_time, 
+#     o_time,
+#     datetime, # same as encounter_datetime_utc
+#     encounter_datetime_utc, 
+#     calendar_date_awst, 
+#     turtle_date) %>% 
+#   View()
+#   
+# R> w2$datetime[[1]]
+# [1] "1987-11-25 05:18:00 UTC"
+# R> w2$encounter_datetime_utc[[1]] %>% lubridate::with_tz("Australia/Perth")
+# [1] "1987-11-25 13:18:00 AWST"
+
+# cols(
+#   TURTLE_ID = col_double(),
+#   SPECIES_CODE = col_character(),
+#   IDENTIFICATION_CONFIDENCE = col_character(),
+#   SEX = col_logical(),
+#   TURTLE_STATUS = col_character(),
+#   OBSERVATION_ID = col_double(),
+#   OBSERVATION_STATUS = col_character(),
+#   TAG_1 = col_character(),
+#   TAG_2 = col_character(),
+#   TAG_3 = col_character(),
+#   TAG_4 = col_character(),
+#   PIT_TAGS = col_character(),
+#   OTHER_IDENTIFICATION = col_character(),
+#   LOCATION_CODE = col_character(),
+#   OBSERVATION_DATE = col_character(),
+#   OBSERVED_TIME = col_time(format = ""),
+#   OBSERVED_LOCATION_CODE = col_character(),
+#   PLACE_CODE = col_character(),
+#   ACTIVITY_CODE = col_character(),
+#   BEACH_POSITION_CODE = col_character(),
+#   NESTING = col_character(),
+#   CLUTCH_COMPLETED = col_character(),
+#   NUMBER_OF_EGGS = col_double(),
+#   EGG_COUNT_METHOD = col_character(),
+#   COMMENTS = col_character(),
+#   CCL = col_double(),
+#   CCW = col_double(),
+#   DATUM_CODE = col_character(),
+#   LATITUDE = col_double(),
+#   LONGITUDE = col_double(),
+#   LATITUDE_DEGREES = col_logical(),
+#   LATITUDE_MINUTES = col_logical(),
+#   LATITUDE_SECONDS = col_logical(),
+#   LONGITUDE_DEGREES = col_logical(),
+#   LONGITUDE_MINUTES = col_logical(),
+#   LONGITUDE_SECONDS = col_logical(),
+#   ZONE = col_double(),
+#   EASTING = col_double(),
+#   NORTHING = col_double(),
+#   DAMAGE = col_character()
+# )
+
+
 rt <- . %>% 
   reactable::reactable(
     ., 
     filterable = T, 
     sortable = T, 
     searchable = T,
-    columns = list(wastd = reactable::colDef(html=TRUE))
+    defaultColDef = reactable::colDef(html = TRUE)
   )
 
 zipfn <- wastdr::urlize(params$area_name)
@@ -57,44 +147,108 @@ x <- wastd_data %>%
 
 # Data
 
-In this report, we present combined Turtle Monitoring data from WAStD
-and filter the data to the location `r params$area_name`.
+In this report, we present combined Turtle Monitoring data from WAStD (Turtle
+Nesting Census, "tracks") and the tagging database WAMTRAM2 (Turtle Tagging,
+"tagging") and filter the data to the location `r params$area_name`.
 
-The data was downloaded from WAStD on `r wastd_data$downloaded_on` and
+The WAStD data was downloaded on `r wastd_data$downloaded_on` and
 reflects all QA operations up to this date.
 
+The WAMTRAM2 data was exported on 26 Feb 2021.
+
 # Survey effort
+Surveys are calculated from tracks.
 
 ```{r survey_effort}
+# Season stats for whole area
+# x$surveys %>% survey_season_stats() %>% rt
+
+# Season stats for whole area, split by sites
+# x$surveys %>% survey_season_site_stats() %>% rt
+
+# Above but with more formatting:
 x$surveys %>% 
-  wastdr::survey_season_site_stats() %>% 
+  wastdr::survey_season_stats() %>% 
   gt::gt(
     groupname_col=NULL,
     caption = "Seasonal survey stats"
   ) %>% 
-  gt::tab_header("Multi-season survey stats")
+  gt::tab_header(glue::glue("Survey stats for {pn}")) %>% 
+  gt::cols_label(
+    season = "Season",
+    first_day = "First day",
+    last_day = "Last day",
+    season_length_days = "Season length (days)",
+    number_surveys = "Number of surveys",
+    hours_surveyed = "Hours surveyed"
+  )
 
-x$surveys %>% surveys_per_site_name_and_date() %>% rt
-x$surveys %>% survey_hours_per_site_name_and_date() %>% rt
-x$surveys %>% survey_hours_per_person() %>% rt
-x$surveys %>% list_survey_count()
-x$surveys %>% plot_survey_count(placename = pl, prefix = pr, export = FALSE)
-x$surveys %>% list_survey_effort()
-x$surveys %>% plot_survey_effort(placename = pl, prefix = pr, export = FALSE)
-x$surveys %>% survey_hours_heatmap(placename = pl, prefix = pr, export = FALSE)
-x$surveys %>% survey_count_heatmap(placename = pl, prefix = pr, export = FALSE)
-x$surveys %>% survey_season_stats() %>% rt
-x$surveys %>% survey_season_site_stats() %>% rt
-x$surveys %>% survey_show_detail() %>% rt
+# List individual surveys with links to WAStD
+# x$surveys %>% survey_show_detail() %>% rt
+
+# Survey effort: numbers
+# x$surveys %>% surveys_per_site_name_and_date() %>% rt
+# x$surveys %>% list_survey_count()
+# x$surveys %>% survey_hours_per_site_name_and_date() %>% rt
+# x$surveys %>% list_survey_effort()
+# x$surveys %>% survey_hours_per_person() %>% rt
+
+# Survey effort: figures
+x$surveys %>% plot_survey_count(placename = pn, prefix = pf, export = FALSE)
+x$surveys %>% plot_survey_effort(placename = pn, prefix = pf, export = FALSE)
+# Heatmaps break on calendar years
+# x$surveys %>% survey_count_heatmap(placename = pn, prefix = pf, export = FALSE)
+# x$surveys %>% survey_hours_heatmap(placename = pn, prefix = pf, export = FALSE)
 ```
 
 # Nesting
 
 ## Season overview
-```{r nesting_overview}
-x %>% wastdr::summarise_wastd_data_per_day_site() %>% rt
-# visualise above
-# same but group by season, not day
+
+Nesting census (tracks) data is shown.
+The map shows the lower GPS accuracy of the older devices used in 2017 and 2018.
+```{r tracks_map}
+x$tracks %>% 
+  wastdr::map_tracks(sites = x$sites)
+# TODO: show tagging in same map
+```
+
+The season summary provides season totals for each species, broken into the 
+different levels of nesting success that were captured.
+See also heading "Nesting Success".
+
+```{r season_summary}
+x$tracks %>% 
+  wastdr::filter_realspecies() %>% 
+  wastdr::nesting_type_by_season_species() %>% 
+  rt()
+# TODO add tagging numbers
+```
+
+
+```{r}
+# 
+# nest_type_by_day <- x$tracks %>% 
+#   wastdr::filter_realspecies() %>% 
+#   dplyr::group_by(site_name, season, calendar_date_awst, nest_type) %>% 
+#   dplyr::tally() %>% 
+#   dplyr::ungroup()
+#  
+# ggplot2::ggplot(
+#   data = nest_type_by_day,
+#   mapping = ggplot2::aes(
+#     x = tdate_as_fdate(calendar_date_awst), 
+#     colour = nest_type
+#   ) 
+# ) +
+#   ggplot2::geom_bar(ggplot2::aes(y = n),
+#                     stat = "identity",
+#                     color = "black",
+#                     fill = "grey"
+#   ) +
+#   ggplot2::facet_grid(facets = ggplot2::vars(season), scales = "free_x") +
+#   ggplot2::scale_x_continuous(labels = function(x) {fdate_as_tdate(x)}) +
+#   NULL
 ```
 
 <!-- SFO https://github.com/dbca-wa/wastd/issues/177
@@ -128,15 +282,98 @@ TABLE:
  
 ## Total turtles per night
 
+We calculate the **total number of turtles per night** as the sum of emergences 
+from the following observations:
+
+* nesting females tagged at night (from WAMTRAM tagging)
+* tracks of turtles missed during tagging, tracks encountered during tagging 
+  (from WAStD tracks, tracks of type "false-crawls" or "successful-crawls" with 
+  track age "missed just now")
+* tracks of turtles missed during tagging, tracks encountered during a nesting
+  census beach walk the next morning 
+  (from WAStD tracks, tracks of type "false-crawls" or "successful-crawls" with 
+  track age "new, made in past 24 hours")
+  
+We exclude hatched nests, incubating nests without a track (older than a day),
+and body pits (which can be recorded, but are of little value).
+
+We bin the numbers for tallying by the "turtle date", which is the 
+calendar date of the tagging night and extends to encounters past midnight
+and on the next morning. Turtle date rolls over at noon. 
+Turtle date bins all observations following one nesting night under one date.
+
+#### Caveats
+The same turtle can emerge multiple times per night. 
+E.g., a turtle could emerge one or several times for an unsuccessful nesting 
+attempt before being processed after a successful one.
+Another turtle could emerge one or several times and evade tagging altogether.
+In either scenario, one turtle would contribute several emergences to a night's
+tally.
+Therefore, the numbers presented here are an **optimistic estimate** of total 
+turtle numbers.
+  
+
+```{r total_turtles, fig.height=14}
+missed_turtles <- x$tracks %>% 
+  wastdr::filter_realspecies() %>% 
+  dplyr::filter(
+    nest_type %in% c(
+      "successful-crawl", 
+      "false-crawl", 
+      "track-unsure", 
+      "track-not-assessed")
+  ) %>% 
+  dplyr::group_by(season, site_name, turtle_date, species) %>% 
+  dplyr::tally(name = "missed") %>% 
+  dplyr::ungroup() 
+
+tagged_turtles <- w2 %>% 
+  dplyr::group_by(season, turtle_date, species) %>% 
+  dplyr::tally(name = "tagged") %>% 
+  dplyr::ungroup()
+
+total_turtles <- dplyr::full_join(
+  missed_turtles,
+  tagged_turtles,
+  by=c("species", "season", "turtle_date")
+)
+
+# TODO below as time series plot, facets=season
+total_turtles %>% rt()
+
+ggplot2::ggplot(
+  data = total_turtles,
+  mapping = ggplot2::aes(x = tdate_as_fdate(turtle_date))
+) +
+  ggplot2::geom_bar(ggplot2::aes(y = missed),
+                    stat = "identity",
+                    color = "black",
+                    fill = "black"
+  ) +
+    ggplot2::geom_bar(ggplot2::aes(y = tagged),
+                    stat = "identity",
+                    color = "grey",
+                    fill = "grey"
+  ) +
+  ggplot2::facet_grid(facets = ggplot2::vars(season), scales = "free_x") +
+  ggplot2::scale_x_continuous(labels = function(x) {fdate_as_tdate(x)}) +
+  NULL
+```
+
+
 ## Nesting females
 
 ## Processed vs missed
 
-Proportion of processed vs missed turtles \* Time series: y=number,
-x=date, group=processed/missed \* Time series: y=proportion of
-processed, x=season
+Proportion of processed vs missed turtles 
+Time series: y=number, x=date, group=processed/missed 
+Time series: facet=season, x=day, y=proportion of processed
 
 ## Recaptured vs new
+```{r recaptured}
+# w2$turtle_status %>% unique() # "T" "Q" "N" "P" NA  "A" "R"
+```
+
 
 ## Remigrants
 -   Add figure “remigration interval”: show the number of remigrants coming back after 1,2,3, 4+ years
@@ -144,17 +381,66 @@ processed, x=season
 
 ## Morphometrics
 -   TABLE with mean, SD, range for CCl, CCW and weight
+```{r morph}
+# w2$ccl
+# w2$ccw
+```
+
 
 ## Nesting success
 
+We calculate the **nesting success** as the fraction of confirmed nests
+(turtles observed laying during tagging plus "successful crawl" turtle tracks 
+with what is believed by the observer to be a nest) over the total number of 
+emergences.
+
+#### Caveats
+We lump all degrees of uncertainty about the nesting success into
+the category of nesting failure. This includes the confirmed absence of a nest
+("false crawl"), but also cases where the presence of a nest is unsure or not
+checked for. 
+The value of nesting success is therefore a **conservative estimate**.
+The data is further biased (both ways) by the observers' individual ability to 
+recognise a nest.
+
+
+### Flatbacks
+Data: tracks - but should be based on `total_turtles`.
+```{r nesting success_fb}
+sp <- "natator-depressus"
+track_success(x$tracks) %>% ggplot_track_success_by_date(sp)
+track_success(x$tracks) %>% ggplot_track_successrate_by_date(sp)
+```
+
+### Green
+```{r nesting_success_gn}
+sp <- "chelonia-mydas"
+track_success(x$tracks) %>% ggplot_track_success_by_date(sp)
+track_success(x$tracks) %>% ggplot_track_successrate_by_date(sp)
+```
+
+
+### Hawksbill
+```{r nesting_success_gn}
+sp <- "eretmochelys-imbricata"
+track_success(x$tracks) %>% ggplot_track_success_by_date(sp)
+track_success(x$tracks) %>% ggplot_track_successrate_by_date(sp)
+```
+
 ## Hatching and emergence success
 
-Replace “Hatching and emergence success” by “Incubation success and hatchling production”
-make sure tables fit on landscape A4 format
-keep table
+<!-- SFO
 add map showing locations of hatched nests throughout the season
-add map showing location of excavated nests and their hatching success. Hatching success can be shown in categories
+add map showing location of excavated nests and their hatching success
+Hatching success can be shown in categories
 add histogram showing proportion of nests in each hatching success categories
+-->
+
+```{r hatch_succ}
+x$nest_excavations %>% 
+  wastdr::hatching_emergence_success() %>% 
+  rt()
+```
 
 
 ## Sand temperatures
@@ -174,3 +460,25 @@ Tags from Delambre rookery found elsewhere (individual)
 ### Injuries of tagged turtles
 
 ### Predation and Disturbance
+#### Causes of disturbance and nest predation
+```{r}
+x$nest_dist %>% 
+  wastdr::disturbance_by_season() %>% 
+  rt()
+```
+
+
+#### General disturbance
+```{r dist_map}
+x$nest_dist %>% 
+  dplyr::filter(encounter_encounter_type == "other") %>% 
+  wastdr::map_dist()
+```
+
+#### Disturbed nests
+```{r dist_map_nest}
+x$nest_dist %>% 
+  dplyr::filter(encounter_encounter_type == "nest") %>% 
+  wastdr::map_dist()
+```
+
