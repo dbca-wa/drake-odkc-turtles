@@ -29,6 +29,7 @@ body, .main-container {max-width: 100%; margin-left: auto; margin-right: auto;}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 options(rmarkdown.html_vignette.check_title = FALSE)
 library(wastdr)
+library(sparkline)
 drake::loadd("wastd_data")
 rt <- . %>% 
   reactable::reactable(
@@ -36,7 +37,7 @@ rt <- . %>%
     filterable = T, 
     sortable = T, 
     searchable = T,
-    defaultColDef = colDef(html = TRUE)
+    defaultColDef = reactable::colDef(html = TRUE)
   )
 ```
 
@@ -52,6 +53,11 @@ if (!fs::file_exists(fn)) {
 ```{r filter_data}
 x <- wastd_data %>% 
   wastdr::filter_wastd_turtledata(area_name = params$area_name)
+
+area_id <- wastd_data$sites %>% 
+  dplyr::filter(area_name==params$area_name) %>% 
+  magrittr::extract2("area_id") %>% 
+  magrittr::extract(1)
 ```
 
 # Overview
@@ -71,8 +77,6 @@ summarise_wastd_data_per_day_site(x) %T>%
   rt
 ```
 
-
-
 This report is a story **about** data. It explains, visualises, and
 rudimentarily summarises the data which is exported to CSV and various
 other formats. The audience of this report are data analysts and
@@ -85,7 +89,7 @@ x %>% wastdr::export_wastd_turtledata(outdir = fn, filename = zipfn)
 # readRDS(fs::path(fn, "wastd_data.rds")) to restore x
 ```
 
-# Data
+## Data sources
 
 Data for this summary is supplied from WAStD, and is manipulated using
 helpers from the R package [wastdr](https://dbca-wa.github.io/wastdr/).
@@ -105,13 +109,34 @@ In this report, we filter the data to the location `r params$area_name`.
 
 The data was downloaded from WAStD on `r wastd_data$downloaded_on`.
 
-# Data summaries
 Training and test data is marked as species "Hatchback turtle (Corolla corolla)",
 surveys are "production=FALSE", disturbance causes are "training or test record".
 Where summaries hide the columns "species" and "production", respectively, 
 training and test data are excluded.
 
-## Turtle tracks (current season)
+# Turtle nesting (current season)
+
+The main caveat here is that some turtle monitoring programs monitor turtle
+nesting via the morning track counts, others conduct additional night time 
+tagging.
+
+As of now, tagging data is handled in another database, and an export of that
+database has to be manually edited into the track count data here.
+
+The report here shows only data from track counts. This includes the missed
+tracks during turtle tagging.
+
+This means:
+
+* Total turtle numbers exclude tagged turtles (if there was tagging).
+* Nesting success, the fraction of successful (nesting) emergences vs all 
+  (including non-nesting emergences), is skewed by the exclusion of tagged 
+  turtles (which could have nested or not before being tagged).
+  
+  
+This caveat will be resolved once the tagging database is fully synchronised 
+with WAStD, and WAStD therefore contains all tagging records, which then are
+added to the descriptive statistics shown in this report.
 
 ```{r tracks_map_2020}
 x$tracks %>% 
@@ -119,7 +144,7 @@ x$tracks %>%
   wastdr::map_tracks(sites = x$sites)
 ```
 
-### Missed tracks
+## Missed tracks
 
 This section is relevant for monitoring programs which tag turtles.
 
@@ -144,7 +169,7 @@ mt %>% wastdr::map_tracks(sites = x$sites)
 
 ## Disturbance, predation: nests and general
 General disturbance and signs of predator presence is captured through the 
-ODK form "Predator or Disturbance". Dist urbance or predation of nests are 
+ODK form "Predator or Disturbance". Disturbance or predation of nests are 
 captured through the ODK form "Turtle Track or Nest".
 As the data specific to the disturbance or predation is identical, both are 
 presented here as one table.
@@ -332,10 +357,13 @@ x$nest_fans %>% rt
 
 This section will be completed once the tagging database has been merged into WAStD.
 
-## Strandings, rescues, and live sightings
+# Marine Wildlife Incidents
 
-### Live sightings: rescues, in water, tagging
-The ODK form "Turtle Sighthing" captures turtles encountered during boat based 
+MWI include strandings, rescues, and live sightings of turtles and other 
+marine megafauna.
+
+## Live sightings: rescues, in water, tagging
+The ODK form "Turtle Sighting" captures turtles encountered during boat based 
 surveys.
 The ODK form "Marine Wildlife Incident" also captures encounters with injured,
 entangled, rescued, but overall alive animals (including turtles).
@@ -348,7 +376,7 @@ x$animals %>%
   wastdr::map_mwi(sites = x$sites)
 ```
 
-### Dead sightings: strandings, mortalities
+## Dead sightings: strandings, mortalities
 The ODK form "Marine Wildlife Incident" captures encounters with dead animals 
 (including turtles), which then become WAStD AnimalEncounters.
 
@@ -358,7 +386,7 @@ x$animals %>%
   wastdr::map_mwi(sites = x$sites)
 ```
 
-## Survey effort
+# Surveys
 
 A summary of past seasons follows. Note the dates are "turtle dates"
 (calendar date of nesting night's evening).
@@ -375,36 +403,158 @@ survey_season_stats %>%
 survey_season_stats %>% rt
 ```
 
-## QA: Duplicate production surveys
+The following summary splits up the above table by sites 
+and is exported as `survey_season_site_stats.csv`.
 
-The following table shows days and sites for which more than one production survey
-exists in WAStD.
+```{r svy_stats_site, fig.width=10}
+survey_season_site_stats <- x$surveys %>% 
+    wastdr::survey_season_site_stats()
+
+survey_season_site_stats %>% 
+  readr::write_csv(here::here(fn, "survey_season_site_stats.csv"))
+
+survey_season_site_stats %>% rt
+```
+
+### QA: Surveys with start points outside the nominated site
+
+### QA: Surveys with end points outside the nominated site
+
+### QA: Backwards Surveys
+
+Incorrectly reconstructed Surveys can run backwards, i.e. with a start time
+past the end time.
+
+Saving a "backwards" Survey in WAStD will automatically adjust the end time to 
+6h past the start time, then adopt Encounters within that time span. 
+Saving the Survey again will set the end time to 30 min past the last adopted 
+Encounter.
+
+After QA, this list should be empty.
+
+```{r}
+x$surveys %>%
+  dplyr::filter(start_time > end_time) %>%
+  dplyr::select(
+    site_name,
+    reporter,
+    start_time,
+    end_time,
+    is_production,
+    id
+  ) %>%
+  dplyr::mutate(
+    Edit = glue::glue(
+        "<a href=\"https://wastd.dbca.wa.gov.au/",
+        "admin/observations/survey/{id}/change/\" target=\"_\">Edit</a>"
+      ),
+    View = glue::glue(
+        "<a href=\"https://wastd.dbca.wa.gov.au/",
+        "observations/surveys/{id}\" target=\"_\">View</a>"
+      )
+  ) %>% 
+  rt()
+```
+
+### QA: Duplicate morning surveys
+
+The following tables shows days and sites for which more than one 
+production (= real, not training or duplicate) survey exists in WAStD.
 Typically, only one of them should be a "production" survey, 
 and all other surveys could be marked and closed as duplicates.
 
-```{r}
-x$surveys %>% wastdr::duplicate_surveys() %>% rt
+Morning surveys are expected to start after 05:00 and before 15:00.
+More than one morning survey on the same site indicates a possible duplicate.
+
+<!-- https://github.com/dbca-wa/wastdr/issues/54 exclude false positives -->
+```{r dup_svy_morning}
+morning_survey_start_hour <- 5
+night_survey_start_hour <- 15
+
+duplicate_morning_surveys <- x$surveys %>% 
+  dplyr::filter(lubridate::hour(start_time) > morning_survey_start_hour,
+                lubridate::hour(start_time) < night_survey_start_hour) %>% 
+  wastdr::duplicate_surveys()
+
+duplicate_morning_surveys %>% rt
 ```
 
-## Number of volunteers each year
+### QA: Duplicate night surveys
+Night surveys are expected to start after 15:00 and before 5:00.
+More than one night survey on the same site and date indicates a possible duplicate.
+```{r dup_svy_night}
+duplicate_night_surveys <- x$surveys %>% 
+  dplyr::filter(lubridate::hour(start_time) < morning_survey_start_hour,
+                lubridate::hour(start_time) > night_survey_start_hour) %>% 
+  wastdr::duplicate_surveys()
+
+duplicate_night_surveys %>% rt
+```
+
+## QA: Surveys with reconstructed duration of exactly 6 hours
+Re-save those marked as "production" to adjust end time.
+
+```{r reconstructed_scy}
+rec_surveys <- x$surveys %>% 
+  dplyr::filter(
+    lubridate::interval(
+      start = start_time, 
+      end = end_time) == lubridate::hours(6))
+
+rec_surveys %>% rt
+```
+
+## QA: Suspiciously long surveys
+Surveys running for more than 6 hours could have been erroneously merged from 
+two separate surveys.
+
+Adjust each survey's duration, save, and watch the success message in WAStD
+for "evicted encounters". These need to be adopted by another survey.
+
+```{r long_scy}
+long_surveys <- x$surveys %>% 
+  dplyr::filter(
+    lubridate::interval(
+      start = start_time, 
+      end = end_time) > lubridate::hours(6))
+
+long_surveys %>% rt
+```
+
+# Personnel
 
 The number of surveys lead by each volunteer is tallied here for each
 season.
 
+If user mapping during data import has matched the wrong WAStD user, this table
+offers a link to the "Transfer data" form, where all records against one \
+(incorrectly matched) WAStD user can be transferred within a Locality
+(prefilled to `r params$area_name`) to another WAStD user (chosen by the QA 
+operator).
+
 ```{r volunteers}
 x$surveys %>% 
-  dplyr::group_by(season, reporter) %>% 
-  dplyr::tally() %>% 
+  dplyr::group_by(season, reporter, reporter_id) %>% 
+  dplyr::tally(name = "Surveys") %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(-season) %>%
+  dplyr::mutate(
+    "Wrong name?" = glue::glue(
+        "<a href=\"https://wastd.dbca.wa.gov.au/users/",
+        "{reporter_id}/transfer-at/{area_id}\" target=\"_\">Transfer data</a>"
+      ),
+  ) %>% 
+  dplyr::select(-reporter_id) %>% 
   rt
 ```
 
+<!-- 
+Scott 
 ## Number of Indigenous employee days
 
-<!-- Scott -->
 To be inserted.
 
 ## List of sat tags applied in last three years
 
 Source: Seaturtle.org or tagging database.
+-->
