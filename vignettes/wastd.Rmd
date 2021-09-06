@@ -31,6 +31,15 @@ options(rmarkdown.html_vignette.check_title = FALSE)
 library(wastdr)
 library(sparkline)
 drake::loadd("wastd_data")
+
+x <- wastd_data %>% 
+  wastdr::filter_wastd_turtledata(area_name = params$area_name)
+
+area_id <- wastd_data$sites %>% 
+  dplyr::filter(area_name==params$area_name) %>% 
+  magrittr::extract2("area_id") %>% 
+  magrittr::extract(1)
+
 rt <- . %>% 
   reactable::reactable(
     ., 
@@ -39,25 +48,13 @@ rt <- . %>%
     searchable = T,
     defaultColDef = reactable::colDef(html = TRUE)
   )
-```
 
-```{r prepare_export}
 zipfn <- wastdr::urlize(params$area_name)
 fn <- here::here("inst/reports", zipfn)
 if (!fs::file_exists(fn)) {
   "Creating dir {fn}" %>% glue::glue() %>% wastdr::wastdr_msg_info()
   fs::dir_create(fn, recurse = TRUE)
 }
-```
-
-```{r filter_data}
-x <- wastd_data %>% 
-  wastdr::filter_wastd_turtledata(area_name = params$area_name)
-
-area_id <- wastd_data$sites %>% 
-  dplyr::filter(area_name==params$area_name) %>% 
-  magrittr::extract2("area_id") %>% 
-  magrittr::extract(1)
 ```
 
 # Overview
@@ -69,11 +66,12 @@ Track tallies, which are only collected in specific places like Cape Domett,
 are counted but the number of tracks therein is not further expanded.
 
 A very detailed explanation of the columns in this table is hosted 
-[here]().
+[here](https://dbca-wa.github.io/wastdr/reference/summarise_wastd_data_per_day_site.html).
 
 ```{r top_level_summary}
 summarise_wastd_data_per_day_site(x) %T>% 
   readr::write_csv(here::here(fn, "just_the_data_thanks.csv")) %>% 
+  janitor::clean_names(case="sentence") %>%
   rt
 ```
 
@@ -114,7 +112,7 @@ surveys are "production=FALSE", disturbance causes are "training or test record"
 Where summaries hide the columns "species" and "production", respectively, 
 training and test data are excluded.
 
-# Turtle nesting (current season)
+# Turtle nesting
 
 The main caveat here is that some turtle monitoring programs monitor turtle
 nesting via the morning track counts, others conduct additional night time 
@@ -203,16 +201,66 @@ To see only missed tracks, type "mis" into the filter box of column
 
 This summary is exported as `nesting_type_by_season_age_species.csv`.
 
-```{r tracks_season}
+```{r tracks_season, fig.width=10}
 wastd_nesting_type_by_season_age_species <-
   x$tracks %>% 
+  wastdr::filter_realspecies() %>% 
   wastdr::nesting_type_by_area_season_age_species() %>% 
   dplyr::arrange(-season)
 
 wastd_nesting_type_by_season_age_species %>%
   readr::write_csv(here::here(fn, "nesting_type_by_season_age_species.csv"))
   
-wastd_nesting_type_by_season_age_species %>% rt
+wastd_nesting_type_by_season_age_species %>% 
+  # janitor::clean_names(case="sentence") 
+  dplyr::select(
+    area_name,
+    season,
+    species,
+    nest_age,
+    `successful-crawl`,
+    `false-crawl`,
+    `track-not-assessed`,
+    `track-unsure`,
+    `nest`,
+    `hatched-nest`,
+    `body-pit`
+  ) %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Nesting season totals"
+  ) %>% 
+  gt::tab_header(
+    title="Seasonal nesting totals",
+    subtitle="Nesting by locality, species, nest age tallied by nesting success"
+  ) %>%
+  gt::cols_label(
+    area_name = "Locality",
+    season = "Season",
+    species = "Species",
+    nest_age = "Nest age",
+    `successful-crawl` = "Track with nest",
+    `false-crawl` = "Track without nest",
+    `track-not-assessed` = "Track (not assessed)",
+    `track-unsure` = "Track (unsure)",
+    `nest` = "Nest (incubating)",
+    `hatched-nest` = "Nest (hatched)",
+    `body-pit` = "Body pit"
+  ) %>% 
+  gt::tab_spanner(
+    label = "Successful nesting",
+    columns = c(`successful-crawl`)
+  ) %>% 
+  gt::tab_spanner(
+    label = "Unsuccessful or unconfirmed nesting",
+    columns = c(
+      `false-crawl`, 
+      `track-not-assessed`,
+      `track-unsure`,
+      `nest`,
+      `hatched-nest`,
+      `body-pit`)
+  )
 ```
 
 ## Turtle tracks and nests daily totals
@@ -220,9 +268,13 @@ wastd_nesting_type_by_season_age_species %>% rt
 The same data, but grouped by day instead of season.
 This summary is exported as `nesting_type_by_day_age_species.csv`.
 
+The data are shown as an interactive table with search, filtering, and sorting
+enabled. The table can be used to inspect nesting activity on individual days.
+
 ```{r tracks_day}
 wastd_nesting_type_by_day_age_species <-
   x$tracks %>% 
+  wastdr::filter_realspecies() %>% 
   wastdr::nesting_type_by_season_calendarday_age_species() %>% 
   dplyr::arrange(-season)
 
@@ -249,25 +301,57 @@ This section will be completed once the tagging database has been merged into WA
 This section will be completed once the tagging database has been merged into WAStD.
 
 ## Annual total turtle emergences
+Fresh tracks and nests are combined and tallied, grouped by season and species
+to form the total number of emergences in one season. 
 
-Tracks and nests are combined and tallied, grouped by season and species
-to form the total number of emergences in one season. This data needs to
-be added to the number of tagged turtles from the tagging database.
+Older signs of nesting, such as incubating and hatched nests, as well as 
+body pits are omitted from the tally.
+
+Caveats: 
+
+* This data needs to be added to the number of tagged turtles from the 
+  tagging database.
+* The data shown here are not normalised by survey effort nor length of 
+  surveyed coastline. 
+* Comparison across seasons will be influenced by different survey effort 
+  between seasons.
+* Comparison to other localities will be influenced by different survey effort 
+  between seasons and different length of surveyed coastline between localities.
 
 ```{r total_emerg}
 x$tracks %>% 
   wastdr::exclude_training_species() %>% 
-  dplyr::group_by(season, species) %>% 
-  dplyr::tally() %>% 
-  dplyr::ungroup() %>% 
-  dplyr::arrange(-season) %>%
-  rt
+  dplyr::filter(
+    nest_type %in% c(
+      "successful-crawl",
+      "false-crawl",
+      "track-not-assessed",
+      "track-unsure"
+    )
+  ) %>% 
+  dplyr::group_by(season, species) %>%
+  dplyr::tally() %>%
+  dplyr::ungroup() %>%
+  dplyr::arrange(-season, -n) %>%
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Total turtle emergences"
+  ) %>% 
+  gt::tab_header(
+    title="Seasonal emergence totals",
+    subtitle="Emergences tallied by locality, season, and species"
+  ) %>%
+  gt::cols_label(
+    N = "Emergences"
+  ) 
 ```
 
 ## Number of nests tagged
 
 Tagged nests are exported as individual records of encounters with
 tagged nests (including initial tagging and re-sighting). 
+
 We show the season tallies, and export the individual records as 
 `nest_tags.csv`.
 
@@ -285,7 +369,18 @@ wastd_tagged_nests %>%
   dplyr::tally() %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(-season) %>%
-  rt
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Total nest tags"
+  ) %>% 
+  gt::tab_header(
+    title="Total nest tags",
+    subtitle="Tally includes any encounter of a nest tag: deployment, re-sighting, and recovery"
+  ) %>%
+  gt::cols_label(
+    N = "Tag encounters"
+  ) 
 ```
 
 ## Number of nests found
@@ -298,7 +393,7 @@ This summary is exported as `fresh_and_hatched_nests.csv`.
 ```{r nests_total}
 wastd_nests <- x$tracks %>% 
   wastdr::exclude_training_species() %>% 
-  dplyr::filter(nest_type %in% c("successful-crawl", "hatched nest")) %>% 
+  dplyr::filter(nest_type %in% c("successful-crawl", "hatched-nest")) %>% 
   dplyr::group_by(season, species, nest_type) %>% 
   dplyr::tally() %>% 
   dplyr::ungroup() %>% 
@@ -307,15 +402,31 @@ wastd_nests <- x$tracks %>%
 wastd_nests %>%
   readr::write_csv(here::here(fn, "fresh_and_hatched_nests.csv"))
 
-wastd_nests %>% rt
+wastd_nests %>% 
+  dplyr::arrange(-season, -n) %>% 
+  # dplyr::mutate(species = wastdr::humanize(species)) %>%
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Total nests found"
+  ) %>% 
+  gt::tab_header(
+    title="Total nests found",
+    subtitle="Nest encounters grouped by season, species, and nest type"
+  ) %>%
+  gt::cols_label(
+    N = "Nest encounters"
+  ) 
 ```
 
 ## Nest loggers
 
-Nest loggers, n is number of encounters which includes both initial
-deployment and any recorded re-sighting.
+Nest loggers include both initial deployment and any recorded re-sighting.
+Multiple loggers can be associated with one nest.
 
 For want of a better overview, we show an interactive table of all loggers here.
+The table supports search, filtering, and ordering.
+
 The nest logger records are also exported as `nest_loggers.csv`.
 
 ```{r}
@@ -323,10 +434,8 @@ x$nest_loggers %>% rt
 ```
 
 ## Hatching and emergence success
-
-Data shown here is summarised by season, and exported as individual nest
-excavation records. Data is split up by source between new season
-(2019-20) and previous seasons.
+Nest excavations are shown here as statistics grouped by season and species and 
+exported as individual nest excavation records. 
 
 This summary is exported as `nest_excavations_hatching_emergence_success.csv`.
 
@@ -339,7 +448,18 @@ nest_excav %>%
   readr::write_csv(
     here::here(fn, "nest_excavations_hatching_emergence_success.csv"))
 
-nest_excav %>% rt
+nest_excav %>% 
+  dplyr::arrange(-season, species) %>% 
+  dplyr::mutate(species = janitor::make_clean_names(species, case="sentence")) %>% 
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Hatching and emergence success"
+  ) %>% 
+  gt::tab_header(
+    title="Hatching and emergence success",
+    subtitle="Descriptive statistics from all excavated nests"
+  )
 ```
 
 <!-- TODO Plot HS/ES time series to show different season length / survey effort. -->
@@ -350,7 +470,9 @@ Fan angle data is exported as `nest_fans.csv` and previewed in the following tab
 More meaningful visualisations are in preparation.
 
 ```{r fanangle_table}
-x$nest_fans %>% rt
+x$nest_fans %>% 
+  janitor::clean_names(case="sentence") %>% 
+  rt
 ```
 
 ## Tag return crossovers from or to by year
@@ -367,8 +489,11 @@ The ODK form "Turtle Sighting" captures turtles encountered during boat based
 surveys.
 The ODK form "Marine Wildlife Incident" also captures encounters with injured,
 entangled, rescued, but overall alive animals (including turtles).
+The ODK form "Turtle Tagging", as well as data import from the legacy turtle
+tagging database WAMTRAM, will show up as a live sighting with a nesting
+activity.
 
-Both forms feed into WAStD AnimalEncounters, which are shown in the map below.
+All of the above forms feed into WAStD AnimalEncounters, which are shown in the map below.
 
 ```{r mwi_map_resc}
 x$animals %>% 
@@ -400,11 +525,23 @@ survey_season_stats <- x$surveys %>%
 survey_season_stats %>% 
   readr::write_csv(here::here(fn, "survey_season_stats.csv"))
 
-survey_season_stats %>% rt
+survey_season_stats %>% 
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Seasonal overview of survey effort"
+  ) %>% 
+  # gt::fmt_date(c("First day", "Last day")) %>% # Friday, October 20, 2017
+  gt::tab_header(
+    title="Seasonal overview of survey effort",
+    subtitle="Survey stats grouped by locality and season"
+  )
 ```
 
 The following summary splits up the above table by sites 
 and is exported as `survey_season_site_stats.csv`.
+
+The table is interactive and supports search, filtering and ordering.
 
 ```{r svy_stats_site, fig.width=10}
 survey_season_site_stats <- x$surveys %>% 
@@ -413,7 +550,9 @@ survey_season_site_stats <- x$surveys %>%
 survey_season_site_stats %>% 
   readr::write_csv(here::here(fn, "survey_season_site_stats.csv"))
 
-survey_season_site_stats %>% rt
+survey_season_site_stats %>% 
+  janitor::clean_names(case="sentence") %>% 
+  rt
 ```
 
 ### QA: Surveys with start points outside the nominated site
@@ -443,14 +582,15 @@ x$surveys %>%
     is_production,
     id
   ) %>%
+  janitor::clean_names(case="sentence") %>% 
   dplyr::mutate(
     Edit = glue::glue(
         "<a href=\"https://wastd.dbca.wa.gov.au/",
-        "admin/observations/survey/{id}/change/\" target=\"_\">Edit</a>"
+        "admin/observations/survey/{Id}/change/\" target=\"_\">Edit</a>"
       ),
     View = glue::glue(
         "<a href=\"https://wastd.dbca.wa.gov.au/",
-        "observations/surveys/{id}\" target=\"_\">View</a>"
+        "observations/surveys/{Id}\" target=\"_\">View</a>"
       )
   ) %>% 
   rt()
@@ -476,7 +616,23 @@ duplicate_morning_surveys <- x$surveys %>%
                 lubridate::hour(start_time) < night_survey_start_hour) %>% 
   wastdr::duplicate_surveys()
 
-duplicate_morning_surveys %>% rt
+duplicate_morning_surveys %>% 
+  dplyr::arrange(-season, site_name) %>% 
+  dplyr::select(-site_id) %>% 
+  janitor::clean_names(case="sentence") %>% rt
+  # gt::gt(
+  #   groupname_col=NULL,
+  #   caption = "Duplicated morning surveys"
+  # ) %>% 
+  # gt::tab_header("Merge duplicated morning surveys") %>% 
+  # gt::cols_label(
+  #   season = "Season",
+  #   site_name = "Site",
+  #   calendar_date_awst = "Date (AWST)",
+  #   n = "Duplicates",
+  #   wastd = "Review and merge"
+  # ) %>% 
+  # gt::fmt_markdown(columns = vars(wastd))
 ```
 
 ### QA: Duplicate night surveys
@@ -488,11 +644,28 @@ duplicate_night_surveys <- x$surveys %>%
                 lubridate::hour(start_time) > night_survey_start_hour) %>% 
   wastdr::duplicate_surveys()
 
-duplicate_night_surveys %>% rt
+duplicate_night_surveys %>%
+  dplyr::arrange(-season, site_name) %>% 
+  dplyr::select(-site_id) %>% 
+  janitor::clean_names(case="sentence") %>% rt
+  # gt::gt(
+  #   groupname_col=NULL,
+  #   caption = "Duplicated morning surveys"
+  # ) %>% 
+  # gt::tab_header("Merge duplicated morning surveys") %>% 
+  # gt::cols_label(
+  #   season = "Season",
+  #   site_name = "Site",
+  #   calendar_date_awst = "Date (AWST)",
+  #   n = "Duplicates",
+  #   wastd = "Review and merge"
+  # ) %>% 
+  # gt::fmt_markdown(columns = vars(wastd))
 ```
 
 ## QA: Surveys with reconstructed duration of exactly 6 hours
-Re-save those marked as "production" to adjust end time.
+Re-save those marked as "production" to auto-adjust end time.
+Manually adjust other time spans as appropriate.
 
 ```{r reconstructed_scy}
 rec_surveys <- x$surveys %>% 
@@ -501,12 +674,44 @@ rec_surveys <- x$surveys %>%
       start = start_time, 
       end = end_time) == lubridate::hours(6))
 
-rec_surveys %>% rt
+rec_surveys %>% 
+  dplyr::select(
+    season,
+    site_name,
+    reporter,
+    calendar_date_awst,
+    start_time,
+    end_time,
+    is_production,
+    change_url
+  ) %>% 
+  janitor::clean_names(case="sentence") %>% rt
+
+ # gt::gt(
+ #    groupname_col=NULL,
+ #    caption = "Surveys with reconstructed end time"
+ #  ) %>% 
+ #  gt::tab_header("Adjust reconstructed end time") %>% 
+ #  gt::cols_label(
+ #    season = "Season",
+ #    site_name = "Site",
+ #    reporter = "Reporter",
+ #    calendar_date_awst = "Date (AWST)",
+ #    start_time = "Survey start",
+ #    end_time = "Survey end",
+ #    is_production = "Production survey",
+ #    change_url = "Adjust length"
+ #  ) %>% 
+ #  gt::fmt_markdown(columns = vars(change_url))
 ```
 
 ## QA: Suspiciously long surveys
 Surveys running for more than 6 hours could have been erroneously merged from 
 two separate surveys.
+
+These can capture encounters from two separate surveys. Survey effort can be
+biased by showing only one survey where two have been conducted, and by 
+showing the extra hours between actual fieldwork as survey duration.
 
 Adjust each survey's duration, save, and watch the success message in WAStD
 for "evicted encounters". These need to be adopted by another survey.
@@ -518,7 +723,35 @@ long_surveys <- x$surveys %>%
       start = start_time, 
       end = end_time) > lubridate::hours(6))
 
-long_surveys %>% rt
+long_surveys %>%
+  dplyr::select(
+    season,
+    site_name,
+    reporter,
+    calendar_date_awst,
+    start_time,
+    end_time,
+    is_production,
+    change_url
+  ) %>% 
+  janitor::clean_names(case="sentence") %>% 
+  rt
+ # gt::gt(
+ #    groupname_col=NULL,
+ #    caption = "Suspiciously long surveys"
+ #  ) %>% 
+ #  gt::tab_header("Adjust start or end time") %>% 
+ #  gt::cols_label(
+ #    season = "Season",
+ #    site_name = "Site",
+ #    reporter = "Reporter",
+ #    calendar_date_awst = "Date (AWST)",
+ #    start_time = "Survey start",
+ #    end_time = "Survey end",
+ #    is_production = "Production survey",
+ #    change_url = "Adjust times"
+ #  ) %>% 
+ #  gt::fmt_markdown(columns = c("change_url"))
 ```
 
 # Personnel
@@ -529,7 +762,7 @@ season.
 If user mapping during data import has matched the wrong WAStD user, this table
 offers a link to the "Transfer data" form, where all records against one \
 (incorrectly matched) WAStD user can be transferred within a Locality
-(prefilled to `r params$area_name`) to another WAStD user (chosen by the QA 
+(pre-filled to `r params$area_name`) to another WAStD user (chosen by the QA 
 operator).
 
 ```{r volunteers}
@@ -539,12 +772,13 @@ x$surveys %>%
   dplyr::ungroup() %>% 
   dplyr::arrange(-season) %>%
   dplyr::mutate(
-    "Wrong name?" = glue::glue(
+    "Transfer" = glue::glue(
         "<a href=\"https://wastd.dbca.wa.gov.au/users/",
         "{reporter_id}/transfer-at/{area_id}\" target=\"_\">Transfer data</a>"
       ),
   ) %>% 
   dplyr::select(-reporter_id) %>% 
+  janitor::clean_names(case="sentence") %>% 
   rt
 ```
 
