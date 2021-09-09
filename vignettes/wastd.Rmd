@@ -218,13 +218,8 @@ wastd_nesting_type_by_season_age_species %>%
     season,
     species,
     nest_age,
-    `successful-crawl`,
-    `false-crawl`,
-    `track-not-assessed`,
-    `track-unsure`,
-    `nest`,
-    `hatched-nest`,
-    `body-pit`
+    dplyr::contains("-"),
+    dplyr::contains("nest")
   ) %>% 
   gt::gt(
     groupname_col=NULL,
@@ -232,36 +227,46 @@ wastd_nesting_type_by_season_age_species %>%
   ) %>% 
   gt::tab_header(
     title="Seasonal nesting totals",
-    subtitle="Nesting by locality, species, nest age tallied by nesting success"
+    subtitle="Nesting by rookery, species, nest age tallied by nesting success"
   ) %>%
   gt::cols_label(
-    area_name = "Locality",
+    area_name = "Rookery",
     season = "Season",
     species = "Species",
-    nest_age = "Nest age",
-    `successful-crawl` = "Track with nest",
-    `false-crawl` = "Track without nest",
-    `track-not-assessed` = "Track (not assessed)",
-    `track-unsure` = "Track (unsure)",
-    `nest` = "Nest (incubating)",
-    `hatched-nest` = "Nest (hatched)",
-    `body-pit` = "Body pit"
-  ) %>% 
-  gt::tab_spanner(
-    label = "Successful nesting",
-    columns = c(`successful-crawl`)
-  ) %>% 
-  gt::tab_spanner(
-    label = "Unsuccessful or unconfirmed nesting",
-    columns = c(
-      `false-crawl`, 
-      `track-not-assessed`,
-      `track-unsure`,
-      `nest`,
-      `hatched-nest`,
-      `body-pit`)
+    nest_age = "Nest age"
   )
+
 ```
+
+<!--
+# `successful-crawl` = "Track with nest",
+# `false-crawl` = "Track without nest",
+# `track-not-assessed` = "Track (not assessed)",
+# `track-unsure` = "Track (unsure)",
+# `nest` = "Nest (incubating)",
+# `hatched-nest` = "Nest (hatched)",
+# `body-pit` = "Body pit") %>% {
+#     
+#     if (
+#       "successful-crawl" %in% names(wastd_nesting_type_by_season_age_species)
+#     ){
+#       gt::tab_spanner(
+#         label = "Successful nesting",
+#         columns = c(`successful-crawl`)
+#       )} else .
+#   } 
+# %>% 
+#   gt::tab_spanner(
+#     label = "Unsuccessful or unconfirmed nesting",
+#     columns = c(
+#       `false-crawl`, 
+#       `track-not-assessed`,
+#       `track-unsure`,
+#       `nest`,
+#       `hatched-nest`,
+#       `body-pit`)
+#   )
+-->
 
 ## Turtle tracks and nests daily totals
 
@@ -340,7 +345,7 @@ x$tracks %>%
   ) %>% 
   gt::tab_header(
     title="Seasonal emergence totals",
-    subtitle="Emergences tallied by locality, season, and species"
+    subtitle="Emergences tallied by rookery, season, and species"
   ) %>%
   gt::cols_label(
     N = "Emergences"
@@ -360,10 +365,7 @@ wastd_tagged_nests <- x$nest_tags %>%
   wastdr::exclude_training_species()
 ```
 
-```{r}
-# Season tally
-# wastd_tagged_nests %>% rt
-
+```{r nests_tagged_season}
 wastd_tagged_nests %>% 
   dplyr::group_by(season, species) %>% 
   dplyr::tally() %>% 
@@ -429,7 +431,7 @@ The table supports search, filtering, and ordering.
 
 The nest logger records are also exported as `nest_loggers.csv`.
 
-```{r}
+```{r nest_log}
 x$nest_loggers %>% rt
 ```
 
@@ -469,7 +471,7 @@ nest_excav %>%
 Fan angle data is exported as `nest_fans.csv` and previewed in the following table.
 More meaningful visualisations are in preparation.
 
-```{r fanangle_table}
+```{r nest_fans}
 x$nest_fans %>% 
   janitor::clean_names(case="sentence") %>% 
   rt
@@ -520,6 +522,7 @@ This summary is exported as `survey_season_stats.csv`.
 
 ```{r svy_stats, fig.width=10}
 survey_season_stats <- x$surveys %>% 
+  wastdr::filter_realsurveys() %>% 
   wastdr::survey_season_stats() 
 
 survey_season_stats %>% 
@@ -534,7 +537,7 @@ survey_season_stats %>%
   # gt::fmt_date(c("First day", "Last day")) %>% # Friday, October 20, 2017
   gt::tab_header(
     title="Seasonal overview of survey effort",
-    subtitle="Survey stats grouped by locality and season"
+    subtitle="Survey stats grouped by rookery and season"
   )
 ```
 
@@ -545,7 +548,8 @@ The table is interactive and supports search, filtering and ordering.
 
 ```{r svy_stats_site, fig.width=10}
 survey_season_site_stats <- x$surveys %>% 
-    wastdr::survey_season_site_stats()
+  wastdr::filter_realsurveys() %>% 
+  wastdr::survey_season_site_stats()
 
 survey_season_site_stats %>% 
   readr::write_csv(here::here(fn, "survey_season_site_stats.csv"))
@@ -620,19 +624,6 @@ duplicate_morning_surveys %>%
   dplyr::arrange(-season, site_name) %>% 
   dplyr::select(-site_id) %>% 
   janitor::clean_names(case="sentence") %>% rt
-  # gt::gt(
-  #   groupname_col=NULL,
-  #   caption = "Duplicated morning surveys"
-  # ) %>% 
-  # gt::tab_header("Merge duplicated morning surveys") %>% 
-  # gt::cols_label(
-  #   season = "Season",
-  #   site_name = "Site",
-  #   calendar_date_awst = "Date (AWST)",
-  #   n = "Duplicates",
-  #   wastd = "Review and merge"
-  # ) %>% 
-  # gt::fmt_markdown(columns = vars(wastd))
 ```
 
 ### QA: Duplicate night surveys
@@ -648,6 +639,8 @@ duplicate_night_surveys %>%
   dplyr::arrange(-season, site_name) %>% 
   dplyr::select(-site_id) %>% 
   janitor::clean_names(case="sentence") %>% rt
+```
+<!--
   # gt::gt(
   #   groupname_col=NULL,
   #   caption = "Duplicated morning surveys"
@@ -661,11 +654,9 @@ duplicate_night_surveys %>%
   #   wastd = "Review and merge"
   # ) %>% 
   # gt::fmt_markdown(columns = vars(wastd))
-```
-
+-->
 ## QA: Surveys with reconstructed duration of exactly 6 hours
-Re-save those marked as "production" to auto-adjust end time.
-Manually adjust other time spans as appropriate.
+Manually adjust end times as and if appropriate.
 
 ```{r reconstructed_scy}
 rec_surveys <- x$surveys %>% 
@@ -686,7 +677,9 @@ rec_surveys %>%
     change_url
   ) %>% 
   janitor::clean_names(case="sentence") %>% rt
+```
 
+<!--
  # gt::gt(
  #    groupname_col=NULL,
  #    caption = "Surveys with reconstructed end time"
@@ -703,18 +696,46 @@ rec_surveys %>%
  #    change_url = "Adjust length"
  #  ) %>% 
  #  gt::fmt_markdown(columns = vars(change_url))
-```
+-->
 
 ## QA: Suspiciously long surveys
 Surveys running for more than 6 hours could have been erroneously merged from 
-two separate surveys.
+two separate surveys, or they are truly long surveys.
+
+Fixing these requires individual inspection and full fluency in WAStD's operation.
 
 These can capture encounters from two separate surveys. Survey effort can be
 biased by showing only one survey where two have been conducted, and by 
 showing the extra hours between actual fieldwork as survey duration.
 
-Adjust each survey's duration, save, and watch the success message in WAStD
-for "evicted encounters". These need to be adopted by another survey.
+Protocol:
+
+* Open each "Update survey XXX" link to view the survey in the data curation portal.
+* From the data curation portal, "view on site" to inspect duration and the 
+  list of encounters.
+* Do the encounters come from two different dates? If so, find surveys from the
+  other date(s). 
+  * Shortcut: Survey detail page > map > click site > surveys, then enter the
+    desired date into the very last filter field and filter.
+  * Long route: Surveys > list surveys > filter by site and date.
+* Having all candidate surveys open in the data curation portal:
+  * mark both as "production",
+  * adjust start and end times to be one one day only, then 
+  * both: save and continue editing.
+  This will adopt encounters to the respective dates and re-distribute them across
+  the two candidate surveys.
+* Refresh both surveys' "view on site". Are the encounters allocated correctly?
+  If not, adjust survey start and end times again to enclose their encounters and
+  save the surveys again.
+* If the surveys have been split up to separate (consecutive) dates:
+  * they should not appear as each others' duplicates, and 
+  * their encounters should also be from the respective date.
+  * Each survey can have other duplicate surveys from their respective date.
+* Mark each survey as "production" again and verify that the number of encounters
+  as well as the start and end dates have not shifted.
+* If other duplicate surveys were found, these should also be merged correctly now.
+
+
 
 ```{r long_scy}
 long_surveys <- x$surveys %>% 
@@ -735,7 +756,10 @@ long_surveys %>%
     change_url
   ) %>% 
   janitor::clean_names(case="sentence") %>% 
-  rt
+  rt()
+```
+
+<!--
  # gt::gt(
  #    groupname_col=NULL,
  #    caption = "Suspiciously long surveys"
@@ -752,8 +776,7 @@ long_surveys %>%
  #    change_url = "Adjust times"
  #  ) %>% 
  #  gt::fmt_markdown(columns = c("change_url"))
-```
-
+-->
 # Personnel
 
 The number of surveys lead by each volunteer is tallied here for each
@@ -761,7 +784,7 @@ season.
 
 If user mapping during data import has matched the wrong WAStD user, this table
 offers a link to the "Transfer data" form, where all records against one \
-(incorrectly matched) WAStD user can be transferred within a Locality
+(incorrectly matched) WAStD user can be transferred within a rookery
 (pre-filled to `r params$area_name`) to another WAStD user (chosen by the QA 
 operator).
 
@@ -791,4 +814,8 @@ To be inserted.
 ## List of sat tags applied in last three years
 
 Source: Seaturtle.org or tagging database.
+
+TODO: make photos mandatory during daytime but not at night
+TODO: GIS beach 2, Karratha office
+TODO: decide on beach 3-5, RI
 -->
