@@ -156,6 +156,18 @@ x$tracks %>%
   wastdr::map_tracks(sites = x$sites, cluster = TRUE)
 ```
 
+
+## QA: tracks outside of known sites
+```{r tracks_map_nosite}
+tracks_nosite <- x$tracks %>% 
+  wastdr::filter_realspecies() %>% 
+  dplyr::filter(is.na(site_name)) %>% 
+  dplyr::mutate(wastd=glue::glue("https://wastd.dbca.wa.gov.au{absolute_admin_url}"))
+
+tracks_nosite %>% wastdr::map_tracks(sites = x$sites)
+tracks_nosite %>% rt()
+```
+
 ## Missed tracks
 
 This section is relevant for monitoring programs which tag turtles.
