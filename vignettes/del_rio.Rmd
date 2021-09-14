@@ -148,9 +148,10 @@ x <- wastd_data %>%
 
 # Data
 
-In this report, we present combined Turtle Monitoring data from WAStD (Turtle
-Nesting Census, "tracks") and the tagging database WAMTRAM2 (Turtle Tagging,
-"tagging") and filter the data to the location `r params$area_name`.
+In this report, we present combined Turtle Monitoring data from WAStD
+(Turtle Nesting Census, "tracks") and the tagging database WAMTRAM2
+(Turtle Tagging, "tagging") and filter the data to the location
+`r params$area_name`.
 
 The WAStD data was downloaded on `r wastd_data$downloaded_on` and
 reflects all QA operations up to this date.
@@ -158,6 +159,7 @@ reflects all QA operations up to this date.
 The WAMTRAM2 data was exported on 26 Feb 2021.
 
 # Survey effort
+
 Surveys are calculated from tracks.
 
 ```{r survey_effort}
@@ -196,18 +198,26 @@ x$surveys %>% plot_survey_effort(placename = pn, prefix = pf, export = FALSE)
 
 ## Season overview
 
-Nesting census (tracks) data is shown.
-The map shows the lower GPS accuracy of the older devices used in 2017 and 2018.
-```{r tracks_map}
+Nesting census (tracks) data is shown for the last season (2020-21). 
+
+```{r tracks_map_2020}
 x$tracks %>% 
   wastdr::filter_realspecies() %>% 
-  wastdr::map_tracks(sites = x$sites, cluster = TRUE)
-# TODO: show tagging in same map
+  wastdr::filter_wastd_season(2020) %>% 
+  wastdr::map_tracks(sites = x$sites, cluster = FALSE)
 ```
 
-The season summary provides season totals for each species, broken into the 
-different levels of nesting success that were captured.
-See also heading "Nesting Success".
+
+<!-- 
+# TODO: show tagging in tracks_map_2020
+-->
+
+The season summary provides season totals for each species, broken into
+the different levels of nesting success that were captured. See also
+heading "Nesting Success".
+<!-- 
+# TODO add tagging numbers to season_summary
+-->
 
 ```{r season_summary}
 wastd_nesting_type_by_season_age_species <-
@@ -269,11 +279,11 @@ wastd_nesting_type_by_season_age_species %>%
       `hatched-nest`,
       `body-pit`)
   )
-# TODO add tagging numbers
+
 ```
 
+<!-- 
 
-```{r}
 # 
 # nest_type_by_day <- x$tracks %>% 
 #   wastdr::filter_realspecies() %>% 
@@ -296,9 +306,8 @@ wastd_nesting_type_by_season_age_species %>%
 #   ggplot2::facet_grid(facets = ggplot2::vars(season), scales = "free_x") +
 #   ggplot2::scale_x_continuous(labels = function(x) {fdate_as_tdate(x)}) +
 #   NULL
-```
 
-<!-- SFO https://github.com/dbca-wa/wastd/issues/177
+SFO https://github.com/dbca-wa/wastd/issues/177
 
 TABLE:
 
@@ -326,39 +335,44 @@ TABLE:
 -   hide figure “nesting intervals”
 -   add figure “Clutch Frequency”: show estimated number of turtles that lay 1 clutch, 2 clutches, 3 clutches, etc
  -->
- 
+
 ## Total turtles per night
 
-We calculate the **total number of turtles per night** as the sum of emergences 
-from the following observations:
+We calculate the **total number of turtles per night** as the sum of
+emergences from the following observations:
 
-* nesting females tagged at night (from WAMTRAM tagging)
-* tracks of turtles missed during tagging, tracks encountered during tagging 
-  (from WAStD tracks, tracks of type "false-crawls" or "successful-crawls" with 
-  track age "missed just now")
-* tracks of turtles missed during tagging, tracks encountered during a nesting
-  census beach walk the next morning 
-  (from WAStD tracks, tracks of type "false-crawls" or "successful-crawls" with 
-  track age "new, made in past 24 hours")
-  
-We exclude hatched nests, incubating nests without a track (older than a day),
-and body pits (which can be recorded, but are of little value).
+-   nesting females tagged at night (from WAMTRAM tagging)
+-   tracks of turtles missed during tagging, tracks encountered during
+    tagging (from WAStD tracks, tracks of type "false-crawls" or
+    "successful-crawls" with track age "missed just now")
+-   tracks of turtles missed during tagging, tracks encountered during a
+    nesting census beach walk the next morning (from WAStD tracks,
+    tracks of type "false-crawls" or "successful-crawls" with track age
+    "new, made in past 24 hours")
 
-We bin the numbers for tallying by the "turtle date", which is the 
-calendar date of the tagging night and extends to encounters past midnight
-and on the next morning. Turtle date rolls over at noon. 
-Turtle date bins all observations following one nesting night under one date.
+We exclude hatched nests, incubating nests without a track (older than a
+day), and body pits (which can be recorded, but are of little value).
+
+We bin the numbers for tallying by the "turtle date", which is the
+calendar date of the tagging night and extends to encounters past
+midnight and on the next morning. Turtle date rolls over at noon. Turtle
+date bins all observations following one nesting night under one date.
 
 #### Caveats
-The same turtle can emerge multiple times per night. 
-E.g., a turtle could emerge one or several times for an unsuccessful nesting 
-attempt before being processed after a successful one.
-Another turtle could emerge one or several times and evade tagging altogether.
-In either scenario, one turtle would contribute several emergences to a night's
-tally.
-Therefore, the numbers presented here are an **optimistic estimate** of total 
-turtle numbers.
-  
+
+The same turtle can emerge multiple times per night. E.g., a turtle
+could emerge one or several times for an unsuccessful nesting attempt
+before being processed after a successful one. Another turtle could
+emerge one or several times and evade tagging altogether. In either
+scenario, one turtle would contribute several emergences to a night's
+tally. Therefore, the numbers presented here are an **optimistic
+estimate** of total turtle numbers.
+
+<!--  
+
+TODO Verify - are missed tracks of pre-WAStD seasons entered in WAMTRAM? 
+
+-->
 
 ```{r total_turtles}
 # A Missed during tagging from "missed" and from morning track count
@@ -440,10 +454,27 @@ ggplot2::ggplot(
   ggplot2::facet_grid(facets = ggplot2::vars(season), scales = "free_x") +
   ggplot2::scale_x_continuous(labels = function(x) {fdate_as_tdate(x)}) +
   NULL
+```
 
+## Nesting females
 
+## Processed vs missed
+
+The tally of processed (tagged) and missed turtles is shown first as an
+interactive table, then as a time series plot.
+
+```{r}
+# Interactive table
 total_turtles_season %>%
-  tidyr::pivot_longer(cols=c(missed, tagged), names_to="type", values_to="n") %>% 
+  dplyr::select(-site_name) %>% 
+  # tidyr::pivot_longer(cols=c(missed, tagged), names_to="type", values_to="n") %>%
+  dplyr::filter(season > 2007) %>% # , species == "natator-depressus"
+  janitor::clean_names(case="sentence") %>% 
+  rt()
+
+# Figure
+total_turtles_season %>%
+  tidyr::pivot_longer(cols=c(missed, tagged), names_to="type", values_to="n") %>%
   dplyr::filter(season > 2007) %>% # , species == "natator-depressus"
   janitor::clean_names(case="sentence") %>% 
   ggplot2::ggplot() +
@@ -455,16 +486,8 @@ total_turtles_season %>%
   NULL
 ```
 
-
-## Nesting females
-
-## Processed vs missed
-
-Proportion of processed vs missed turtles 
-Time series: y=number, x=date, group=processed/missed 
-Time series: facet=season, x=day, y=proportion of processed
-
 ## Recaptured vs new
+
 
 <!--
         # resighted
@@ -522,8 +545,6 @@ NEST_TAG_STATUS_CHOICES = (
     (TAG_STATUS_DEFAULT, 're-sighted associated with nest'),
 )
 
--->
-```{r recaptured}
 # w2$turtle_status %>% unique() 
 # "T" tag scar?
 # "Q" question - incorrect read?
@@ -532,38 +553,101 @@ NEST_TAG_STATUS_CHOICES = (
 # NA  
 # "A" applied new?
 # "R" removed
+
+-->
+
+```{r trt_mcr}
+turtles_mcr <- w2 %>% 
+  # dplyr::filter(species_code == "FB") %>% 
+  dplyr::group_by(season, species, observation_status) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(-season, species) %>% 
+  tidyr::pivot_wider(names_from = observation_status, values_from = n) %>% 
+  janitor::clean_names(case="sentence") 
+
+turtles_mcr %>% 
+gt::gt(
+    groupname_col=NULL,
+    caption = "Recapture status by season and species"
+  ) %>% 
+  gt::tab_header(
+    title="Recapture status by season and species"
+    # subtitle="Initial nesting vs Remigrant vs Resighting vs Initial sighting"
+  )
 ```
+
 ## Remigrants
--   Add figure “remigration interval”: show the number of remigrants coming back after 1,2,3, 4+ years
+
+-   Add figure "remigration interval": show the number of remigrants
+    coming back after 1,2,3, 4+ years
 -   Add text about remigrant turtles coming from other rookeries
 
 ## Morphometrics
--   TABLE with mean, SD, range for CCl, CCW and weight
-```{r morph}
-# w2$ccl
-# w2$ccw
-```
+* Source: Tagging data fields `w2$ccl` and `w2$ccw`.
+* Process: Group by season and species, then summarise into mean, sd, min, max.
 
+Summary statistics of curved carapace length and width in mm (rounded to two 
+decimals) are shown below.
+
+```{r morph}
+trt_morph <- w2 %>% 
+  dplyr::group_by(season, species) %>% 
+  dplyr::summarise(
+    ccl_mean = mean(ccl) %>% round(2),
+    ccl_sd = sd(ccl) %>% round(2),
+    ccl_min = min(ccl) %>% round(2),
+    ccl_max = max(ccl) %>% round(2),
+    ccw_mean = mean(ccw) %>% round(2),
+    ccw_sd = sd(ccw) %>% round(2),
+    ccw_min = min(ccw) %>% round(2),
+    ccw_max = max(ccw) %>% round(2)
+  ) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(
+    species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
+  ) %>% 
+  janitor::clean_names(case="sentence")
+
+trt_morph %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Morphometrics by season and species"
+  ) %>% 
+  gt::tab_header(
+    title="Morphometrics by season and species",
+    subtitle="Values in millimetres, rounded to two decimals"
+  ) %>% 
+  gt::tab_spanner(
+    label = "Curved Carapace Length (mm)",
+    columns = c(gt::contains("ccl"))
+  ) %>% gt::tab_spanner(
+    label = "Curved Carapace Width (mm)",
+    columns = c(gt::contains("ccw"))
+  )
+
+```
 
 ## Nesting success
 
 We calculate the **nesting success** as the fraction of confirmed nests
-(turtles observed laying during tagging plus "successful crawl" turtle tracks 
-with what is believed by the observer to be a nest) over the total number of 
-emergences.
+(turtles observed laying during tagging plus "successful crawl" turtle
+tracks with what is believed by the observer to be a nest) over the
+total number of emergences.
 
 #### Caveats
-We lump all degrees of uncertainty about the nesting success into
-the category of nesting failure. This includes the confirmed absence of a nest
-("false crawl"), but also cases where the presence of a nest is unsure or not
-checked for. 
-The value of nesting success is therefore a **conservative estimate**.
-The data is further biased (both ways) by the observers' individual ability to 
-recognise a nest.
 
+We lump all degrees of uncertainty about the nesting success into the
+category of nesting failure. This includes the confirmed absence of a
+nest ("false crawl"), but also cases where the presence of a nest is
+unsure or not checked for. The value of nesting success is therefore a
+**conservative estimate**. The data is further biased (both ways) by the
+observers' individual ability to recognize a nest.
 
 ### Flatbacks
+
 TODO Data: tracks - but should be based on `total_turtles`.
+
 ```{r nesting success_fb}
 sp <- "natator-depressus"
 track_success(x$tracks) %>% ggplot_track_success_by_date(sp)
@@ -571,14 +655,15 @@ track_success(x$tracks) %>% ggplot_track_successrate_by_date(sp)
 ```
 
 ### Green
+
 ```{r nesting_success_gn}
 sp <- "chelonia-mydas"
 track_success(x$tracks) %>% ggplot_track_success_by_date(sp)
 track_success(x$tracks) %>% ggplot_track_successrate_by_date(sp)
 ```
 
-
 ### Hawksbill
+
 ```{r nesting_success_gn}
 sp <- "eretmochelys-imbricata"
 track_success(x$tracks) %>% ggplot_track_success_by_date(sp)
@@ -587,19 +672,19 @@ track_success(x$tracks) %>% ggplot_track_successrate_by_date(sp)
 
 ## Hatching and emergence success
 
+```{=html}
 <!-- SFO
 add map showing locations of hatched nests throughout the season
 add map showing location of excavated nests and their hatching success
 Hatching success can be shown in categories
 add histogram showing proportion of nests in each hatching success categories
 -->
-
+```
 ```{r hatch_succ}
 x$nest_excavations %>% 
   wastdr::hatching_emergence_success() %>% 
   rt()
 ```
-
 
 ## Sand temperatures
 
@@ -618,15 +703,19 @@ Tags from Delambre rookery found elsewhere (individual)
 ### Injuries of tagged turtles
 
 ### Predation and Disturbance
+
 #### Causes of disturbance and nest predation
+
 ```{r}
 x$nest_dist %>% 
   wastdr::disturbance_by_season() %>% 
+  dplyr::arrange(-season, encounter_type, -n) %>% 
+  janitor::clean_names(case = "sentence") %>% 
   rt()
 ```
 
-
 #### General disturbance
+
 ```{r dist_map}
 x$nest_dist %>% 
   dplyr::filter(encounter_encounter_type == "other") %>% 
@@ -634,9 +723,9 @@ x$nest_dist %>%
 ```
 
 #### Disturbed nests
+
 ```{r dist_map_nest}
 x$nest_dist %>% 
   dplyr::filter(encounter_encounter_type == "nest") %>% 
   wastdr::map_dist()
 ```
-

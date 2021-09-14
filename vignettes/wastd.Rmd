@@ -136,10 +136,24 @@ This caveat will be resolved once the tagging database is fully synchronised
 with WAStD, and WAStD therefore contains all tagging records, which then are
 added to the descriptive statistics shown in this report.
 
+## Turtle Nesting Current Season
+
 ```{r tracks_map_2020}
 x$tracks %>% 
   wastdr::filter_wastd_season(2020) %>% 
+  wastdr::filter_realspecies() %>% 
   wastdr::map_tracks(sites = x$sites)
+```
+
+For performance, we include the same map with tracks clustered by species.
+On slow machines with large datasets, this map will perform better than the
+above map with individual records.
+
+```{r tracks_map_2020_cluster}
+x$tracks %>% 
+  wastdr::filter_wastd_season(2020) %>% 
+  wastdr::filter_realspecies() %>% 
+  wastdr::map_tracks(sites = x$sites, cluster = TRUE)
 ```
 
 ## Missed tracks
@@ -159,6 +173,7 @@ Missed tracks are contained in the exported `tracks.csv` with `nest_age` "missed
 ```{r tracks_missed}
 mt <- x$tracks %>% 
   wastdr::filter_wastd_season(2020) %>% 
+  wastdr::filter_realspecies() %>% 
   dplyr::filter(nest_age == "missed")
 
 # mt %>% rt
@@ -180,6 +195,25 @@ disturbance or presence of predators.
 x$nest_dist %>% 
   wastdr::filter_wastd_season(2020) %>%
   wastdr::map_dist()
+```
+
+
+### Disturbance causes
+The following interactive table tallies both nest and general ("other") 
+disturbance by season. Filter this table to inspect disturbance causes.
+
+You can also select any combination of disturbance causes in the map above to 
+inspect their spatial distribution across the studied area.
+
+The numbers shown are absolute numbers and not normalised for survey effort or
+extent of surveyed area.
+
+```{r dist_causes}
+x$nest_dist %>% 
+  wastdr::disturbance_by_season() %>% 
+  dplyr::arrange(-season, -n) %>% 
+  # dplyr::filter(n>1) %>% 
+  rt()
 ```
 
 ## Turtle tracks and nests season totals
@@ -710,7 +744,8 @@ showing the extra hours between actual fieldwork as survey duration.
 
 Protocol:
 
-* Open each "Update survey XXX" link to view the survey in the data curation portal.
+* Open each "Update survey XXX" link to view the survey in the data curation 
+  portal.
 * From the data curation portal, "view on site" to inspect duration and the 
   list of encounters.
 * Do the encounters come from two different dates? If so, find surveys from the
@@ -721,18 +756,21 @@ Protocol:
 * Having all candidate surveys open in the data curation portal:
   * mark both as "production",
   * adjust start and end times to be one one day only, then 
-  * both: save and continue editing.
-  This will adopt encounters to the respective dates and re-distribute them across
-  the two candidate surveys.
+  * aave and continue editing the "recipient" survey, then refresh the "view" 
+    and verify that additional encounters were adopted.
+  * Save and continue editing the "donor" survey, refresh the "view" and
+    verify that the encounters of the incorrect date are gone from the list of
+    encounters.
 * Refresh both surveys' "view on site". Are the encounters allocated correctly?
   If not, adjust survey start and end times again to enclose their encounters and
-  save the surveys again.
+  save the surveys again until the number of linked encounters remains stable.
 * If the surveys have been split up to separate (consecutive) dates:
   * they should not appear as each others' duplicates, and 
   * their encounters should also be from the respective date.
   * Each survey can have other duplicate surveys from their respective date.
-* Mark each survey as "production" again and verify that the number of encounters
-  as well as the start and end dates have not shifted.
+* Always mark the recipient survey production first, then the donor survey.
+  Verify that the number of encounters as well as the start and end dates 
+  have not shifted.
 * If other duplicate surveys were found, these should also be merged correctly now.
 
 
