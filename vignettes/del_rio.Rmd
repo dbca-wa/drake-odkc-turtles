@@ -31,6 +31,9 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 options(rmarkdown.html_vignette.check_title = FALSE)
 library(wastdr)
 library(sparkline)
+library(ggplot2)
+library(gt)
+library(reactable)
 
 # WAStD data from ETL
 drake::loadd("wastd_data")
@@ -149,7 +152,7 @@ x <- wastd_data %>%
   wastdr::filter_wastd_turtledata(area_name = params$area_name)
 
 # A Missed during tagging from "missed" and from morning track count
-missed_turtles <- 
+wastd_missed_turtles <- 
   x$tracks %>% 
   wastdr::filter_realspecies() %>% 
   dplyr::filter(
@@ -159,48 +162,69 @@ missed_turtles <-
       "track-unsure", 
       "track-not-assessed")
   ) %>% 
-  dplyr::group_by(season, site_name, turtle_date, species) %>% 
-  dplyr::tally(name = "missed") %>% 
+  dplyr::group_by(season, turtle_date, species) %>% 
+  dplyr::tally(name = "missed_tracks") %>% 
   dplyr::ungroup() 
  
-# B Tagged from night tagging
-# TODO split into tagged and missed
-# 
-# unique(w2$turtle_status)
-# new tag:
+# B from night tagging
+# unique(w2$turtle_status)  processed: "T" "Q" "P" "A" "R" - missed: "N" NA
+# new tag applied:
 # "A" new tag
-# "P" query new tagged
+# "P" query new tagged - new on a turtle with tag scars and no PIT = not a new turtle
 # "Q" query identity
 # "T" tagged
 # "R" re-entered population - original
-# 
-# not "NEW TAG L"
+#  
+# no new tag applied:
 # "N" non tagged
 # NA  
 # C captive
 # E error data not to be used
 # s salvage
 
-tagged_turtles <- w2 %>% 
+# w2_total_turtles = w2_processed_turtles + w2_missed_turtles
+w2_total_turtles <- w2 %>% 
   dplyr::group_by(season, turtle_date, species) %>% 
-  dplyr::tally(name = "tagged") %>% 
+  dplyr::tally(name = "total_turtles") %>% 
   dplyr::ungroup()
+
+w2_processed_turtles <- w2 %>% 
+  dplyr::filter(turtle_status %in% c("A", "P", "Q", "T", "R")) %>% 
+  dplyr::group_by(season, turtle_date, species) %>% 
+  dplyr::tally(name = "processed_turtles") %>% 
+  dplyr::ungroup()
+
+w2_missed_turtles <- w2 %>% 
+  dplyr::filter(turtle_status %in% c("N", NA, "C", "S")) %>% 
+  dplyr::group_by(season, turtle_date, species) %>% 
+  dplyr::tally(name = "missed_turtles") %>% 
+  dplyr::ungroup()
+
 
 # Join A+B
 total_turtles <- dplyr::full_join(
-  missed_turtles,
-  tagged_turtles,
+  wastd_missed_turtles,
+  w2_total_turtles,
   by=c("species", "season", "turtle_date")
-)
+) %>% 
+  dplyr::mutate(
+    emergences = total_turtles + missed_tracks,
+    processed_pct = round(total_turtles * 100 / (total_turtles+missed_tracks), 2)
+  ) %>% 
+  dplyr::arrange(-season, species) %>% 
+  dplyr::mutate(
+    species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
+  ) %>% 
+  janitor::clean_names(case="sentence")
 
-# Tally A
-missed_turtles_season_totals <- missed_turtles %>% 
-  dplyr::group_by(site_name, season, species) %>% 
+# Tally A TODO combine with w2_missed_turtles
+missed_turtles_season_totals <- wastd_missed_turtles %>% 
+  dplyr::group_by(season, species) %>% 
   dplyr::tally(name = "missed") %>% 
   dplyr::ungroup() 
 
 # Tally B
-tagged_turtles_season_totals <- tagged_turtles %>% 
+tagged_turtles_season_totals <- w2_total_turtles %>% 
   dplyr::group_by(season, species) %>% 
   dplyr::tally(name = "tagged") %>% 
   dplyr::ungroup() 
@@ -212,7 +236,14 @@ total_turtles_season <-
   tagged_turtles_season_totals,
   by=c("species", "season")
 ) %>% 
-  dplyr::arrange(-season, species)
+  dplyr::mutate(
+    emergences = tagged+missed,
+    processed_pct = round(tagged * 100 / (tagged+missed), 2)) %>% 
+  dplyr::arrange(-season, species) %>% 
+  dplyr::mutate(
+    species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
+  ) %>% 
+  janitor::clean_names(case="sentence")
 ```
 
 # Data
@@ -228,16 +259,26 @@ reflects all QA operations up to this date.
 The WAMTRAM2 data was exported on 26 Feb 2021.
 
 # Survey effort
-Survey effort as shown here is calculated from tracks.
+Survey effort as shown here is calculated from surveys captured in WAStD.
 
 The season length spans the dates of the first to the last survey of the season.
 The single survey with a single turtle track in Aug 2019 contribute to the
 unusual season length in 2019.
 
+<!--
+TODO
+What's the story behind the single flatback false crawl in 21 Aug 2019?
+https://wastd.dbca.wa.gov.au/admin/observations/turtlenestencounter/175285/change/
+-->
+
 The estimate of hours spent surveying is inflated in past seasons (2019 and earlier)
 by incorrectly merged surveys which span either two night tagging shifts, or
 a night tagging shift and a morning track count. The estimate of hours will be
 more accurate after these merged surveys have been un-merged.
+
+On days of night tagging and morning track counts there should be two surveys 
+per date.
+
 
 ```{r survey_effort}
 x$surveys %>% 
@@ -283,6 +324,10 @@ x$surveys %>% plot_survey_effort(placename = pn, prefix = pf, export = FALSE)
 Nesting census data (WAStD tracks) are shown for the last season (2020-21). 
 Training records are excluded.
 
+<!-- 
+# TODO: show tagging in tracks_map_2020
+-->
+
 ```{r tracks_map_2020}
 x$tracks %>% 
   wastdr::filter_realspecies() %>% 
@@ -290,25 +335,6 @@ x$tracks %>%
   wastdr::map_tracks(sites = x$sites, cluster = FALSE)
 ```
 
-
-<!-- 
-# TODO: show tagging in tracks_map_2020
--->
-
-The season summary provides season totals for each species, broken into
-the different levels of nesting success that were captured. See also
-heading "Nesting Success".
-
-<!-- 
-# TODO add tagging numbers to season_summary
-
-# wastd_nesting_type_by_season_age_species %>%
-#   readr::write_csv(here::here(fn, "nesting_type_by_season_age_species.csv"))
--->
-
-```{r season_summary}
-
-```
 
 <!-- 
 
@@ -368,30 +394,33 @@ TABLE:
 -   add figure “Clutch Frequency”: show estimated number of turtles that lay 1 clutch, 2 clutches, 3 clutches, etc
  -->
 
-## Total turtles per night
+## Total turtles
 
 We calculate the **total number of turtles per night** as the sum of
 emergences from the following observations:
 
 -   nesting females tagged at night (from WAMTRAM tagging)
+-   nesting females 
 -   tracks of turtles missed during tagging, tracks encountered during
-    tagging (from WAStD tracks of type "false-crawls" or
-    "successful-crawls" with track age "missed just now")
+    tagging (from WAStD tracks of any nesting success type - success, unsure, or 
+    no success - with track age "missed just now")
 -   tracks of turtles missed during tagging, tracks encountered during a
     nesting census beach walk the next morning (from WAStD tracks,
-    tracks of type "false-crawls" or "successful-crawls" with track age
-    "new, made in past 24 hours")
+    tracks of of any nesting success type with track age "new, made in past 24 hours")
 
-We exclude hatched nests, incubating nests without a track (older than a
+We exclude hatched nests, incubating nests without a track (each are older than a
 day), and body pits (which can be recorded, but are of little value).
 
 We assume each record in WAMTRAM is a turtle emergence, be it tagged or not, and
-nesting or not.
+nesting or not. We assume no record in WAMTRAM is duplicated in WAStD, i.e.
+turtles are either captured on paper (WAMTRAM) or in a tablet (WAStD), but never
+on both media.
 
 We bin the numbers for tallying by the "turtle date", which is the
 calendar date of the tagging night and extends to encounters past
-midnight and on the next morning. Turtle date rolls over at noon. Turtle
-date bins all observations following one nesting night under one date.
+midnight and on the next morning. 
+Turtle date rolls over at noon and lags calendar date by 12 hours. 
+Turtle date bins all recorded events from one nesting night under one date.
 
 #### Caveats
 
@@ -417,54 +446,88 @@ TODO this should be total numbers - not split by tagged vs missed
 #   gt::gt(groupname_col=NULL, caption = "Total Flatback emergences") %>%
 #   gt::tab_header(title="Total Flatback emergences", subtitle="")
 -->
+### Total turtles per season
+The emergences are the sum of tagged and missed turtles. 
+The percentage of processed turtles is shown as the fraction of tagged turtles
+over total emergences (tagged and missed).
 
-```{r total_turtles}
-# TODO - total turtles per night as table and figure
+```{r total_turtles_season}
+total_turtles_season %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Total number of turtles"
+  ) %>% 
+  # gt::fmt_date(c("First day", "Last day")) %>% # Friday, October 20, 2017
+  gt::tab_header(
+    title="Total numbers of turtles",
+    subtitle="Turtle emergences grouped by season and species"
+  )
 ```
 
-## Processed vs missed turtles
+### Total, processed, and missed turtles per night
 Data:
-* All species from seasons 2008-09 and onwards.
+* All species 
+* All seasons. Dedicated monitoring starts in season 2008-09.
 * Processed turtles: WAMTRAM records indicating successful tagging
 * Missed turtles: WAMTRAM records indicating tracks from a missed turtle, 
   the track being either encountered during night tagging or during a morning
   survey.
 
-The tally of processed (tagged) and missed turtles is shown first as an
-interactive table, then as a time series plot.
+The tally of processed (tagged) and missed turtles is shown first as tables 
+(tallied by season and date, respectively), then as a time series plot.
 
-<!-- TODO split WAMTRAM into tagged and non tagged -->
-
-```{r proc_vs_missed}
-total_turtles_season %>%
-  dplyr::select(-site_name) %>% 
-  # tidyr::pivot_longer(cols=c(missed, tagged), names_to="type", values_to="n") %>%
-  dplyr::filter(season > 2007) %>% # , species == "natator-depressus"
-  dplyr::mutate(
-    species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
+```{r total_turtles_date}
+total_turtles %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Total number of turtles"
   ) %>% 
-  janitor::clean_names(case="sentence") %>% 
-  rt()
+  # gt::fmt_date(c("First day", "Last day")) %>% # Friday, October 20, 2017
+  gt::tab_header(
+    title="Total numbers of turtles",
+    subtitle="Turtle emergences grouped by turtle date and species"
+  )
 ```
 
-### All species
 
-```{r total_turtles_fig, fig.height=12}
+### Recent seasons split by species
+* Data: combined numbers from WAMTRAM and WAStD, `total_turtles_season`
+* Y: Absolute numbers of processed and missed turtles
+* X: Year (from 2008)
+
+```{r proc_vs_missed_fig, fig.height=12}
+total_turtles_season %>%
+  tidyr::pivot_longer(cols=c(Missed, Tagged), names_to="Type", values_to="N") %>%
+  dplyr::filter(Season > 2007) %>% # , species == "natator-depressus"
+  ggplot2::ggplot() +
+  ggplot2::geom_col(ggplot2::aes(x=Season, y=N, colour=Type, fill=Type)) +
+  ggplot2::facet_grid(facets = ggplot2::vars(Species), scales="free_x") +
+  ggplot2::ggtitle(label="Processed and missed turtles", 
+                   subtitle="Numbers of processed and missed turtles over seasons by species") + 
+  ggplot2::labs(x="Year", y="Turtles") +
+  ggplot2::theme_bw() +
+  ggplot2::theme(legend.position="bottom") +
+  NULL
+```
+
+### All species, all seasons
+
+```{r total_turtles_date_fig, fig.height=12}
 ggplot2::ggplot(
   data = total_turtles,
-  mapping = ggplot2::aes(x = tdate_as_fdate(turtle_date))
+  mapping = ggplot2::aes(x = tdate_as_fdate(`Turtle date`))
 ) +
-  ggplot2::geom_bar(ggplot2::aes(y = missed),
+  ggplot2::geom_bar(ggplot2::aes(y = `Missed tracks`),
                     stat = "identity",
                     color = "black",
                     fill = "black"
   ) +
-    ggplot2::geom_bar(ggplot2::aes(y = tagged),
+    ggplot2::geom_bar(ggplot2::aes(y = `Total turtles`),
                     stat = "identity",
                     color = "grey",
                     fill = "grey"
   ) +
-  ggplot2::facet_grid(facets = ggplot2::vars(season), scales = "free_x") +
+  ggplot2::facet_grid(facets = ggplot2::vars(Season), scales = "free_x") +
   ggplot2::scale_x_continuous(labels = function(x) {fdate_as_tdate(x)}) +
   ggplot2::ggtitle(label="Total turtles", 
                    subtitle="Tagged vs missed by season") + 
@@ -474,92 +537,7 @@ ggplot2::ggplot(
   NULL
 ```
 
-### Recent seasons split by species
-
-```{r proc_vs_missed_fig, fig.height=12}
-total_turtles_season %>%
-  tidyr::pivot_longer(cols=c(missed, tagged), names_to="type", values_to="n") %>%
-  dplyr::filter(season > 2007) %>% # , species == "natator-depressus"
-  janitor::clean_names(case="sentence") %>% 
-  ggplot2::ggplot() +
-  ggplot2::geom_col(ggplot2::aes(x=Season, y=N, colour=Type, fill=Type)) +
-  ggplot2::facet_grid(facets = ggplot2::vars(Species), scales="free_x") +
-  ggplot2::ggtitle(label="Total turtles", 
-                   subtitle="Tagged vs missed by season") + 
-  ggplot2::labs(x="Date", y="Turtles") +
-  ggplot2::theme_bw() +
-  ggplot2::theme(legend.position="bottom") +
-  NULL
-```
-
-## Recaptured vs new turtles
-
-<!--
-        # resighted
-        "P": 'resighted',
-        "p": 'resighted',  # typo duplicate of P
-        "P_OK": 'resighted',  # tag seen, good fix observed
-        "P_ED": 'resighted',  # resighted, but tag about to fall off
-        "RQ": 'resighted',  # observed but insecure, action taken unknown
-        "RC": 'reclinched',  # observed insecure, reclinched
-        "OX": 'reclinched',
-
-        # applied-new
-        "A1": 'applied-new',  # applied new, fix seems ok
-        "AE": 'applied-new',  # applied new, end clinch noted
-        "ae": 'applied-new',  # typo duplicate of AE
-
-        # removed
-        "R": 'removed',  # removed by obs
-        "OO": 'removed',  # fell off during observation
-
-        # not tagged, no tags seen, no number recorded:
-        # "A2": '',  # TODO no tag applied
-        "PX": 'resighted',  # TODO tag present, not read
-        # "0": '',  # TODO false ID as lost
-        "#": 'applied-new',  # tag was applied, but tag number unknown
-        "Q": 'applied-new',  # tag number incompletely recorded
-        # M tag scar seen
-        # M1 missing
-        # N not recorded
-        # 0L falsely assumed to be tag scar, not a tag scar
-        'resighted': 'resighted'
-        
-TAG_STATUS_DEFAULT = 'resighted'
-TAG_STATUS_APPLIED_NEW = 'applied-new'
-TAG_STATUS_CHOICES = (                                          # TRT_TAG_STATES
-    ('ordered', 'ordered from manufacturer'),
-    ('produced', 'produced by manufacturer'),
-    ('delivered', 'delivered to HQ'),
-    ('allocated', 'allocated to field team'),
-    (TAG_STATUS_APPLIED_NEW, 'applied new'),                    # A1, AE
-    (TAG_STATUS_DEFAULT, 're-sighted associated with animal'),  # OX, P, P_OK, RQ, P_ED
-    ('reclinched', 're-sighted and reclinched on animal'),      # RC
-    ('removed', 'taken off animal'),                            # OO, R
-    ('found', 'found detached'),
-    ('returned', 'returned to HQ'),
-    ('decommissioned', 'decommissioned'),
-    ('destroyed', 'destroyed'),
-    ('observed', 'observed in any other context, see comments'), )
-
-TAG_STATUS_RESIGHTED = ('resighted', 'reclinched', 'removed')
-TAG_STATUS_ON_ANIMAL = (TAG_STATUS_APPLIED_NEW, TAG_STATUS_RESIGHTED)
-
-NEST_TAG_STATUS_CHOICES = (
-    (TAG_STATUS_APPLIED_NEW, 'applied new'),
-    (TAG_STATUS_DEFAULT, 're-sighted associated with nest'),
-)
-
-# w2$turtle_status %>% unique() 
-# "T" tag scar?
-# "Q" question - incorrect read?
-# "N" not recorded
-# "P" re-sighted
-# NA  
-# "A" applied new?
-# "R" removed
-
--->
+## New, remigrant, recaptured turtles
 WAMTRAM tagging records are grouped by season, species, and observation status
 (initial nesting, remigrant, resighting, initial sighting) and tallied.
 
@@ -584,11 +562,11 @@ gt::gt(
   )
 ```
 
-## Remigrants
-
+<!--
 -   Add figure "remigration interval": show the number of remigrants
     coming back after 1,2,3, 4+ years
 -   Add text about remigrant turtles coming from other rookeries
+-->
 
 ## Morphometrics
 Tagging data fields `w2$ccl` and `w2$ccw` are grouped by season and species, 
@@ -699,10 +677,11 @@ total_nesting_by_season_species <-
     nesting = `successful-crawl` + nesting,
     unsure = `track-not-assessed` + `track-unsure` + unsure_nesting +  unknown_nesting,
     non_nesting = `false-crawl` + non_nesting,
-    nesting_success = round(nesting * 100 / (unsure+non_nesting), 2)
+    nesting_success = round(nesting * 100 / (nesting+unsure+non_nesting), 2)
   )
 
 total_nesting_by_season_species %>%
+  dplyr::filter(season>2016) %>% 
   gt::gt(
     groupname_col=NULL,
     caption = "Nesting by season and species tallied by nesting success from tagging and track data"
@@ -716,7 +695,8 @@ total_nesting_by_season_species %>%
     species = "Species",
     nesting = "Nesting confirmed",
     unsure = "Nesting unsure",
-    non_nesting = "Non nesting"
+    non_nesting = "Non nesting",
+    nesting_success = "Nesting success"
   )
 ```
 
