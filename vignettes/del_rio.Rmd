@@ -188,6 +188,8 @@ wastd_missed_turtles <-
 # E error data not to be used
 # s salvage
 
+# -----------------------------------------------------------------------------#
+# Emergences: processed + missed
 # w2_processed_turtles = w2_tagged_turtles + w2_non_tagged_turtles
 w2_processed_turtles <- w2 %>% 
   dplyr::group_by(season, turtle_date, species) %>% 
@@ -263,7 +265,83 @@ total_turtles_season <-
   ) %>% 
   dplyr::select(season, species, emergences, processed, missed, processed_pct) %>% 
   janitor::clean_names(case="sentence")
+
+# -----------------------------------------------------------------------------#
+# Nesting success
+wastd_nesting_type_by_season_age_species <-
+  x$tracks %>% 
+  wastdr::filter_realspecies() %>% 
+  wastdr::nesting_type_by_area_season_species() %>% 
+  dplyr::arrange(-season)
+
+w2_nesting_type_by_season_species <- 
+  w2 %>% 
+  dplyr::group_by(season, species, nesting) %>% 
+  dplyr::tally() %>%
+  dplyr::ungroup() %>%
+  tidyr::spread(nesting, n, fill = 0) %>% 
+  dplyr::rename(nesting=Y, non_nesting=N, unknown_nesting=U, unsure_nesting=P)
+  
+total_nesting_by_season_species <-
+  dplyr::full_join(
+    wastd_nesting_type_by_season_age_species,
+    w2_nesting_type_by_season_species,
+    by=c("season", "species")
+  ) %>% 
+  dplyr::arrange(-season, species) %>% 
+  dplyr::transmute(
+    season = season,
+    species = stringr::str_to_sentence(species) %>% stringr::str_replace("-"," "),
+    nesting = `successful-crawl` + nesting,
+    unsure = `track-not-assessed` + `track-unsure` + unsure_nesting +  unknown_nesting,
+    non_nesting = `false-crawl` + non_nesting,
+    nesting_success = round(nesting * 100 / (nesting+unsure+non_nesting), 2)
+  )
+
+# -----------------------------------------------------------------------------#
+# Damages and injuries
+damage_codes <- tibble::tribble(
+  ~"damage_type", ~"damage",
+  "0", "None significant",
+  "1", "Tip off - Flipper",
+  "2", "Lost from Nail - Flipper",
+  "3", "Lost half - Flipper",
+  "4", "Lost whole - Flipper",
+  "5", "Minor Wounds or cuts",
+  "6", "Major Wounds or cuts",
+  "7", "Deformity"
+)
+
+# w2$damage split by comma, tally unique injuries
+# 
+trt_numbers <- w2 %>% 
+  dplyr::group_by(season, species) %>% 
+  dplyr::tally(name = "total_turtles") %>% 
+  dplyr::ungroup() %>% 
+  dplyr::mutate(
+    species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
+  )
+  
+  
+trt_dmg <- w2 %>% 
+  dplyr::select(season, turtle_date, species, damage) %>% 
+  tidyr::separate_rows(damage, sep = ", ") %>% 
+  tidyr::drop_na(damage) %>% 
+  dplyr::mutate(
+    species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," "),
+    damage = damage %>% 
+      stringr::str_replace("mid-carapace", "mid carapace") %>%
+      stringr::str_replace(" - entire", " entire") %>% 
+      trimws()
+  ) %>% 
+  tidyr::separate(damage, c("body_part", "damage_type"), sep = " - ") %>% 
+  dplyr::left_join(damage_codes, by = c("damage_type")) %>% 
+  dplyr::select(-damage_type) %>% 
+  dplyr::arrange(-season) %>% 
+  dplyr::left_join(trt_numbers, by=c("season", "species"))
 ```
+
+<!-- TODO handle NA vs 0 in processed and missed so that processed_pct is numeric  -->
 
 # Data
 
@@ -279,16 +357,9 @@ The WAMTRAM2 data was exported on 26 Feb 2021.
 
 # Survey effort
 Survey effort as shown here is calculated from surveys captured in WAStD.
+Test and training surveys are excluded.`
 
 The season length spans the dates of the first to the last survey of the season.
-The single survey with a single turtle track in Aug 2019 contribute to the
-unusual season length in 2019.
-
-<!--
-TODO
-What's the story behind the single flatback false crawl in 21 Aug 2019?
-https://wastd.dbca.wa.gov.au/admin/observations/turtlenestencounter/175285/change/
--->
 
 The estimate of hours spent surveying is inflated in past seasons (2019 and earlier)
 by incorrectly merged surveys which span either two night tagging shifts, or
@@ -301,6 +372,7 @@ per date.
 
 ```{r survey_effort}
 x$surveys %>% 
+  wastdr::filter_realsurveys() %>% 
   wastdr::survey_season_stats()  %>% 
   janitor::clean_names(case="sentence") %>% 
   gt::gt(
@@ -315,11 +387,15 @@ x$surveys %>%
 ```
 
 ```{r svy_plt_count}
-x$surveys %>% plot_survey_count(placename = pn, prefix = pf, export = FALSE)
+x$surveys %>% 
+  wastdr::filter_realsurveys() %>% 
+  plot_survey_count(placename = pn, prefix = pf, export = FALSE)
 ```
 
 ```{r svy_plt_hrs}
-x$surveys %>% plot_survey_effort(placename = pn, prefix = pf, export = FALSE)
+x$surveys %>% 
+  wastdr::filter_realsurveys() %>% 
+  plot_survey_effort(placename = pn, prefix = pf, export = FALSE)
 ```
 
 <!--
@@ -354,67 +430,7 @@ x$tracks %>%
   wastdr::map_tracks(sites = x$sites, cluster = FALSE)
 ```
 
-
-<!-- 
-
-# 
-# nest_type_by_day <- x$tracks %>% 
-#   wastdr::filter_realspecies() %>% 
-#   dplyr::group_by(site_name, season, calendar_date_awst, nest_type) %>% 
-#   dplyr::tally() %>% 
-#   dplyr::ungroup()
-#  
-# ggplot2::ggplot(
-#   data = nest_type_by_day,
-#   mapping = ggplot2::aes(
-#     x = tdate_as_fdate(calendar_date_awst), 
-#     colour = nest_type
-#   ) 
-# ) +
-#   ggplot2::geom_bar(ggplot2::aes(y = n),
-#                     stat = "identity",
-#                     color = "black",
-#                     fill = "grey"
-#   ) +
-#   ggplot2::facet_grid(facets = ggplot2::vars(season), scales = "free_x") +
-#   ggplot2::scale_x_continuous(labels = function(x) {fdate_as_tdate(x)}) +
-#   NULL
-
-SFO https://github.com/dbca-wa/wastd/issues/177
-
-TABLE:
-
--   Total, mean, SD and range number of processed turtles
--   Total, mean, SD and range number of unique individuals
--   Total, mean, SD and range number of new turtles 
--   Total, mean, SD and range number of remigrants
--   Mean, SD, range of number of missed turtles per night, and
-    percentage of missed turtles per night (compared to number of
-    processed turtles)
--   Total, mean, SD and range number of nests (need to discuss
-    methodology to QA data to identify nests)
--   Total, mean, SD and range number of false crawls
--   mean, SD and range nesting success
--   keep figure “Number of processed turtles per day” but add number of 
-    missed turtles per day to the figure, staked histograms
--   add figure “Number of new and remigrant turtles per day” : 
-    show the number of new turtles and remigrants each day (unique sighting, 
-    not observations)
--   add figure “Nesting success”: show the number of false crawls and nests 
-    each day + dashed line showing the mean
-
-Inter-nesting interval and clutch frequency
-
-TABLE:
-
--   mean, SD, range of inter-nesting interval in days + number of animals
--   mean, SD, range of clutch frequency
--   hide figure “nesting intervals”
--   add figure “Clutch Frequency”: show estimated number of turtles that lay 1 clutch, 2 clutches, 3 clutches, etc
- -->
-
 ## Total turtles
-
 We calculate the **total number of turtle emergences per night** as the sum of
 emergences from the following observations:
 
@@ -443,7 +459,6 @@ Turtle date rolls over at noon and lags behind calendar date by 12 hours.
 Turtle date bins all recorded events from one nesting night under one date.
 
 #### Caveats
-
 The same turtle can emerge multiple times per night. E.g., a turtle
 could emerge one or several times for an unsuccessful nesting attempt
 before being processed after a successful one. Another turtle could
@@ -452,18 +467,6 @@ scenario, one turtle would contribute several emergences to a night's
 tally. Therefore, the numbers presented here are an **optimistic
 estimate** of total turtle numbers.
 
-<!--  
-
-TODO Verify - are missed tracks of pre-WAStD seasons entered in WAMTRAM? 
-
-# Static (too long)
-# total_turtles %>%
-#   dplyr::filter(species == "natator-depressus") %>%
-#   dplyr::select(-site_name, -species) %>%
-#   janitor::clean_names(case="sentence") %>%
-#   gt::gt(groupname_col=NULL, caption = "Total Flatback emergences") %>%
-#   gt::tab_header(title="Total Flatback emergences", subtitle="")
--->
 ### Total emergences (processed and missed) turtles per season
 The emergences are the sum of processed and missed turtles. 
 The percentage of processed turtles is shown as the fraction of processed turtles
@@ -515,7 +518,7 @@ total_turtles %>% rt()
 
 
 ### Recent seasons split by species
-* Data: combined emergences from WAMTRAM and WAStD, `total_turtles_season`
+* Data: combined emergences from WAMTRAM and WAStD, `total_turtles_season.csv`
 * Y: Absolute numbers of processed (=tagged) and missed turtles
 * X: Year (from 2008)
 
@@ -603,7 +606,17 @@ turtle in 1995.
 This summary is exported as `turtles_new_rem_rec.csv` and shown in tables 
 below split by species.
 
-<!-- TODO save to CSV  -->
+<!-- 
+Inter-nesting interval and clutch frequency
+
+TABLE:
+
+-   mean, SD, range of inter-nesting interval in days + number of animals
+-   mean, SD, range of clutch frequency
+-   hide figure “nesting intervals”
+-   add figure “Clutch Frequency”: show estimated number of turtles that lay 
+    1 clutch, 2 clutches, 3 clutches, etc
+-->
 
 <!-- TODO plots?  -->
 ```{r trt_mcr}
@@ -673,14 +686,16 @@ summarised into mean, sd, min, max, and rounded to two decimals.
 These summary statistics of curved carapace length and width in mm are shown below.
 
 <!-- TODO save to CSV  -->
-<!-- TODO split by species?  -->
 
-This summary is exported as `turtles_morph.csv` and shown below split by species.
+This summary as a whole is exported as `trt_morph.csv` but shown below 
+split by species.
 
 ```{r morph}
 trt_morph <- w2 %>% 
+  dplyr::filter(!is.na(ccl), !is.na(ccw)) %>% 
   dplyr::group_by(season, species) %>% 
   dplyr::summarise(
+    n = dplyr::n(),
     ccl_mean = mean(ccl) %>% round(2),
     ccl_sd = sd(ccl) %>% round(2),
     ccl_min = min(ccl) %>% round(2),
@@ -688,7 +703,8 @@ trt_morph <- w2 %>%
     ccw_mean = mean(ccw) %>% round(2),
     ccw_sd = sd(ccw) %>% round(2),
     ccw_min = min(ccw) %>% round(2),
-    ccw_max = max(ccw) %>% round(2)
+    ccw_max = max(ccw) %>% round(2),
+    .groups = "keep"
   ) %>% 
   dplyr::ungroup() %>% 
   dplyr::arrange(-season, species) %>% 
@@ -699,15 +715,19 @@ trt_morph <- w2 %>%
 ```
 
 ```{r morph_fb}
-trt_morph %>% 
+trt_morph %>%
   dplyr::filter(Species == "Natator depressus") %>% 
   gt::gt(
     groupname_col=NULL,
     caption = "Morphometrics by season and species: Flatback turtles"
   ) %>% 
   gt::tab_header(
-    title="Morphometrics by season and species",
+    title="Morphometrics by season and species: Flatback turtles",
     subtitle="Values in millimetres, rounded to two decimals"
+  ) %>% 
+  gt::tab_spanner(
+    label = "Group",
+    columns = c(Season, Species, N)
   ) %>% 
   gt::tab_spanner(
     label = "Curved Carapace Length (mm)",
@@ -725,8 +745,12 @@ trt_morph %>%
     caption = "Morphometrics by season and species: Green turtles"
   ) %>% 
   gt::tab_header(
-    title="Morphometrics by season and species",
+    title="Morphometrics by season and species: Green turtles",
     subtitle="Values in millimetres, rounded to two decimals"
+  ) %>% 
+  gt::tab_spanner(
+    label = "Group",
+    columns = c(Season, Species, N)
   ) %>% 
   gt::tab_spanner(
     label = "Curved Carapace Length (mm)",
@@ -737,6 +761,8 @@ trt_morph %>%
   )
 ```
 
+
+
 ```{r morph_hb}
 trt_morph %>% 
   dplyr::filter(Species == "Eretmochelys imbricata") %>% 
@@ -745,8 +771,12 @@ trt_morph %>%
     caption = "Morphometrics by season and species: Hawksbill turtles"
   ) %>% 
   gt::tab_header(
-    title="Morphometrics by season and species",
+    title="Morphometrics by season and species: Hawksbill turtles",
     subtitle="Values in millimetres, rounded to two decimals"
+  ) %>% 
+  gt::tab_spanner(
+    label = "Group",
+    columns = c(Season, Species, N)
   ) %>% 
   gt::tab_spanner(
     label = "Curved Carapace Length (mm)",
@@ -798,36 +828,6 @@ recognize a nest.
 This summary is exported as `total_nesting_by_season_species.csv`.
 
 ```{r}
-wastd_nesting_type_by_season_age_species <-
-  x$tracks %>% 
-  wastdr::filter_realspecies() %>% 
-  wastdr::nesting_type_by_area_season_species() %>% 
-  dplyr::arrange(-season)
-
-w2_nesting_type_by_season_species <- 
-  w2 %>% 
-  dplyr::group_by(season, species, nesting) %>% 
-  dplyr::tally() %>%
-  dplyr::ungroup() %>%
-  tidyr::spread(nesting, n, fill = 0) %>% 
-  dplyr::rename(nesting=Y, non_nesting=N, unknown_nesting=U, unsure_nesting=P)
-  
-total_nesting_by_season_species <-
-  dplyr::full_join(
-    wastd_nesting_type_by_season_age_species,
-    w2_nesting_type_by_season_species,
-    by=c("season", "species")
-  ) %>% 
-  dplyr::arrange(-season, species) %>% 
-  dplyr::transmute(
-    season = season,
-    species = stringr::str_to_sentence(species) %>% stringr::str_replace("-"," "),
-    nesting = `successful-crawl` + nesting,
-    unsure = `track-not-assessed` + `track-unsure` + unsure_nesting +  unknown_nesting,
-    non_nesting = `false-crawl` + non_nesting,
-    nesting_success = round(nesting * 100 / (nesting+unsure+non_nesting), 2)
-  )
-
 total_nesting_by_season_species %>%
   dplyr::filter(season>2016) %>% 
   gt::gt(
@@ -917,18 +917,148 @@ x$nest_excavations %>%
 # Connectivity
 
 ## Connections to foraging grounds
-
-## Tag recoveries
-
 Tags from Delambre rookery found elsewhere (individual)
 <!-- TODO James: how to get from W2 -->
+
+
+## Tag recoveries
 
 ## Satellite tracking
 
 # Pressures and Threats
 
 ## Injuries of tagged turtles
-<!-- TODO injuries  -->
+Injuries are reported as part of the tagging process.
+The full list of injuries is exported as `turtle_injuries.csv`.
+Summaries by damage type and damaged body part are shown below.
+
+### Frequent injuries
+
+The numbers shown as "Damaged turtles" are absolute numbers, the percentages
+shown as "Damage pct" are normalised over the number of encountered turtles 
+per respective season ("Total turtles").
+
+This summary is exported as `trt_dmg_by_species_season.csv`.
+
+```{r dmg_type}
+trt_dmg_by_species_season <- trt_dmg %>% 
+  dplyr::group_by(season, species, damage, total_turtles) %>% 
+  dplyr::tally(name = "damaged_turtles") %>% 
+  dplyr::mutate(damage_pct = round(100* damaged_turtles / total_turtles, 2)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(species, -season, -damage_pct) %>% 
+  janitor::clean_names(case="sentence") 
+
+trt_dmg_by_species_season %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Most frequent injuries by season and species"
+  ) %>% 
+  gt::tab_header(
+    title="Most frequent injuries by season and species",
+    subtitle=""
+  ) 
+```
+
+### Injury type over time
+To inspect the relative abundance of each injury type per species, we show
+injury abundances (as fraction of turtles seen with that damage over total
+number of processed turtles in that season) over time.
+
+This summary is exported as `trt_dmg_type_pivot.csv`.
+
+```{r dmg_type_pivot}
+trt_dmg_type_pivot <- trt_dmg %>% 
+  dplyr::group_by(season, species, damage, total_turtles) %>% 
+  dplyr::tally(name = "damaged_turtles") %>% 
+  dplyr::mutate(damage_pct = round(100* damaged_turtles / total_turtles, 2)) %>% 
+  dplyr::ungroup() %>% 
+  janitor::clean_names(case="sentence") %>% 
+  tidyr::pivot_wider(
+    names_from = Season, values_from = `Damage pct`, names_sort = TRUE, values_fill = 0
+  ) %>% 
+  dplyr::select(-`Total turtles`, -`Damaged turtles`) 
+
+trt_dmg_type_pivot %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Injuries by species over time"
+  ) %>% 
+  gt::tab_header(
+    title="Injuries by species over time",
+    subtitle="Percent of processed turtles with given damage"
+  ) 
+```
+
+```{r dmg_bodypart, eval=FALSE}
+# TODO make relative numbers - use total_turtles of all times
+trt_dmg %>% 
+  dplyr::group_by(species, body_part) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(n>1) %>%
+  dplyr::arrange(species, -n) %>% 
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Most frequent injured body parts by species (all seasons)"
+  ) %>% 
+  gt::tab_header(
+    title="Most frequent injured body parts by species (all seasons)",
+    subtitle="Injuries occurring more than once"
+  ) 
+```      
+
+### Injured body parts over time
+To inspect the relative abundance of each injured body part per species, we show
+injury abundances (as fraction of turtles seen with damage to that body part 
+over total number of processed turtles in that season) over time.
+
+This summary is exported as `trt_dmg_bodypart_pivot.csv`.
+
+```{r dmg_bodypart_pivot}
+trt_dmg_bodypart_pivot <- trt_dmg %>% 
+  dplyr::group_by(season, species, body_part, total_turtles) %>% 
+  dplyr::tally(name = "damaged_turtles") %>% 
+  dplyr::mutate(damage_pct = round(100* damaged_turtles / total_turtles, 2)) %>% 
+  dplyr::ungroup() %>% 
+  janitor::clean_names(case="sentence") %>% 
+  tidyr::pivot_wider(
+    names_from = Season, values_from = `Damage pct`, names_sort = TRUE, values_fill = 0
+  ) %>% 
+  dplyr::select(-`Total turtles`, -`Damaged turtles`) 
+
+trt_dmg_bodypart_pivot %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Injuries to body parts by species over time"
+  ) %>% 
+  gt::tab_header(
+    title="Injuries to body parts by species over time",
+    subtitle="Percent of processed turtles with given damaged body part"
+  )  
+```
+
+
+```{r dmg_both, eval=FALSE}
+# TODO normalise
+trt_dmg %>% 
+  dplyr::group_by(species, body_part, damage) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::filter(n>2) %>%
+  dplyr::arrange(species, -n) %>% 
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Most frequent injuries by species (all seasons)"
+  ) %>% 
+  gt::tab_header(
+    title="Most frequent injuries by species (all seasons)",
+    subtitle="Injuries occurring more than twice"
+  ) 
+```
+
 
 ## Predation and Disturbance
 Predation and disturbance is recorded through WAStD as either general disturbance
@@ -939,9 +1069,9 @@ Each distinct cause of predation or disturbance is recorded separately.
 ### Disturbance and nest predation
 
 <!-- TODO save to CSV: explain wastd export  -->
-Nest and general disturbances are exported as `nest_dist.csv`. One record therein
-refers to one distinct disturbance or predation of one nest, or one distinct
-sign of general disturbance or predator presence.
+Nest and general disturbances are exported as `nest_dist.csv`. 
+One record therein refers to one distinct disturbance or predation of one nest 
+or one distinct sign of general disturbance or predator presence.
 
 ```{r}
 x$nest_dist %>% 
