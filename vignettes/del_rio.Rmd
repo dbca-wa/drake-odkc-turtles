@@ -18,6 +18,8 @@ vignette: |
   %\VignetteIndexEntry{wastd} %\VignetteEncoding{UTF-8} %\VignetteEngine{knitr::rmarkdown}
 params:
   area_name: Delambre Island
+  prefix: DEL
+  w2_filepath: 'data/wamtram.csv'
 editor_options:
   markdown:
     wrap: 72
@@ -36,10 +38,48 @@ library(ggplot2)
 library(gt)
 library(reactable)
 
+# -----------------------------------------------------------------------------#
+# Helpers
+# 
+# Rendered tables: gt
+# Interactive tables: reactable
+rt <- . %>% 
+  reactable::reactable(
+    ., 
+    filterable = T, 
+    sortable = T, 
+    searchable = T,
+    defaultColDef = reactable::colDef(html = TRUE)
+  )
+
+# -----------------------------------------------------------------------------#
+# Data export
+# 
+zipfn <- wastdr::urlize(params$area_name)
+fn <- here::here("inst/reports/rio", zipfn)
+if (!fs::file_exists(fn)) {
+  "Creating dir {fn}" %>% glue::glue() %>% wastdr::wastdr_msg_info()
+  fs::dir_create(fn, recurse = TRUE)
+}
+
+# Data labels
+pn <- params$area_name
+pf <- params$prefix
+ld <- fn
+
+# -----------------------------------------------------------------------------#
 # WAStD data from ETL
+# 
 drake::loadd("wastd_data")
 
+x <- wastd_data %>% 
+  wastdr::filter_wastd_turtledata(area_name = params$area_name)
+
+x %>% wastdr::export_wastd_turtledata(outdir = fn, filename = zipfn)
+
+# -----------------------------------------------------------------------------#
 # WAMTRAM data from manual export
+# 
 # https://dpaw.sharepoint.com/teams/TurtlesRioTinto/Shared%20Documents/Forms/AllItems.aspx?viewid=737abde6%2D72b7%2D4293%2D92d3%2D4e1db0bfaf3a&id=%2Fteams%2FTurtlesRioTinto%2FShared%20Documents%2FGeneral%2F2021%2D03%2D26%20DEL%20and%20WPTP%2FTagging%20data%20export%20%2D%20new%20format
 # data export new format saved to data/wamtram.csv
 species_lookup <- tibble::tribble(
@@ -50,7 +90,7 @@ species_lookup <- tibble::tribble(
   "GN", "chelonia-mydas"
 ) 
 
-w2 <- here::here("data/wamtram.csv") %>% 
+w2 <- here::here(params$w2_filepath) %>% 
   readr::read_csv() %>% 
   janitor::clean_names() %>% 
   dplyr::left_join(species_lookup, by="species_code") %>% 
@@ -126,33 +166,9 @@ w2 <- here::here("data/wamtram.csv") %>%
 #   DAMAGE = col_character()
 # )
 
-# Rendered tables: gt
-# Interactive tables: reactable
-rt <- . %>% 
-  reactable::reactable(
-    ., 
-    filterable = T, 
-    sortable = T, 
-    searchable = T,
-    defaultColDef = reactable::colDef(html = TRUE)
-  )
-
-# Data export destination
-zipfn <- wastdr::urlize(params$area_name)
-fn <- here::here("inst/reports/rio", zipfn)
-if (!fs::file_exists(fn)) {
-  "Creating dir {fn}" %>% glue::glue() %>% wastdr::wastdr_msg_info()
-  fs::dir_create(fn, recurse = TRUE)
-}
-
-# Data labels
-pn <- params$area_name
-pf <- "DEL"
-ld <- here::here("inst/reports/delambre-island")
-
-x <- wastd_data %>% 
-  wastdr::filter_wastd_turtledata(area_name = params$area_name)
-
+# -----------------------------------------------------------------------------#
+# Emergences: WAStD
+# 
 # Missed turtles during tagging
 # We don't filter by track_age
 # This includes "missed just now" from tagging, 
@@ -266,6 +282,9 @@ total_turtles_season <-
   dplyr::select(season, species, emergences, processed, missed, processed_pct) %>% 
   janitor::clean_names(case="sentence")
 
+total_turtles_season %>% 
+  readr::write_csv(here::here(ld, "total_turtles_season.csv"))
+
 # -----------------------------------------------------------------------------#
 # Nesting success
 wastd_nesting_type_by_season_age_species <-
@@ -298,6 +317,9 @@ total_nesting_by_season_species <-
     nesting_success = round(nesting * 100 / (nesting+unsure+non_nesting), 2)
   )
 
+total_nesting_by_season_species %>% 
+  readr::write_csv(here::here(ld, "total_nesting_by_season_species.csv"))
+
 # -----------------------------------------------------------------------------#
 # Damages and injuries
 damage_codes <- tibble::tribble(
@@ -322,7 +344,6 @@ trt_numbers <- w2 %>%
     species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
   )
   
-  
 trt_dmg <- w2 %>% 
   dplyr::select(season, turtle_date, species, damage) %>% 
   tidyr::separate_rows(damage, sep = ", ") %>% 
@@ -339,9 +360,51 @@ trt_dmg <- w2 %>%
   dplyr::select(-damage_type) %>% 
   dplyr::arrange(-season) %>% 
   dplyr::left_join(trt_numbers, by=c("season", "species"))
+
+trt_dmg %>% 
+  readr::write_csv(here::here(ld, "trt_dmg.csv"))
+
+
+trt_dmg_by_species_season <- trt_dmg %>% 
+  dplyr::group_by(season, species, damage, total_turtles) %>% 
+  dplyr::tally(name = "damaged_turtles") %>% 
+  dplyr::mutate(damage_pct = round(100* damaged_turtles / total_turtles, 2)) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(species, -season, -damage_pct) %>% 
+  janitor::clean_names(case="sentence")
+
+trt_dmg_by_species_season %>% 
+  readr::write_csv(here::here(ld, "trt_dmg_by_species_season.csv"))
+
+trt_dmg_type_pivot <- trt_dmg %>% 
+  dplyr::group_by(season, species, damage, total_turtles) %>% 
+  dplyr::tally(name = "damaged_turtles") %>% 
+  dplyr::mutate(damage_pct = round(100* damaged_turtles / total_turtles, 2)) %>% 
+  dplyr::ungroup() %>% 
+  janitor::clean_names(case="sentence") %>% 
+  tidyr::pivot_wider(
+    names_from = Season, values_from = `Damage pct`, names_sort = TRUE, values_fill = 0
+  ) %>% 
+  dplyr::select(-`Total turtles`, -`Damaged turtles`) 
+
+trt_dmg_type_pivot %>% 
+  readr::write_csv(here::here(ld, "trt_dmg_type_pivot.csv"))
+
+trt_dmg_bodypart_pivot <- trt_dmg %>% 
+  dplyr::group_by(season, species, body_part, total_turtles) %>% 
+  dplyr::tally(name = "damaged_turtles") %>% 
+  dplyr::mutate(damage_pct = round(100* damaged_turtles / total_turtles, 2)) %>% 
+  dplyr::ungroup() %>% 
+  janitor::clean_names(case="sentence") %>% 
+  tidyr::pivot_wider(
+    names_from = Season, values_from = `Damage pct`, names_sort = TRUE, values_fill = 0
+  ) %>% 
+  dplyr::select(-`Total turtles`, -`Damaged turtles`) 
+
+trt_dmg_bodypart_pivot %>% 
+  readr::write_csv(here::here(ld, "trt_dmg_bodypart_pivot.csv"))
 ```
 
-<!-- TODO handle NA vs 0 in processed and missed so that processed_pct is numeric  -->
 
 # Data
 
@@ -386,16 +449,19 @@ x$surveys %>%
   )
 ```
 
+The following figure is saved as `DEL_survey_count_delambre-island.png`.
+
 ```{r svy_plt_count}
 x$surveys %>% 
   wastdr::filter_realsurveys() %>% 
-  plot_survey_count(placename = pn, prefix = pf, export = FALSE)
+  plot_survey_count(local_dir = fn, placename = pn, prefix = pf, export = TRUE)
 ```
+The following figure is saved as `DEL_survey_effort_delambre-island.png`.
 
 ```{r svy_plt_hrs}
 x$surveys %>% 
   wastdr::filter_realsurveys() %>% 
-  plot_survey_effort(placename = pn, prefix = pf, export = FALSE)
+  plot_survey_effort(local_dir = ld, placename = pn, prefix = pf, export = TRUE)
 ```
 
 <!--
@@ -525,9 +591,10 @@ total_turtles %>% rt()
 This figure is exported as `turtles_proc_mis_by_species.png`.
 
 <!-- TODO processed vs missed - change  total_turtles_season$tagged to exclude w2 non-tagged -->
-<!-- TODO save to PNG  -->
+
 ```{r proc_vs_missed_fig, fig.height=12}
-total_turtles_season %>%
+plt_total_turtles_season <- 
+  total_turtles_season %>%
   tidyr::pivot_longer(cols=c(Missed, Processed), names_to="Type", values_to="N") %>%
   dplyr::filter(Season > 2007) %>% # , species == "natator-depressus"
   ggplot2::ggplot() +
@@ -539,6 +606,16 @@ total_turtles_season %>%
   ggplot2::theme_bw() +
   ggplot2::theme(legend.position="bottom") +
   NULL
+
+ggplot2::ggsave(
+  plot = plt_total_turtles_season,
+  filename = "turtles_proc_mis_by_species.png",
+  path = fn,
+  width = 10,
+  height = 8
+)
+
+plt_total_turtles_season
 ```
 
 ### All species, all seasons
@@ -547,7 +624,8 @@ This figure is exported as `turtles_proc_mis_by_season.png`.
 
 <!-- TODO save to PNG  -->
 ```{r total_turtles_date_fig, fig.height=12}
-ggplot2::ggplot(
+turtles_proc_mis_by_season <- 
+  ggplot2::ggplot(
   data = total_turtles,
   mapping = ggplot2::aes(x = tdate_as_fdate(`Turtle date`))
 ) +
@@ -569,6 +647,16 @@ ggplot2::ggplot(
   ggplot2::theme_bw() +
   ggplot2::theme(legend.position="bottom") +
   NULL
+
+ggplot2::ggsave(
+  plot = turtles_proc_mis_by_season,
+  filename = "turtles_proc_mis_by_season.png",
+  path = fn,
+  width = 10,
+  height = 12
+)
+
+turtles_proc_mis_by_season
 ```
 
 ```{r total_turtles_fb_date_fig, fig.height=12}
@@ -941,14 +1029,6 @@ per respective season ("Total turtles").
 This summary is exported as `trt_dmg_by_species_season.csv`.
 
 ```{r dmg_type}
-trt_dmg_by_species_season <- trt_dmg %>% 
-  dplyr::group_by(season, species, damage, total_turtles) %>% 
-  dplyr::tally(name = "damaged_turtles") %>% 
-  dplyr::mutate(damage_pct = round(100* damaged_turtles / total_turtles, 2)) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::arrange(species, -season, -damage_pct) %>% 
-  janitor::clean_names(case="sentence") 
-
 trt_dmg_by_species_season %>% 
   gt::gt(
     groupname_col=NULL,
@@ -968,17 +1048,6 @@ number of processed turtles in that season) over time.
 This summary is exported as `trt_dmg_type_pivot.csv`.
 
 ```{r dmg_type_pivot}
-trt_dmg_type_pivot <- trt_dmg %>% 
-  dplyr::group_by(season, species, damage, total_turtles) %>% 
-  dplyr::tally(name = "damaged_turtles") %>% 
-  dplyr::mutate(damage_pct = round(100* damaged_turtles / total_turtles, 2)) %>% 
-  dplyr::ungroup() %>% 
-  janitor::clean_names(case="sentence") %>% 
-  tidyr::pivot_wider(
-    names_from = Season, values_from = `Damage pct`, names_sort = TRUE, values_fill = 0
-  ) %>% 
-  dplyr::select(-`Total turtles`, -`Damaged turtles`) 
-
 trt_dmg_type_pivot %>% 
   gt::gt(
     groupname_col=NULL,
@@ -1017,17 +1086,6 @@ over total number of processed turtles in that season) over time.
 This summary is exported as `trt_dmg_bodypart_pivot.csv`.
 
 ```{r dmg_bodypart_pivot}
-trt_dmg_bodypart_pivot <- trt_dmg %>% 
-  dplyr::group_by(season, species, body_part, total_turtles) %>% 
-  dplyr::tally(name = "damaged_turtles") %>% 
-  dplyr::mutate(damage_pct = round(100* damaged_turtles / total_turtles, 2)) %>% 
-  dplyr::ungroup() %>% 
-  janitor::clean_names(case="sentence") %>% 
-  tidyr::pivot_wider(
-    names_from = Season, values_from = `Damage pct`, names_sort = TRUE, values_fill = 0
-  ) %>% 
-  dplyr::select(-`Total turtles`, -`Damaged turtles`) 
-
 trt_dmg_bodypart_pivot %>% 
   gt::gt(
     groupname_col=NULL,
