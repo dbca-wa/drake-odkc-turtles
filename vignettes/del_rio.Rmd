@@ -486,7 +486,7 @@ Nesting census data (WAStD tracks) are shown for the last season (2020-21).
 Training records are excluded.
 
 <!-- 
-# TODO: show tagging in tracks_map_2020
+# TODO: show tagging in tracks_map_2020, save static map
 -->
 
 ```{r tracks_map_2020}

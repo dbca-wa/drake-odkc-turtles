@@ -44,9 +44,13 @@ upload_to_sharepoint <- function(wastd_reports = NULL){
   dst_rio <- get_todays_folder_sharepoint("Turtles Rio Tinto")
   source_files_del <- fs::dir_ls(here::here("inst/reports"), recurse = TRUE, regex="delambre")
   source_files_wptp <- fs::dir_ls(here::here("inst/reports"), recurse = TRUE, regex="west-pilbara")
+  # add del_rio when approved
+  # source_files_rio <- fs::dir_ls(here::here("inst/reports"), recurse = TRUE, regex="rio")
   source_files_qa <- fs::dir_ls(here::here("inst/reports"), regex="qa_")
   for (src_fn in source_files_del) {upload_item_to_sharepoint(src_fn, dst_rio)}
   for (src_fn in source_files_wptp) {upload_item_to_sharepoint(src_fn, dst_rio)}
+  # add del_rio when approved
+  # for (src_fn in source_files_rio) {upload_item_to_sharepoint(src_fn, dst_rio)}
   for (src_fn in source_files_qa) {upload_item_to_sharepoint(src_fn, dst_rio)}
   notify_teams_data("Turtles Rio Tinto", dst_rio)
 
