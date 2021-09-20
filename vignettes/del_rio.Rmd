@@ -20,6 +20,7 @@ params:
   area_name: Delambre Island
   prefix: DEL
   w2_filepath: 'data/wamtram.csv'
+  w2_observed_location_code: 'DA'
 editor_options:
   markdown:
     wrap: 72
@@ -90,7 +91,18 @@ species_lookup <- tibble::tribble(
   "GN", "chelonia-mydas"
 ) 
 
-w2 <- here::here(params$w2_filepath) %>% 
+#' Convert WAMTRAM `clutch_completed` values into `successful_nesting`
+#' 
+annotate_w2_nesting_success <- . %>% 
+  dplyr::mutate(
+    successful_nesting = 
+      dplyr::case_when(
+        clutch_completed == "Y" ~ "nesting",
+        clutch_completed == "N" ~ "non_nesting",
+        TRUE ~ "unknown_nesting" # "U", "P", "D", NA
+      ))
+
+w2_all <- here::here(params$w2_filepath) %>% 
   readr::read_csv() %>% 
   janitor::clean_names() %>% 
   dplyr::left_join(species_lookup, by="species_code") %>% 
@@ -104,7 +116,11 @@ w2 <- here::here(params$w2_filepath) %>%
       tz="UTC"
       ) %>% lubridate::with_tz("UTC")
   ) %>% 
-  wastdr::add_dates(date_col = "encounter_datetime_utc", parse_date = FALSE)
+  wastdr::add_dates(date_col = "encounter_datetime_utc", parse_date = FALSE) %>% 
+  annotate_w2_nesting_success()
+
+w2 <- w2_all %>% 
+  dplyr::filter(observed_location_code == params$w2_observed_location_code)
 
 # Verify that dates are correct:
 # w2 %>% 
@@ -287,19 +303,35 @@ total_turtles_season %>%
 
 # -----------------------------------------------------------------------------#
 # Nesting success
+# 
+# 
+# todo clutch_completed == successful NESTING
+# w2$clutch_completed %>% unique()
+# Y yes, N no, P possible, U uncertain, D did not check
+# 
+# Nesting success by season and species: season summary (tracks)
 wastd_nesting_type_by_season_age_species <-
   x$tracks %>% 
   wastdr::filter_realspecies() %>% 
   wastdr::nesting_type_by_area_season_species() %>% 
   dplyr::arrange(-season)
 
+# Nesting success by season and species: season summary (tagging)
 w2_nesting_type_by_season_species <- 
   w2 %>% 
-  dplyr::group_by(season, species, nesting) %>% 
+  dplyr::group_by(season, species, successful_nesting) %>% 
   dplyr::tally() %>%
   dplyr::ungroup() %>%
-  tidyr::spread(nesting, n, fill = 0) %>% 
-  dplyr::rename(nesting=Y, non_nesting=N, unknown_nesting=U, unsure_nesting=P)
+  tidyr::spread(successful_nesting, n, fill = 0)
+
+# Nesting success by season and individual turtle: internesting and clutch freq
+w2_nesting_type_by_season_turtle <- 
+  w2 %>% 
+  dplyr::group_by(season, species, turtle_id, successful_nesting) %>% 
+  dplyr::tally() %>%
+  dplyr::ungroup() %>%
+  tidyr::spread(successful_nesting, n, fill = 0) %>% 
+  dplyr::arrange(-season, turtle_id, -nesting)
   
 total_nesting_by_season_species <-
   dplyr::full_join(
@@ -312,13 +344,35 @@ total_nesting_by_season_species <-
     season = season,
     species = stringr::str_to_sentence(species) %>% stringr::str_replace("-"," "),
     nesting = `successful-crawl` + nesting,
-    unsure = `track-not-assessed` + `track-unsure` + unsure_nesting +  unknown_nesting,
+    unsure = `track-not-assessed` + `track-unsure` + unknown_nesting,
     non_nesting = `false-crawl` + non_nesting,
     nesting_success = round(nesting * 100 / (nesting+unsure+non_nesting), 2)
   )
 
 total_nesting_by_season_species %>% 
   readr::write_csv(here::here(ld, "total_nesting_by_season_species.csv"))
+
+w2_nesting_type_by_season_turtle %>% 
+  readr::write_csv(here::here(ld, "total_nesting_by_season_turtle.csv"))
+
+# -----------------------------------------------------------------------------#
+# Connectivity
+trt_conn <- 
+  w2_all %>% 
+  dplyr::group_by(season, species, observed_location_code, location_code) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  tidyr::pivot_wider(
+    names_from=location_code, 
+    names_sort = TRUE, 
+    values_from=n,
+    values_fill = 0
+  ) %>% 
+  dplyr::arrange(-season, observed_location_code, species)
+
+trt_conn %>% 
+  readr::write_csv(here::here(ld, "turtle_nesting_connectivity.csv"))
+
 
 # -----------------------------------------------------------------------------#
 # Damages and injuries
@@ -383,7 +437,10 @@ trt_dmg_type_pivot <- trt_dmg %>%
   dplyr::ungroup() %>% 
   janitor::clean_names(case="sentence") %>% 
   tidyr::pivot_wider(
-    names_from = Season, values_from = `Damage pct`, names_sort = TRUE, values_fill = 0
+    names_from = Season, 
+    values_from = `Damage pct`, 
+    names_sort = TRUE, 
+    values_fill = 0
   ) %>% 
   dplyr::select(-`Total turtles`, -`Damaged turtles`) 
 
@@ -496,7 +553,7 @@ x$tracks %>%
   wastdr::map_tracks(sites = x$sites, cluster = FALSE)
 ```
 
-## Total turtles
+## Turtle emergences and processing success
 We calculate the **total number of turtle emergences per night** as the sum of
 emergences from the following observations:
 
@@ -694,19 +751,6 @@ turtle in 1995.
 This summary is exported as `turtles_new_rem_rec.csv` and shown in tables 
 below split by species.
 
-<!-- 
-Inter-nesting interval and clutch frequency
-
-TABLE:
-
--   mean, SD, range of inter-nesting interval in days + number of animals
--   mean, SD, range of clutch frequency
--   hide figure “nesting intervals”
--   add figure “Clutch Frequency”: show estimated number of turtles that lay 
-    1 clutch, 2 clutches, 3 clutches, etc
--->
-
-<!-- TODO plots?  -->
 ```{r trt_mcr}
 turtles_mcr <- w2 %>% 
   # dplyr::filter(species_code == "FB") %>% 
@@ -760,20 +804,214 @@ turtles_mcr %>%
 ```
 
 
-
 <!--
 -   Add figure "remigration interval": show the number of remigrants
     coming back after 1,2,3, 4+ years
 -   Add text about remigrant turtles coming from other rookeries
 -->
 
+## Inter-nesting interval
+The recorded nesting success of identified turtles is exported as 
+`total_nesting_by_season_turtle.csv`.
+
+We show summary statistics per season split by species in the following three
+tables.
+
+```{r internesting}
+trt_internesting <- 
+  w2_nesting_type_by_season_turtle %>% 
+  dplyr::group_by(season, species) %>% 
+  dplyr::summarise(
+    n = dplyr::n(),
+    
+    nesting_mean = mean(nesting) %>% round(2),
+    nesting_sd = sd(nesting) %>% round(2),
+    nesting_max = max(nesting),
+    nesting_min = min(nesting),
+    
+    non_nesting_mean = mean(non_nesting) %>% round(2),
+    non_nesting_sd = sd(non_nesting) %>% round(2),
+    non_nesting_max = max(non_nesting),
+    non_nesting_min = min(non_nesting),
+    
+    unknown_nesting_mean = mean(unknown_nesting) %>% round(2),
+    unknown_nesting_sd = sd(unknown_nesting) %>% round(2),
+    unknown_nesting_max = max(unknown_nesting),
+    unknown_nesting_min = min(unknown_nesting)
+    ) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(-season, species)
+```
+
+```{r intern_fb}
+trt_internesting %>% 
+  dplyr::filter(species == "natator-depressus") %>% 
+  dplyr::select(-species) %>% 
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Internesting by season of Flatback turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Internesting by season of Flatback turtles",
+    subtitle="Counts of successful, unsuccessful, and unknown clutches per season"
+  ) %>% 
+  gt::tab_spanner(
+    "Successful nesting", 
+    columns = dplyr::contains("Nesting", ignore.case = FALSE)
+  ) %>% 
+  gt::tab_spanner(
+    "Unsucessful nesting", 
+    columns = dplyr::contains("Non nesting", ignore.case = FALSE)
+  ) %>%  
+  gt::tab_spanner(
+    "Unknown nesting", 
+    columns = dplyr::contains("Unknown nesting", ignore.case = FALSE)
+  )
+```
+
+```{r intern_gn}
+trt_internesting %>% 
+  dplyr::filter(species == "chelonia-mydas") %>% 
+  dplyr::select(-species) %>% 
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Internesting by season of Green turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Internesting by season of Green turtles",
+    subtitle="Counts of successful, unsuccessful, and unknown clutches per season"
+  ) %>% 
+  gt::tab_spanner(
+    "Successful nesting", 
+    columns = dplyr::contains("Nesting", ignore.case = FALSE)
+  ) %>% 
+  gt::tab_spanner(
+    "Unsucessful nesting", 
+    columns = dplyr::contains("Non nesting", ignore.case = FALSE)
+  ) %>%  
+  gt::tab_spanner(
+    "Unknown nesting", 
+    columns = dplyr::contains("Unknown nesting", ignore.case = FALSE)
+  )
+```
+
+```{r intern_hb}
+trt_internesting %>% 
+  dplyr::filter(species == "eretmochelys-imbricata") %>% 
+  dplyr::select(-species) %>% 
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Internesting by season of Hawksbill turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Internesting by season of Hawksbill turtles",
+    subtitle="Counts of successful, unsuccessful, and unknown clutches per season"
+  ) %>% 
+  gt::tab_spanner(
+    "Successful nesting", 
+    columns = dplyr::contains("Nesting", ignore.case = FALSE)
+  ) %>% 
+  gt::tab_spanner(
+    "Unsucessful nesting", 
+    columns = dplyr::contains("Non nesting", ignore.case = FALSE)
+  ) %>%  
+  gt::tab_spanner(
+    "Unknown nesting", 
+    columns = dplyr::contains("Unknown nesting", ignore.case = FALSE)
+  )
+```
+
+## Clutch frequency
+The clutch frequency is calculated from the individual turtles' nesting 
+frequencies (`w2_nesting_type_by_season_turtle`) as a tally of the frequency of the 
+confirmed successful nesting events. 
+This summary ignores unsuccessful and unknown nesting events.
+
+We show the clutch frequencies per season split by species in the following three
+tables.
+
+```{r clutch_freq}
+clutch_freq <- 
+  w2_nesting_type_by_season_turtle %>% 
+  dplyr::group_by(season, species, nesting) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(-season, species, -nesting) %>%
+  dplyr::rename(confirmed_clutches=nesting, Season=season) %>% 
+  tidyr::pivot_wider(
+    names_from=confirmed_clutches, values_from=n, names_sort=TRUE
+  )
+```
+
+```{r clutch_freq_fb}
+clutch_freq %>% 
+  dplyr::filter(species == "natator-depressus") %>% 
+  dplyr::select(-species) %>% 
+  # janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Clutch frequency of Flatback turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Clutch frequency of Green turtles"
+    # subtitle=""
+  ) %>% 
+  gt::tab_spanner(
+    "Number of successful clutches", 
+    columns = !dplyr::contains("Season")
+  )
+  
+```
+
+```{r clutch_freq_gn}
+clutch_freq %>% 
+  dplyr::filter(species == "chelonia-mydas") %>% 
+  dplyr::select(-species) %>% 
+  # janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Clutch frequency of Green turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Clutch frequency of Green turtles"
+    # subtitle=""
+  ) %>% 
+  gt::tab_spanner(
+    "Number of successful clutches", 
+    columns = !dplyr::contains("Season")
+  )
+  
+```
+
+```{r clutch_freq_hb}
+clutch_freq %>% 
+  dplyr::filter(species == "eretmochelys-imbricata") %>% 
+  dplyr::select(-species) %>% 
+  # janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Clutch frequency of Hawksbill turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Clutch frequency of Hawksbill turtles"
+    # subtitle=""
+  ) %>% 
+  gt::tab_spanner(
+    "Number of successful clutches", 
+    columns = !dplyr::contains("Season")
+  )
+  
+```
+
+
 ## Morphometrics
 Tagging data fields `w2$ccl` and `w2$ccw` are grouped by season and species, 
 summarised into mean, sd, min, max, and rounded to two decimals.
 
 These summary statistics of curved carapace length and width in mm are shown below.
-
-<!-- TODO save to CSV  -->
 
 This summary as a whole is exported as `trt_morph.csv` but shown below 
 split by species.
@@ -884,19 +1122,36 @@ total number of emergences.
 
 As nesting success are counted:
 
-* Tagging records with `nesting` "Y" (confirmed yes)
-* Tracks with `nest_type` "successful-crawl", believed to be a nest by the observer
+* Tagging records with `clutch_completed` status 
+
+  * "Y" (confirmed comleted clutch).
+  
+* Tracks with `nest_type` 
+
+  * "successful-crawl" (believed to be a nest by the observer).
 
 As unknowns are counted:
 
-* Tagging records with `nesting` "U" (unsure of nesting) and "P" (unknown)
-* Tracks with `nest_type` "track-not-assessed" (did not check for nest),
-  and "track-unsure" (checked but unsure)
+* Tagging records with `clutch_completed` status 
+
+  * "P" (possible clutch, but not certain enough to confirm), 
+  * "U" (uncertain about clutch), and 
+  * "D" (did not check).
+  
+* Tracks with `nest_type` 
+
+  * "track-not-assessed" (did not check for nest), and 
+  * "track-unsure" (checked but unsure).
   
 As non nesting are counted:
 
-* Tagging records with `nesting` "N" (confirmed no)
-* Tracks with `nest_type` "false-crawl", believed not to be a nest by the observer
+* Tagging records with `clutch_completed` status
+
+  * "N" (confirmed no).
+  
+* Tracks with `nest_type` 
+  
+  * "false-crawl" (believed not to be a nest by the observer).
 
 #### Caveats
 
@@ -904,14 +1159,17 @@ When calculating the nesting success as fraction of successful over total nestin
 we lump all degrees of uncertainty about the nesting success into the
 category of nesting failure. This includes the confirmed absence of a
 nest ("false crawl"), but also cases where the presence of a nest is
-unsure or not checked for. The value of nesting success is therefore a
-**conservative estimate**. 
+unsure or not checked for. 
 
-The data are biased (both ways) by the observers' individual ability to 
-recognize a nest.
+Similarly, the tagging records cater for a range of unknowns, which again could
+well be successfully completed clutches.
 
-<!-- TODO spot check numbers - are non-nesting tallies missing?  -->
-<!-- TODO save to CSV  -->
+The **data** are biased (both ways) by the observers' individual ability to 
+recognize a nest, and the opportunity to observe the clutch up to its successful 
+end.
+
+The **calculation** of nesting success lumps unknowns with negatives and therefore 
+presents a **conservative estimate**. 
 
 This summary is exported as `total_nesting_by_season_species.csv`.
 
@@ -964,9 +1222,6 @@ Hatching success can be shown in categories
 add histogram showing proportion of nests in each hatching success categories
 -->
 
-<!-- TODO save to CSV: explain wastd export  -->
-<!-- TODO QA max clutch sizes  -->
-
 Nest excavations are exported as `nest_excavations.csv`. One record therein
 refers to one excavated nest.
 
@@ -1000,18 +1255,103 @@ x$nest_excavations %>%
 
 ```
 
-## Sand temperatures
+<!--  ## Sand temperatures - no data -->
 
 # Connectivity
 
-## Connections to foraging grounds
-Tags from Delambre rookery found elsewhere (individual)
-<!-- TODO James: how to get from W2 -->
+This section shows a confusion matrix of turtle numbers between places they 
+were observed. These places include rookeries and non-rookeries.
+
+As origin ("Initially observed at") we consider the place where a
+previously unmarked turtle was tagged for the first time. In the original data,
+this is coded as column `location_code`.
+
+As destination ("Observed at") we consider the place a turtle was observed.
+In the original data, this is coded as column `observed_location_code`.
+
+The data is saved as `turtle_nesting_connectivity.csv`.
 
 
+```{r trt_conn_fb}
+trt_conn %>% 
+  dplyr::filter(species == "natator-depressus") %>%
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Connectivity of Flatback turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Connectivity of Flatback turtles"
+  ) %>% 
+  gt::cols_label(
+    season = "Season",
+    species = "Species",
+    observed_location_code = "Observed at"
+  ) %>% 
+  gt::tab_spanner(
+    label = "Initially observed at",
+    columns = c(
+      -gt::contains("season"), 
+      -gt::contains("species"), 
+      -gt::contains("observed_location_code")
+    )
+  ) 
+```
+
+```{r trt_conn_gn}
+trt_conn %>% 
+  dplyr::filter(species == "chelonia-mydas") %>%
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Connectivity of Green turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Connectivity of Green turtles"
+  ) %>% 
+  gt::cols_label(
+    season = "Season",
+    species = "Species",
+    observed_location_code = "Observed at"
+  ) %>% 
+  gt::tab_spanner(
+    label = "Initially observed at",
+    columns = c(
+      -gt::contains("season"), 
+      -gt::contains("species"), 
+      -gt::contains("observed_location_code")
+    )
+  ) 
+```
+
+```{r trt_conn_hb}
+trt_conn %>% 
+  dplyr::filter(species == "eretmochelys-imbricats") %>%
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Connectivity of Hawksbill turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Connectivity of Hawksbill turtles"
+  ) %>% 
+  gt::cols_label(
+    season = "Season",
+    species = "Species",
+    observed_location_code = "Observed at"
+  ) %>% 
+  gt::tab_spanner(
+    label = "Initially observed at",
+    columns = c(
+      -gt::contains("season"), 
+      -gt::contains("species"), 
+      -gt::contains("observed_location_code")
+    )
+  ) 
+```
+
+<!-- 
 ## Tag recoveries
 
 ## Satellite tracking
+-->
 
 # Pressures and Threats
 

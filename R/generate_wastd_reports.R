@@ -25,7 +25,8 @@ generate_wastd_reports <- function(wastd_data){
     here::here("vignettes/del_rio.Rmd"),
     params = list(area_name = "Delambre Island",
                   prefix="DEL",
-                  w2_filepath="data/wamtram.csv"),
+                  w2_filepath="data/wamtram.csv",
+                  w2_observed_location_code="DA"),
     output_file = fn
   )
   wastdr::wastdr_msg_success(glue::glue("Compiled {fn}."))
