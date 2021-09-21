@@ -21,6 +21,8 @@ params:
   prefix: DEL
   w2_filepath: 'data/wamtram.csv'
   w2_observed_location_code: 'DA'
+  w2_exported_on: '20 Sept 2021'
+  export_dir: 'inst/reports/rio'
 editor_options:
   markdown:
     wrap: 72
@@ -57,7 +59,7 @@ rt <- . %>%
 # Data export
 # 
 zipfn <- wastdr::urlize(params$area_name)
-fn <- here::here("inst/reports/rio", zipfn)
+fn <- here::here(params$export_dir, zipfn)
 if (!fs::file_exists(fn)) {
   "Creating dir {fn}" %>% glue::glue() %>% wastdr::wastdr_msg_info()
   fs::dir_create(fn, recurse = TRUE)
@@ -69,7 +71,7 @@ pf <- params$prefix
 ld <- fn
 
 # -----------------------------------------------------------------------------#
-# WAStD data from ETL
+# WAStD data: load snapshot from ETL
 # 
 drake::loadd("wastd_data")
 
@@ -79,10 +81,8 @@ x <- wastd_data %>%
 x %>% wastdr::export_wastd_turtledata(outdir = fn, filename = zipfn)
 
 # -----------------------------------------------------------------------------#
-# WAMTRAM data from manual export
+# WAMTRAM data: load from manual export
 # 
-# https://dpaw.sharepoint.com/teams/TurtlesRioTinto/Shared%20Documents/Forms/AllItems.aspx?viewid=737abde6%2D72b7%2D4293%2D92d3%2D4e1db0bfaf3a&id=%2Fteams%2FTurtlesRioTinto%2FShared%20Documents%2FGeneral%2F2021%2D03%2D26%20DEL%20and%20WPTP%2FTagging%20data%20export%20%2D%20new%20format
-# data export new format saved to data/wamtram.csv
 species_lookup <- tibble::tribble(
   ~ species_code, ~ species,
   "HK", "eretmochelys-imbricata",
@@ -121,6 +121,14 @@ w2_all <- here::here(params$w2_filepath) %>%
 
 w2 <- w2_all %>% 
   dplyr::filter(observed_location_code == params$w2_observed_location_code)
+
+w2 %>% 
+  readr::write_csv(
+    here::here(
+      ld, 
+      glue::glue("wamtram_{params$w2_observed_location_code}.csv")
+    )
+  )
 
 # Verify that dates are correct:
 # w2 %>% 
@@ -471,9 +479,10 @@ In this report, we present combined Turtle Monitoring data from WAStD
 `r params$area_name`.
 
 The WAStD data was downloaded on `r wastd_data$downloaded_on` and
-reflects all QA operations up to this date.
+reflects all QA operations on WAStD data up to this date.
 
-The WAMTRAM2 data was exported on 26 Feb 2021.
+The WAMTRAM2 data was exported on `r params$w2_exported_on` and
+reflects all QA operations on WAMTRAM2 tagging data up to this date.
 
 # Survey effort
 Survey effort as shown here is calculated from surveys captured in WAStD.
@@ -543,7 +552,7 @@ Nesting census data (WAStD tracks) are shown for the last season (2020-21).
 Training records are excluded.
 
 <!-- 
-# TODO: show tagging in tracks_map_2020, save static map
+TODO: show tagging in tracks_map_2020, save static map
 -->
 
 ```{r tracks_map_2020}
@@ -742,6 +751,19 @@ ggplot2::ggplot(
 ```
 
 ## New, remigrant, recaptured turtles
+<!--
+Per species:
+
+Season
+New tagged
+ISR# inter season returns (turtle recaptured from previous season)
+Total individuals
+Total processed
+Missed turtles
+Total turtles recorded
+Mean nightly turtles
+-->
+
 WAMTRAM tagging records are grouped by season, species, and observation status
 (initial nesting, remigrant, resighting, initial sighting) and tallied.
 
@@ -778,18 +800,7 @@ turtles_mcr %>%
   )
 ```
 
-```{r trt_mcr_gn}
-turtles_mcr %>% 
-  dplyr::filter(Species == "Chelonia mydas") %>% 
-  gt::gt(
-    groupname_col=NULL,
-    caption = "Recapture status by season of Green turtles"
-  ) %>% 
-  gt::tab_header(
-    title="Recapture status by season of Green turtles"
-    # subtitle="Initial nesting vs Remigrant vs Resighting vs Initial sighting"
-  )
-```
+
 ```{r trt_mcr_hb}
 turtles_mcr %>% 
   dplyr::filter(Species == "Eretmochelys imbricata") %>% 
@@ -803,7 +814,18 @@ turtles_mcr %>%
   )
 ```
 
-
+```{r trt_mcr_gn}
+turtles_mcr %>% 
+  dplyr::filter(Species == "Chelonia mydas") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Recapture status by season of Green turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Recapture status by season of Green turtles"
+    # subtitle="Initial nesting vs Remigrant vs Resighting vs Initial sighting"
+  )
+```
 <!--
 -   Add figure "remigration interval": show the number of remigrants
     coming back after 1,2,3, 4+ years
@@ -870,17 +892,19 @@ trt_internesting %>%
   )
 ```
 
-```{r intern_gn}
+
+
+```{r intern_hb}
 trt_internesting %>% 
-  dplyr::filter(species == "chelonia-mydas") %>% 
+  dplyr::filter(species == "eretmochelys-imbricata") %>% 
   dplyr::select(-species) %>% 
   janitor::clean_names(case="sentence") %>% 
   gt::gt(
     groupname_col=NULL,
-    caption = "Internesting by season of Green turtles"
+    caption = "Internesting by season of Hawksbill turtles"
   ) %>% 
   gt::tab_header(
-    title="Internesting by season of Green turtles",
+    title="Internesting by season of Hawksbill turtles",
     subtitle="Counts of successful, unsuccessful, and unknown clutches per season"
   ) %>% 
   gt::tab_spanner(
@@ -897,17 +921,17 @@ trt_internesting %>%
   )
 ```
 
-```{r intern_hb}
+```{r intern_gn}
 trt_internesting %>% 
-  dplyr::filter(species == "eretmochelys-imbricata") %>% 
+  dplyr::filter(species == "chelonia-mydas") %>% 
   dplyr::select(-species) %>% 
   janitor::clean_names(case="sentence") %>% 
   gt::gt(
     groupname_col=NULL,
-    caption = "Internesting by season of Hawksbill turtles"
+    caption = "Internesting by season of Green turtles"
   ) %>% 
   gt::tab_header(
-    title="Internesting by season of Hawksbill turtles",
+    title="Internesting by season of Green turtles",
     subtitle="Counts of successful, unsuccessful, and unknown clutches per season"
   ) %>% 
   gt::tab_spanner(
@@ -966,25 +990,6 @@ clutch_freq %>%
   
 ```
 
-```{r clutch_freq_gn}
-clutch_freq %>% 
-  dplyr::filter(species == "chelonia-mydas") %>% 
-  dplyr::select(-species) %>% 
-  # janitor::clean_names(case="sentence") %>% 
-  gt::gt(
-    groupname_col=NULL,
-    caption = "Clutch frequency of Green turtles"
-  ) %>% 
-  gt::tab_header(
-    title="Clutch frequency of Green turtles"
-    # subtitle=""
-  ) %>% 
-  gt::tab_spanner(
-    "Number of successful clutches", 
-    columns = !dplyr::contains("Season")
-  )
-  
-```
 
 ```{r clutch_freq_hb}
 clutch_freq %>% 
@@ -1006,6 +1011,26 @@ clutch_freq %>%
   
 ```
 
+
+```{r clutch_freq_gn}
+clutch_freq %>% 
+  dplyr::filter(species == "chelonia-mydas") %>% 
+  dplyr::select(-species) %>% 
+  # janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Clutch frequency of Green turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Clutch frequency of Green turtles"
+    # subtitle=""
+  ) %>% 
+  gt::tab_spanner(
+    "Number of successful clutches", 
+    columns = !dplyr::contains("Season")
+  )
+  
+```
 
 ## Morphometrics
 Tagging data fields `w2$ccl` and `w2$ccw` are grouped by season and species, 
@@ -1063,31 +1088,6 @@ trt_morph %>%
     columns = c(gt::contains("ccw"))
   )
 ```
-```{r morph_gn}
-trt_morph %>% 
-  dplyr::filter(Species == "Chelonia mydas") %>% 
-  gt::gt(
-    groupname_col=NULL,
-    caption = "Morphometrics by season and species: Green turtles"
-  ) %>% 
-  gt::tab_header(
-    title="Morphometrics by season and species: Green turtles",
-    subtitle="Values in millimetres, rounded to two decimals"
-  ) %>% 
-  gt::tab_spanner(
-    label = "Group",
-    columns = c(Season, Species, N)
-  ) %>% 
-  gt::tab_spanner(
-    label = "Curved Carapace Length (mm)",
-    columns = c(gt::contains("ccl"))
-  ) %>% gt::tab_spanner(
-    label = "Curved Carapace Width (mm)",
-    columns = c(gt::contains("ccw"))
-  )
-```
-
-
 
 ```{r morph_hb}
 trt_morph %>% 
@@ -1113,18 +1113,42 @@ trt_morph %>%
   )
 ```
 
+```{r morph_gn}
+trt_morph %>% 
+  dplyr::filter(Species == "Chelonia mydas") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Morphometrics by season and species: Green turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Morphometrics by season and species: Green turtles",
+    subtitle="Values in millimetres, rounded to two decimals"
+  ) %>% 
+  gt::tab_spanner(
+    label = "Group",
+    columns = c(Season, Species, N)
+  ) %>% 
+  gt::tab_spanner(
+    label = "Curved Carapace Length (mm)",
+    columns = c(gt::contains("ccl"))
+  ) %>% gt::tab_spanner(
+    label = "Curved Carapace Width (mm)",
+    columns = c(gt::contains("ccw"))
+  )
+```
+
 ## Nesting success
 
 We calculate the **nesting success** as the fraction of confirmed nests
 (turtles observed laying during tagging plus "successful crawl" turtle
 tracks with what is believed by the observer to be a nest) over the
-total number of emergences.
+total number of nesting attempts (emergences).
 
 As nesting success are counted:
 
 * Tagging records with `clutch_completed` status 
 
-  * "Y" (confirmed comleted clutch).
+  * "Y" (confirmed completed clutch).
   
 * Tracks with `nest_type` 
 
@@ -1173,7 +1197,7 @@ presents a **conservative estimate**.
 
 This summary is exported as `total_nesting_by_season_species.csv`.
 
-```{r}
+```{r nesting_totals}
 total_nesting_by_season_species %>%
   dplyr::filter(season>2016) %>% 
   gt::gt(
@@ -1260,7 +1284,7 @@ x$nest_excavations %>%
 # Connectivity
 
 This section shows a confusion matrix of turtle numbers between places they 
-were observed. These places include rookeries and non-rookeries.
+were observed. These places include rookeries and foraging grounds.
 
 As origin ("Initially observed at") we consider the place where a
 previously unmarked turtle was tagged for the first time. In the original data,
@@ -1270,7 +1294,6 @@ As destination ("Observed at") we consider the place a turtle was observed.
 In the original data, this is coded as column `observed_location_code`.
 
 The data is saved as `turtle_nesting_connectivity.csv`.
-
 
 ```{r trt_conn_fb}
 trt_conn %>% 
@@ -1297,6 +1320,33 @@ trt_conn %>%
   ) 
 ```
 
+
+```{r trt_conn_hb}
+trt_conn %>% 
+  dplyr::filter(species == "eretmochelys-imbricata") %>%
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Connectivity of Hawksbill turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Connectivity of Hawksbill turtles"
+  ) %>% 
+  gt::cols_label(
+    season = "Season",
+    species = "Species",
+    observed_location_code = "Observed at"
+  ) %>% 
+  gt::tab_spanner(
+    label = "Initially observed at",
+    columns = c(
+      -gt::contains("season"), 
+      -gt::contains("species"), 
+      -gt::contains("observed_location_code")
+    )
+  ) 
+```
+
+
 ```{r trt_conn_gn}
 trt_conn %>% 
   dplyr::filter(species == "chelonia-mydas") %>%
@@ -1322,35 +1372,10 @@ trt_conn %>%
   ) 
 ```
 
-```{r trt_conn_hb}
-trt_conn %>% 
-  dplyr::filter(species == "eretmochelys-imbricats") %>%
-  gt::gt(
-    groupname_col=NULL,
-    caption = "Connectivity of Hawksbill turtles"
-  ) %>% 
-  gt::tab_header(
-    title="Connectivity of Hawksbill turtles"
-  ) %>% 
-  gt::cols_label(
-    season = "Season",
-    species = "Species",
-    observed_location_code = "Observed at"
-  ) %>% 
-  gt::tab_spanner(
-    label = "Initially observed at",
-    columns = c(
-      -gt::contains("season"), 
-      -gt::contains("species"), 
-      -gt::contains("observed_location_code")
-    )
-  ) 
-```
-
 <!-- 
 ## Tag recoveries
+Life history of individual turtles sighted in-water at RBB
 
-## Satellite tracking
 -->
 
 # Pressures and Threats

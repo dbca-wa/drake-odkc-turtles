@@ -26,7 +26,10 @@ generate_wastd_reports <- function(wastd_data){
     params = list(area_name = "Delambre Island",
                   prefix="DEL",
                   w2_filepath="data/wamtram.csv",
-                  w2_observed_location_code="DA"),
+                  w2_observed_location_code="DA",
+                  w2_exported_on="20 Sept 2021",
+                  export_dir="inst/reports/rio"
+                  ),
     output_file = fn
   )
   wastdr::wastdr_msg_success(glue::glue("Compiled {fn}."))
