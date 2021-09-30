@@ -41,6 +41,8 @@ library(etlTurtleNesting)
 library(wastdr)
 library(drake)
 
+drake::loadd("w2_data")
+
 wamtram()
 visNetwork::visSave(vis_drake_graph(wamtram()), "drake_graph.html")
 drake::vis_drake_graph(wamtram())

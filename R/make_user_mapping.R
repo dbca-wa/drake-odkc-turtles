@@ -19,8 +19,12 @@
 #'
 #' @param odkc_data The output of `wastdr::download_all_odkc_turtledata_2019`.
 #' @param wastd_users A tibble of WAStD users
+#' @template param-verbose
 #' @export
-make_user_mapping <- function(odkc_data, wastd_users) {
+make_user_mapping <- function(odkc_data, wastd_users,
+                              verbose = wastdr::get_wastdr_verbose()) {
+
+
   if (!is.null(odkc_data$tt)) {
     tagging_names <- unique(
       c(
@@ -36,6 +40,7 @@ make_user_mapping <- function(odkc_data, wastd_users) {
     tagging_names <- c()
   }
 
+
   odkc_reporters <- unique(
     c(
       tagging_names,
@@ -50,6 +55,11 @@ make_user_mapping <- function(odkc_data, wastd_users) {
       tidyr::replace_na("Turtles")
   )
 
+  glue::glue(
+    "Mapping {nrow(odkc_reporters)} ODKC usernames to ",
+    "{nrow(wastd_users)} WAStD user profiles...") %>%
+    wastdr::wastdr_msg_info(verbose = verbose)
+
   wastd_users <- wastd_users %>%
     dplyr::filter(is_active=TRUE) %>%
     dplyr::mutate(
@@ -58,7 +68,7 @@ make_user_mapping <- function(odkc_data, wastd_users) {
     )%>%
     tidyr::separate_rows(wastd_usernames, sep=",")
 
-  tibble::tibble(
+  out <- tibble::tibble(
     odkc_username = odkc_reporters,
     odkc_un_trim = stringr::str_squish(
       odkc_username
@@ -78,4 +88,9 @@ make_user_mapping <- function(odkc_data, wastd_users) {
     dplyr::arrange(odkc_username) %>%
     dplyr::ungroup()
   # %>% dplyr::select(-odkc_un_trim)
+
+  "Done, returning user mapping." %>%
+    glue::glue() %>% wastdr::wastdr_msg_success(verbose = verbose)
+
+  out
 }

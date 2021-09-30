@@ -4,12 +4,19 @@
 \alias{make_user_mapping}
 \title{Generate a WAStD user mapping from a given list of ODKC data.}
 \usage{
-make_user_mapping(odkc_data, wastd_users)
+make_user_mapping(
+  odkc_data,
+  wastd_users,
+  verbose = wastdr::get_wastdr_verbose()
+)
 }
 \arguments{
 \item{odkc_data}{The output of \code{wastdr::download_all_odkc_turtledata_2019}.}
 
 \item{wastd_users}{A tibble of WAStD users}
+
+\item{verbose}{Whether to show debug messages.
+Default: wastdr::get_wastdr_verbose()}
 }
 \description{
 The matching is done by

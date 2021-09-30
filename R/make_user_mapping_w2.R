@@ -14,10 +14,16 @@
 #'
 #' @param wastd_users A tibble of WAStD users.
 #' @param w2_data The output of `wastdr::download_w2_data`.
+#' @template param-verbose
 #' @return A tibble of legacy username and user ID with the respective best
 #'   match of a WAStD user.
 #' @export
-make_user_mapping_w2 <- function(w2_data, wastd_users) {
+make_user_mapping_w2 <- function(w2_data, wastd_users, verbose = wastdr::get_wastdr_verbose()) {
+  glue::glue(
+    "Mapping {nrow(w2_data$persons)} WAMTRAM users to ",
+    "{nrow(wastd_users)} WAStD user profiles...") %>%
+    wastdr::wastdr_msg_info(verbose = verbose)
+
   unique_legacy_users <-
     w2_data$persons %>%
     tidyr::drop_na(clean_name) %>%
@@ -33,7 +39,7 @@ make_user_mapping_w2 <- function(w2_data, wastd_users) {
     ) %>%
     tidyr::separate_rows(wastd_usernames, sep = ",")
 
-  unique_legacy_users %>%
+  out <- unique_legacy_users %>%
     dplyr::transmute(
       legacy_userid = person_id,
       legacy_username = clean_name,
@@ -51,4 +57,9 @@ make_user_mapping_w2 <- function(w2_data, wastd_users) {
     dplyr::top_n(1, -dist) %>%
     dplyr::arrange(legacy_username) %>%
     dplyr::ungroup()
+
+  "Done, returning user mapping." %>%
+    glue::glue() %>% wastdr::wastdr_msg_success(verbose = verbose)
+
+  out
 }

@@ -31,8 +31,8 @@ library(gt)
 ## Currency
 
 -   This QA report ran on `r Sys.time()`.
--   The ODK Central data was downloaded on `r odkc_ex$downloaded_on`.
 -   The WAStD Users were downloaded just before the workbook ran.
+-   The WAMTRAM Users were downloaded on `r w2_data$downloaded_on`.
 
 ## Step 0: Add new data collectors to WAStD
 
@@ -90,13 +90,13 @@ dissimilarity above a threshold. This should separate mismatches from matches.
 
 The validation table shows columns:
 
--   `odkc_username` - the ODK Collect username
+-   `legacy_username` - the ODK Collect username
 -   `wastd_matched` - a link to the WAStD User profile that we matched
 -   `search_wastd` - individual links to search WAStD Users (names, usernames,
     aliases, role, phone, email) for each part of the ODK Collect username. This
     is helpful where a list of names were supplied, e.g. "Flo and Janet".
 
-For each mismatch: Find the correct WAStD user, and add the `odkc_username` to
+For each mismatch: Find the correct WAStD user, and add the `legacy_username` to
 the WAStD User's field "aliases", then "save" or "save and continue editing" the
 WAStD user profile. It is **absolutely essential** to separate the aliases with
 a **comma**. e.g. Florian Mayer's aliases can be "Flo Mayer, FlorianM, FloJo",
@@ -156,55 +156,64 @@ Your actions:
         lower dissimilarity measure (or even drop off the validation shortlist).
 
 ```{r user_table, echo=FALSE}
-validation_data <- 
+validation_data_extracts <- 
   a %>%
-  pointblank::get_data_extracts() %>%
+  pointblank::get_data_extracts() 
+
+if (length(validation_data_extracts > 0)) {
+  validation_data <- validation_data_extracts %>%
   magrittr::extract2(1) %>%
   dplyr::rowwise() %>% 
-  # dplyr::mutate(active_at = get_user_area(odkc_ex, odkc_username)) %>% 
-  dplyr::arrange(
-    # active_at, 
-    -dist)
-
-# Create missing users in WAStD
-# Run manually when necessary
-# 
-#  missing_users <- validation_data %>% 
-#   dplyr::select(legacy_userid) %>% 
-#   dplyr::arrange(legacy_userid) %>%
-#   dplyr::distinct(legacy_userid) %>% 
-#   dplyr::left_join(w2_data$persons, by = c("legacy_userid"="person_id")) %>% 
-#   dplyr::transmute(
-#     username = clean_name %>% wastdr::urlize() %>% stringr::str_replace_all("-", "_"),
-#     name = clean_name,
-#     # phone = mobile, # NA
-#     # email = clean_email, # NA
-#     role = glue::glue("{specialty} {comments}")
-#   )
-#  missing_users %>% wastdr::wastd_bulk_post("users", verbose = TRUE)
-
-validation_data %>% 
+  dplyr::arrange(-dist)
+  
+validation_data %>%
   gt::gt() %>%
-  gt::fmt_markdown(columns = TRUE) %>%
+  gt::fmt_markdown(columns = gt::everything()) %>%
   gt::cols_label(
-    legacy_username = gt::html("<h5>They wrote</h5>\n<small>ODK Collect username</small>"),
+    legacy_username = gt::html("<h5>They wrote</h5>\n<small>W2 username</small>"),
+    legacy_userid = gt::html("<small>W2 legacy ID</small>"),
     # active_at = gt::html("<small>Active at</small>"),
-    legacy_un_trim = gt::html("<h5>We searched</h5>\n<small>Cleaned ODK name</small>"),
+    legacy_un_trim = gt::html("<h5>We searched</h5>\n<small>Cleaned W2 name</small>"),
     wastd_matched = gt::html("<h5>We matched</h5>\n<small>WAStD User</small>"),
     search_wastd = gt::html("<h5>Search</h5>\n<small>likely candidates</small>"),
     dist = gt::html("<h5>Dissimilarity</h5>\n<small>smaller = better</small>")
   ) %>%
-  gt::tab_spanner(
-    label = "WASTD User match",
-    columns = vars(legacy_username,
-                   # active_at,
-                   legacy_un_trim,
-                   wastd_matched, 
-                   search_wastd, 
-                   dist)
+  gt::tab_spanner(label = "Wamtram profile",
+                  columns = c(legacy_username,
+                              legacy_userid)) %>%
+  gt::tab_spanner(label = "WASTD User match",
+                  columns = c(legacy_un_trim,
+                              wastd_matched,
+                              search_wastd,
+                              dist)
   ) %>%
   gt::tab_spanner(
     label = "WASTD User profile (chosen as most likely)",
-    columns = vars(role, pk, username, name, nickname, aliases, email, phone)
+    columns = c(role, pk, username, name, nickname, aliases, email, phone)
+  )  
+} else {
+  "All users are matched beyond reasonable doubt." %>% 
+    wastdr::wastdr_msg_success(verbose = TRUE)
+}
+```
+
+## Create missing users in WAStD
+Run manually when necessary.
+
+```{r, eval=FALSE}
+missing_users <- validation_data %>%
+  dplyr::select(legacy_userid) %>%
+  dplyr::arrange(legacy_userid) %>%
+  dplyr::distinct(legacy_userid) %>%
+  dplyr::left_join(w2_data$persons, by = c("legacy_userid"="person_id")) %>%
+  dplyr::transmute(
+    username = clean_name %>% 
+      wastdr::urlize() %>% stringr::str_replace_all("-", "_"),
+    name = clean_name,
+    # phone = mobile, # NA
+    # email = clean_email, # NA
+    role = glue::glue("{specialty} {comments}")
   )
+
+missing_users %>% wastdr::wastd_bulk_post("users", verbose = TRUE)
 ```

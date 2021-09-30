@@ -4,12 +4,19 @@
 \alias{make_user_mapping_w2}
 \title{Generate a WAStD user mapping from a given turtle tagging DB export}
 \usage{
-make_user_mapping_w2(w2_data, wastd_users)
+make_user_mapping_w2(
+  w2_data,
+  wastd_users,
+  verbose = wastdr::get_wastdr_verbose()
+)
 }
 \arguments{
 \item{w2_data}{The output of \code{wastdr::download_w2_data}.}
 
 \item{wastd_users}{A tibble of WAStD users.}
+
+\item{verbose}{Whether to show debug messages.
+Default: wastdr::get_wastdr_verbose()}
 }
 \value{
 A tibble of legacy username and user ID with the respective best
