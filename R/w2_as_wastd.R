@@ -9,7 +9,7 @@
 #' @export
 w2_as_wastd <- function(data, user_mapping){
   list(
-    tt     = w2_as_wastd_ae(data, user_mapping)#,
+    tt = w2_as_wastd_ae(data, user_mapping)#,
     # tt_dmg = w2_dmg_as_wastd_turtledmg(odkc_data$tt_dmg),
     # tt_tsc = w2_as_wastd_turtledmg(odkc_data$tt),
     # tt_log = w2_log_as_wastd_loggerobs(odkc_data$tt_log),

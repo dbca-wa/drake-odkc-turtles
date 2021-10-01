@@ -55,8 +55,8 @@ wamtram <- function() {
 
     # ------------------------------------------------------------------------ #
     # EXTRACT
-    # save(w2_data, file="data/w2.RData", compress="xz")
-    # load("data/w2.RData")
+    # save(w2_data, file="inst/w2.RData", compress="xz")
+    # load("inst/w2.RData")
     w2_data = wastdr::download_w2_data(
       ord = c("YmdHMS", "Ymd"),
       tz = "Australia/Perth",
@@ -88,9 +88,9 @@ wamtram <- function() {
 
     # ------------------------------------------------------------------------ #
     # LOAD
-    # wastd_data_min = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
+    wastd_data_min = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
     # Skip logic compares existing data in target DB with new data to upload
-    # w2_up = split_create_update_skip_w2(w2_tf, wastd_data_min),
+    w2_up = split_create_update_skip_w2(w2_tf, wastd_data_min),
     # Upload (skip, update, create as per skip logic)
     # upload_to_wastd = upload_w2_to_wastd(w2_up, update_existing = up_ex)
   )

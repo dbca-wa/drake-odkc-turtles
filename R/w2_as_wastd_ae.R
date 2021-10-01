@@ -129,9 +129,8 @@ w2_as_wastd_ae <- function(data,
   data$enc %>%
     dplyr::filter(turtle_status != "E") %>%           # discard records in error
     dplyr::transmute(
-      # wastd.observations.models.SOURCE_CHOICES
-      source = "wamtram",
-      source_id = observation_id,
+      source = "wamtram", # wastd.observations.models.SOURCE_CHOICES
+      source_id = observation_id %>% as.character(),
       observer = tagger_person_id,
       reporter = reporter_person_id,
       behaviour = glue::glue(
