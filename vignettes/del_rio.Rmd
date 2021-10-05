@@ -313,7 +313,7 @@ total_turtles_season %>%
 # Nesting success
 # 
 # 
-# todo clutch_completed == successful NESTING
+# We equate clutch_completed with successful nesting.
 # w2$clutch_completed %>% unique()
 # Y yes, N no, P possible, U uncertain, D did not check
 # 
@@ -498,6 +498,9 @@ more accurate after these merged surveys have been un-merged.
 On days of night tagging and morning track counts there should be two surveys 
 per date.
 
+In the 2020-21 season, monitoring effort was disrupted by thunderstorms and 
+cyclone activity in weeks 3 and 4. On 2020-12-09, the field team was evacuated 
+from Delambre Island.
 
 ```{r survey_effort}
 x$surveys %>% 
@@ -611,6 +614,9 @@ Later in this report, we split the total emergences into nesting and non nesting
 
 This summary is exported as `total_turtles_season.csv`.
 
+The low numbers in the 2020-21 season can be explained with thunderstorms and 
+cyclone activity in weeks 3 and 4 of the 4 week turtle monitoring expedition.
+
 ```{r total_turtles_season}
 total_turtles_season %>% 
   gt::gt(
@@ -643,7 +649,6 @@ following sections.
 We show an interactive table, as the printed version is too long.
 This summary is exported as `total_turtles.csv`.
 
-<!-- TODO save to CSV  -->
 ```{r total_turtles_date}
 total_turtles %>% rt()
 ```
@@ -655,8 +660,6 @@ total_turtles %>% rt()
 * X: Year (from 2008)
 
 This figure is exported as `turtles_proc_mis_by_species.png`.
-
-<!-- TODO processed vs missed - change  total_turtles_season$tagged to exclude w2 non-tagged -->
 
 ```{r proc_vs_missed_fig, fig.height=12}
 plt_total_turtles_season <- 
@@ -688,7 +691,6 @@ plt_total_turtles_season
 
 This figure is exported as `turtles_proc_mis_by_season.png`.
 
-<!-- TODO save to PNG  -->
 ```{r total_turtles_date_fig, fig.height=12}
 turtles_proc_mis_by_season <- 
   ggplot2::ggplot(
@@ -980,7 +982,7 @@ clutch_freq %>%
     caption = "Clutch frequency of Flatback turtles"
   ) %>% 
   gt::tab_header(
-    title="Clutch frequency of Green turtles"
+    title="Clutch frequency of Flatback turtles"
     # subtitle=""
   ) %>% 
   gt::tab_spanner(
@@ -1195,6 +1197,19 @@ end.
 The **calculation** of nesting success lumps unknowns with negatives and therefore 
 presents a **conservative estimate**. 
 
+If we were to include unknowns (or a realistic fraction thereof) with successful 
+nesting, we would get an **optimistic estimate**.
+
+Nesting success measured during night tagging can be assumed to be lowered by
+the disruption through monitoring disturbance.
+
+<!--
+* Nesting success (optimistic) = yes + unsure / yes + unsure + no
+* Nesting success is lower during tagging because tagging disrupts nesting
+* Morning surveys of tracks with/without nests don't disturb nesting process, but
+  biased by observer capability to determine nest presence (barring excavation).
+-->
+
 This summary is exported as `total_nesting_by_season_species.csv`.
 
 ```{r nesting_totals}
@@ -1218,7 +1233,8 @@ total_nesting_by_season_species %>%
   )
 ```
 
-<!--  TODO Build this from  total_nesting_by_season_species 
+<!--  
+TODO Build this from  total_nesting_by_season_species 
 show nesting success as fraction of confirmed yes over all nesting
 -->
 <!-- TODO save to PNG  -->
@@ -1385,6 +1401,10 @@ Injuries are reported as part of the tagging process.
 The full list of injuries is exported as `turtle_injuries.csv`.
 Summaries by damage type and damaged body part are shown below.
 
+### Caveats
+Injured turtles with flipper amputations are more likely to be encountered, as
+they nest slower.
+
 ### Frequent injuries
 
 The numbers shown as "Damaged turtles" are absolute numbers, the percentages
@@ -1505,6 +1525,7 @@ x$nest_dist %>%
 ```
 
 ### General disturbance
+Data is shown for all seasons.
 
 ```{r dist_map}
 x$nest_dist %>% 
@@ -1513,6 +1534,7 @@ x$nest_dist %>%
 ```
 
 ### Disturbed nests
+Data is shown for all seasons.
 
 ```{r dist_map_nest}
 x$nest_dist %>% 
