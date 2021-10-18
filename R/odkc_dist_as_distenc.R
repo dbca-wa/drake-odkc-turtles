@@ -41,8 +41,8 @@ odkc_dist_as_distenc <- function(data, user_mapping) {
       location_accuracy_m = disturbanceobservation_location_accuracy,
       when = lubridate::format_ISO8601(observation_start_time, usetz = TRUE)
     ) %>%
-    dplyr::left_join(wastd_reporters, by = "reporter") %>% # TSC User PK
-    dplyr::left_join(wastd_observers, by = "observer") %>% # TSC User PK
+    dplyr::left_join(wastd_reporters, by = "reporter") %>% # WAStD User PK
+    dplyr::left_join(wastd_observers, by = "observer") %>% # WAStD User PK
     dplyr::select(-reporter, -observer) # drop odkc_username
 }
 

@@ -31,7 +31,7 @@ odkc_as_wastd <- function(odkc_data, user_mapping) {
     th_morph = odkc_tracks_hatch_as_wastd_thmorph(odkc_data$tracks_hatch),
 
     # -------------------------------------------------------------------- #
-    # https://tsc.dbca.wa.gov.au/api/1/turtle-nest-hatchling-emergences/
+    # https://wastd.dbca.wa.gov.au/api/1/turtle-nest-hatchling-emergences/
     th_emerg = odkc_tracks_as_tnhe(odkc_data$tracks),
 
     # -------------------------------------------------------------------- #

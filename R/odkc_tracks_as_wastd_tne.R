@@ -63,8 +63,8 @@ odkc_tracks_as_wastd_tne <- function(data, user_mapping) {
       hatchlings_measured = nest_hatchlings_measured %>% tx_obs_choices,
       fan_angles_measured = nest_fan_angles_measured %>% tx_obs_choices
     ) %>%
-    dplyr::left_join(wastd_reporters, by = "reporter") %>% # TSC User PK
-    dplyr::left_join(wastd_observers, by = "observer") %>% # TSC User PK
+    dplyr::left_join(wastd_reporters, by = "reporter") %>% # WAStD User PK
+    dplyr::left_join(wastd_observers, by = "observer") %>% # WAStD User PK
     dplyr::select(-reporter, -observer) # drop odkc_username
 }
 

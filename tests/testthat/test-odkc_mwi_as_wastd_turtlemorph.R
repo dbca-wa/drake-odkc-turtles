@@ -4,7 +4,7 @@ test_that("odkc_mwi_as_wastd_turtlemorph works", {
 
   user_mapping <- tibble::tibble(odkc_username = "test", pk = 1)
 
-  # TSC API shows source and source_id under encounter, resolves users
+  # WAStD API shows source and source_id under encounter, resolves users
   odkc_names <- odkc_data$mwi %>%
     odkc_mwi_as_wastd_turtlemorph(user_mapping = user_mapping) %>%
     dplyr::select(-source, -source_id, -handler_id, -recorder_id) %>%
@@ -12,7 +12,7 @@ test_that("odkc_mwi_as_wastd_turtlemorph works", {
     # dplyr::rename(handler_pk = handler_id, recorder_pk = recorder_id) %>%
     names()
 
-  # ODKC data transformed into TSC shape should contain all fields of the
+  # ODKC data transformed into WAStD shape should contain all fields of the
   # WAStD serializer
   # WAStD accepts handler_id write-only, but returns handler_{pk, username, name}
   # read-only
