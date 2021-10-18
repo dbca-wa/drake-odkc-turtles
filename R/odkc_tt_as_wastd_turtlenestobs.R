@@ -20,13 +20,11 @@ odkc_tt_as_wastd_turtlenestobs <- function(data) {
       source_id = id,
       encounter_source="odk",
       encounter_source_id = id,
-      egg_count = nest_egg_count,
-      comments = glue::glue(
-        "The observed number of eggs was {nest_egg_count_accuracy}."
-      )
+      egg_count = nest_egg_count
+      # comments = ""
     ) %>%
     dplyr::filter_at(
-      dplyr::vars(-source, -source_id, -encounter_source, -encounter_source_id, -comments),
+      dplyr::vars(-source, -source_id, -encounter_source, -encounter_source_id),
       dplyr::any_vars(!is.na(.))
     )
 }

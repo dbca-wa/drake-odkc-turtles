@@ -57,10 +57,11 @@ odkc_tt_as_wastd_ae <- function(data,
         "{start_geopoint_longitude}.\n",
         "Photos expected: {system_attachments_expected}, ",
         "present: {system_attachments_present}.\n",
+        "Injuries: {turtle_damage_seen}, ",
         "Nesting success: {wastdr::humanize(nest_observed_nesting_success)}.\n",
         "Nesting disturbed: {nest_nesting_disturbed}, ",
         "cause {nest_nesting_disturbance_cause}.\n",
-        "Eggs {nest_egg_count_accuracy}: {nest_eggs_counted}, {nest_egg_count}.\n",
+        "Eggs: {nest_eggs_counted}, {nest_egg_count}.\n",
         # nest_more_tags
         # nest_more_loggers
         "Datasheet comments: {datasheet_datasheet_comments}"
@@ -109,13 +110,13 @@ odkc_tt_as_wastd_ae <- function(data,
         TRUE ~ as.numeric(start_geopoint_accuracy)
       ),
       taxon = "Cheloniidae",
-      species = nest_species %>% tidyr::replace_na("na"),
-      sex = nest_sex %>% tidyr::replace_na("na"),
+      species = turtle_species %>% tidyr::replace_na("na"),
+      sex = turtle_sex %>% tidyr::replace_na("na"),
       health = "alive",
-      maturity = "adult", # in-water rodeo catch tagging could be subadult
+      maturity = turtle_maturity %>% tidyr::replace_na("na"),
       habitat = nest_habitat,
       activity = "general-breeding-activity", # models.NESTING_ACTIVITY_CHOICES
-      nesting_event = "present",
+      nesting_event = nest_observed_nesting_success, # nesting success
       scanned_for_pit_tags = ifelse(
         is.null(pit_pit_left_name),
         "present",
@@ -126,7 +127,7 @@ odkc_tt_as_wastd_ae <- function(data,
         "present",
         "absent"
       ),
-      checked_for_injuries = nest_damage_seen
+      checked_for_injuries = turtle_damage_seen
     ) %>%
     dplyr::left_join(wastd_reporters, by = "reporter") %>% # wastd User PK
     dplyr::left_join(wastd_observers, by = "observer") %>% # wastd User PK
