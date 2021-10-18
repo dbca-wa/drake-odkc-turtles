@@ -502,6 +502,8 @@ In the 2020-21 season, monitoring effort was disrupted by thunderstorms and
 cyclone activity in weeks 3 and 4. On 2020-12-09, the field team was evacuated 
 from Delambre Island.
 
+<!-- TODO field days per season Nov/Dec and Jan/Feb  -->
+
 ```{r survey_effort}
 x$surveys %>% 
   wastdr::filter_realsurveys() %>% 

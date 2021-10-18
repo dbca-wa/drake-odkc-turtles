@@ -5,13 +5,13 @@ test_that("odkc_mwi_as_wastd_ae works", {
 
   user_mapping <- tibble::tibble(odkc_username = "test", pk = 1)
 
-  # TSC API shows source and source_id under encounter, resolves users
+  # WAStD API shows source and source_id under encounter, resolves users
   odkc_names <- odkc_data$mwi %>%
     odkc_mwi_as_wastd_ae(user_mapping = user_mapping) %>%
     dplyr::select(-source, -source_id, -where, -reporter_id, -observer_id, -when) %>%
     names()
 
-  # ODKC data transformed into TSC shape should contain all fields of the
+  # ODKC data transformed into WAStD shape should contain all fields of the
   # WAStD serializer
   for (n in odkc_names) {
     testthat::expect_true(
