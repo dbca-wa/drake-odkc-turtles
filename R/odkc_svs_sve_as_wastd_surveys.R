@@ -47,6 +47,7 @@ odkc_svs_sve_as_wastd_surveys <- function(svs, sve, user_mapping){
         dplyr::transmute(
             end_source_id = id,
             end_time = lubridate::format_ISO8601(survey_end_time, usetz = TRUE),
+            survey_end_time = survey_end_time,
             end_location = glue::glue(
                 "POINT ({site_visit_location_longitude}",
                 " {site_visit_location_latitude})"
@@ -57,8 +58,8 @@ odkc_svs_sve_as_wastd_surveys <- function(svs, sve, user_mapping){
                                       "End point recorded by {reporter} ",
                                       "on device {device_id}."),
             # for matching to svs:
-            device_id = device_id,
-            calendar_date_awst = calendar_date_awst,
+            # device_id = device_id,
+            # calendar_date_awst = calendar_date_awst,
             site_id = site_id
         )
 
@@ -75,6 +76,8 @@ odkc_svs_sve_as_wastd_surveys <- function(svs, sve, user_mapping){
             ),
             start_location_accuracy_m = site_visit_location_accuracy,
             start_time = lubridate::format_ISO8601(datetime, usetz = TRUE),
+            start_datetime = datetime,
+            latest_end_time = datetime + lubridate::hours(8),
             # start_photo = site_visit_site_conditions,
             start_comments = glue::glue("{site_visit_comments}\n",
                                         "Team: {site_visit_team}"),
@@ -85,15 +88,17 @@ odkc_svs_sve_as_wastd_surveys <- function(svs, sve, user_mapping){
             site_id = site_id
         ) %>%
         dplyr::left_join(wastd_reporters, by = "reporter") %>% # wastd User PK
-        dplyr::left_join(
-            survey_ends,
-            by = c(
-                "device_id",
-                "calendar_date_awst",
-                "site_id" # site_id or not?
-            )
-        ) %>%
-        dplyr::select(-reporter, -calendar_date_awst, -site_id)
+        dplyr::left_join(survey_ends, by = "site_id") %>%
+        dplyr::filter(survey_end_time > start_datetime) %>%
+        dplyr::filter(survey_end_time < latest_end_time) %>%
+        dplyr::select(
+            -reporter,
+            -calendar_date_awst,
+            -site_id,
+            - start_datetime,
+            -latest_end_time,
+            -survey_end_time
+        )
 
     surveys
 }
