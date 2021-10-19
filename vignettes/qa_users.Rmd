@@ -1,5 +1,5 @@
 ---
-title: "WAStD User Mapping QA"
+title: "WAStD User Matching QA"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document
 ---
@@ -7,7 +7,7 @@ output: html_document
 ```{=html}
 <style type="text/css">
 .main-container {
-  max-width: 100%;
+  max-width: 90%;
   margin-left: auto;
   margin-right: auto;
 }
@@ -28,101 +28,48 @@ loadd(odkc_ex)
 loadd(user_mapping)
 ```
 
-## Currency
-
--   This QA report ran on `r Sys.time()`.
--   The ODK Central data was downloaded on `r odkc_ex$downloaded_on`.
--   The WAStD Users were downloaded just before the workbook ran.
-
-## Step 0: Add new data collectors to WAStD
-
-Coordinators of data capture programs supply us with a spreadsheet in this exact
-format:
-
--   Column "name": The full name, including given and surname, e.g. "Florian
-    Mayer"
-
-    -   Use correct capitalisation. Do not write "florian mayer" or "FLORIAN
-        MAYER". The case does not matter for the user matching, but it matters
-        for displaying in reports.
-
--   Column "email": A valid email, e.g. "<Florian.Mayer@dbca.wa.gov.au>".
-
-    -   Omit any HTML markup, e.g. "mailto:", or anything involving `<`pointy
-        brackets`>`.
-
--   Column "phone": A valid phone number with the Australian prefix `+61`.
-
-    -   Valid example: "+61414123456".
-    -   Whitespace will be discarded, so "+61 414 123 456" works too.
-    -   Format the column as "text". Excel has a nasty habit of auto-formatting
-        columns and dropping the leading "+". This is very tedious to fix. E.g.
-        "61414123456" is invalid.
-
-We add columns:
-
--   "username", generated from the snake-cased "name", e.g. "florian\_mayer".
--   "role", which we set to a predefined text such as "Cable Beach Broome
-    Volunteer 2020-21". As user registrations come in batches from distinct
-    locations, we get a cleaner result if we set the role centrally following a
-    naming convention.
-
-## Step 1: wastdr takes a wild guess
-
-During the data import from ODK Central to WAStD, wastdr maps each distinct ODK
-Collect "username" as written by data collectors to actual WAStD user profiles.
-
-The matching is done by
-[`fuzzyjoin::stringdist_left_join`](http://varianceexplained.org/fuzzyjoin/reference/stringdist_join.html)
-using the Jaro-Winker distance between the ODKC username and the combined WAStD
-`name` and `aliases`.
-
-Details about the distance measures are
-[here](http://finzi.psych.upenn.edu/library/stringdist/html/stringdist-metrics.html).
-
-The Jaro-Winker distance was chosen as it returns the highest number of correct
-matches.
-
-## Step 2: Manually update WAStD user aliases to improve mapping
-
-In the automated validation output we show all user mappings with a
-dissimilarity above a threshold. This should separate mismatches from matches.
-
-The validation table shows columns:
-
--   `odkc_username` - the ODK Collect username
--   `wastd_matched` - a link to the WAStD User profile that we matched
--   `search_wastd` - individual links to search WAStD Users (names, usernames,
-    aliases, role, phone, email) for each part of the ODK Collect username. This
-    is helpful where a list of names were supplied, e.g. "Flo and Janet".
-
-For each mismatch: Find the correct WAStD user, and add the `odkc_username` to
-the WAStD User's field "aliases", then "save" or "save and continue editing" the
-WAStD user profile. It is **absolutely essential** to separate the aliases with
-a **comma**. e.g. Florian Mayer's aliases can be "Flo Mayer, FlorianM, FloJo",
-which then will precisely map to "Flo Mayer", "FlorianM", and "FloJo".
-
-Note: updating WAStD will not refresh this report automatically - we have to
-re-run the data import.
-
-When we re-run the user matching with fresh data, this user should match up.
-Some will won't, which we'll handle in the next step.
-
-The QA validation will pick up all username matches with a dissimilarity of 0.01
-or higher. Perfect matches will have a dissimilarity below 0.01.
-
-You can download a spreadsheet of mismatches from the CSV button:
-
-```{r user_mapping, message = FALSE, echo=FALSE}
+```{r user_table, echo=FALSE}
 a <- user_mapping %>%
     annotate_user_mapping() %>%
     pointblank::create_agent() %>%
     pointblank::col_vals_lt("dist", 0.01) %>%
     interrogate()
-a
+
+actions_table <- a %>%
+  pointblank::get_data_extracts() %>%
+  magrittr::extract2(1) %>%
+  dplyr::rowwise() %>% 
+  dplyr::mutate(active_at = get_user_area(odkc_ex, odkc_username)) %>% 
+  dplyr::select(-email, -phone) %>% 
+  dplyr::arrange(active_at, -dist) %>% 
+  gt::gt() %>%
+  gt::fmt_markdown(columns = gt::everything()) %>%
+  gt::cols_label(
+    odkc_username = gt::html("<h5>They wrote</h5>\n<small>ODK Collect username</small>"),
+    active_at = gt::html("<small>Active at</small>"),
+    odkc_un_trim = gt::html("<h5>We searched</h5>\n<small>Cleaned ODK name</small>"),
+    wastd_matched = gt::html("<h5>We matched</h5>\n<small>WAStD User</small>"),
+    search_wastd = gt::html("<h5>Search</h5>\n<small>likely candidates</small>"),
+    dist = gt::html("<h5>Dissimilarity</h5>\n<small>smaller = better</small>")
+  ) %>%
+  gt::tab_spanner(
+    label = "WASTD User match",
+    columns = c(odkc_username,
+                   active_at,
+                   odkc_un_trim,
+                   wastd_matched, search_wastd, dist)
+  ) %>%
+  gt::tab_spanner(
+    label = "WASTD User profile (chosen as best match)",
+    columns = c(role, pk, username, name, nickname, aliases)
+  )
 ```
 
-Alternatively, you can work through the issues directly in the table below.
+
+# User matching results {.tabset}
+
+## Please review {.active}
+Work through the issues directly in the table below.
 
 Your actions:
 
@@ -130,7 +77,7 @@ Your actions:
 
     -   Username is tablet holder.
     -   SVS team is other names.
-    -   Full names as given pre season in Step 0.
+    -   Full names as given to us pre season.
 
 -   If a "We matched WAStD User" is definitely not the person from the "ODK
     Collect username":
@@ -138,7 +85,7 @@ Your actions:
     -   Find the correct user in WAStD.
     -   Use the individual links in "Search likely candidates" to search WAStD
         for users matching part of the ODK username.
-    -   Really not a WAStD user yet? Create new user.
+    -   Really not a WAStD user yet? Create new WAStD user.
     -   Update the real WAStD user's "aliases" field with the ODK username.
         Important: drop commas from ODK username, but separate distinct aliases
         with a comma. This is crucial for our user matching algorithm.
@@ -155,32 +102,75 @@ Your actions:
     -   Next time we run the user matching, the match should come up with a 
         lower dissimilarity measure (or even drop off the validation shortlist).
 
-```{r user_table, echo=FALSE}
-a %>%
-  pointblank::get_data_extracts() %>%
-  magrittr::extract2(1) %>%
-  dplyr::rowwise() %>% 
-  dplyr::mutate(active_at = get_user_area(odkc_ex, odkc_username)) %>% 
-  dplyr::arrange(active_at, -dist) %>% 
-  gt::gt() %>%
-  gt::fmt_markdown(columns = TRUE) %>%
-  gt::cols_label(
-    odkc_username = gt::html("<h5>They wrote</h5>\n<small>ODK Collect username</small>"),
-    active_at = gt::html("<small>Active at</small>"),
-    odkc_un_trim = gt::html("<h5>We searched</h5>\n<small>Cleaned ODK name</small>"),
-    wastd_matched = gt::html("<h5>We matched</h5>\n<small>WAStD User</small>"),
-    search_wastd = gt::html("<h5>Search</h5>\n<small>likely candidates</small>"),
-    dist = gt::html("<h5>Dissimilarity</h5>\n<small>smaller = better</small>")
-  ) %>%
-  gt::tab_spanner(
-    label = "WASTD User match",
-    columns = vars(odkc_username,
-                   active_at,
-                   odkc_un_trim,
-                   wastd_matched, search_wastd, dist)
-  ) %>%
-  gt::tab_spanner(
-    label = "WASTD User profile (chosen as most likely)",
-    columns = vars(role, pk, username, name, nickname, aliases, email, phone)
-  )
+```{r view_match_table, echo=FALSE}
+actions_table
 ```
+
+
+## Data and Methods
+
+-   This QA report ran on `r Sys.time()`.
+-   The ODK Central data was downloaded on `r odkc_ex$downloaded_on`.
+-   The WAStD Users were downloaded just before the workbook ran.
+
+During the data import from ODK Central to WAStD, wastdr maps each distinct ODK
+Collect "username" as written by data collectors to actual WAStD user profiles.
+
+The matching is done by
+[`fuzzyjoin::stringdist_left_join`](http://varianceexplained.org/fuzzyjoin/reference/stringdist_join.html)
+using the Jaro-Winker distance between the ODKC username and the WAStD
+`name` and `aliases`. Aliases are split up by comma. 
+The Jaro-Winker distance was chosen as it returns the highest number of correct
+matches.
+
+Details about available distance measures can be found
+[here](http://finzi.psych.upenn.edu/library/stringdist/html/stringdist-metrics.html).
+
+
+You can download a spreadsheet of mismatches from the CSV button:
+
+```{r user_mapping, message = FALSE, echo=FALSE}
+a
+```
+
+Note: updating WAStD will not refresh this report automatically - we have to
+re-run the data import.
+
+When we re-run the user matching with fresh data, users with updated aliases 
+should match up.
+
+The QA validation will pick up all username matches with a dissimilarity of 0.01
+or higher. Perfect matches will have a dissimilarity below 0.01.
+
+## Adding new data collectors to WAStD
+
+Coordinators of data capture programs supply us with a spreadsheet in this exact
+format:
+
+-   Column "name": The full name, including given and surname, e.g. "Florian
+    Mayer"
+
+    -   Use correct capitalisation. Do not write "florian mayer" or "FLORIAN
+        MAYER". The case does not matter for the user matching, but it matters
+        for displaying in reports.
+
+-   Column "email": A valid email, e.g. `Florian.Mayer@dbca.wa.gov.au`.
+
+    -   Omit any HTML markup, e.g. "mailto:", or anything involving `<`pointy
+        brackets`>`.
+
+-   Column "phone": A valid phone number with the Australian prefix `+61`.
+
+    -   Valid example: "+61414123456".
+    -   Whitespace will be discarded, so "+61 414 123 456" works too.
+    -   Format the column as "text". Excel has a nasty habit of auto-formatting
+        columns and dropping the leading "+". This is very tedious to fix. E.g.
+        "61414123456" is invalid.
+
+We add the following columns:
+
+-   "username", generated from the snake-cased "name", e.g. `florian_mayer`.
+-   "role", which we set to a predefined text such as "Cable Beach Broome
+    Volunteer 2020-21". As user registrations come in batches from distinct
+    locations, we get a cleaner result if we set the role centrally following a
+    naming convention. Less work for the coordinator!
