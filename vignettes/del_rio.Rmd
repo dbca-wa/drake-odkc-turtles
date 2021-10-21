@@ -20,7 +20,9 @@ params:
   area_name: Delambre Island
   prefix: DEL
   w2_filepath: 'data/wamtram.csv'
+  w2_rds_filepath: 'data/w2.RData'
   w2_observed_location_code: 'DA'
+  w2_place_code: 'DADI'
   w2_exported_on: '20 Sept 2021'
   export_dir: 'inst/reports/rio'
 editor_options:
@@ -91,6 +93,9 @@ species_lookup <- tibble::tribble(
   "GN", "chelonia-mydas"
 ) 
 
+# WAMTRAM direct database export
+w2db <- readRDS(here::here(params$w2_rds_filepath))
+
 #' Convert WAMTRAM `clutch_completed` values into `successful_nesting`
 #' 
 annotate_w2_nesting_success <- . %>% 
@@ -102,6 +107,8 @@ annotate_w2_nesting_success <- . %>%
         TRUE ~ "unknown_nesting" # "U", "P", "D", NA
       ))
 
+# WAMTRAM observation summary
+# does not contain some important data, e.g. meas CCL_notch, site names
 w2_all <- here::here(params$w2_filepath) %>% 
   readr::read_csv() %>% 
   janitor::clean_names() %>% 
@@ -120,13 +127,14 @@ w2_all <- here::here(params$w2_filepath) %>%
   annotate_w2_nesting_success()
 
 w2 <- w2_all %>% 
-  dplyr::filter(observed_location_code == params$w2_observed_location_code)
+  # dplyr::filter(observed_location_code == params$w2_observed_location_code)
+  dplyr::filter(place_code == params$w2_place_code)
 
 w2 %>% 
   readr::write_csv(
     here::here(
       ld, 
-      glue::glue("wamtram_{params$w2_observed_location_code}.csv")
+      glue::glue("wamtram_{params$w2_place_code}.csv")
     )
   )
 
@@ -189,6 +197,68 @@ w2 %>%
 #   NORTHING = col_double(),
 #   DAMAGE = col_character()
 # )
+
+# -----------------------------------------------------------------------------#
+# Survey effort: WAStD
+#
+# All surveys: useful for programs running over entire season (e.g. C4H)
+all_surveys <- x$surveys %>% 
+  wastdr::filter_realsurveys() %>% 
+  wastdr::survey_season_stats()  
+
+# Distinct reporters of tagging surveys
+teams_early_season <- x$surveys %>% 
+  wastdr::filter_realsurveys() %>% 
+  dplyr::filter(lubridate::month(start_time) > 6) %>% 
+  dplyr::group_by(season, reporter) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(season) %>% 
+  dplyr::tally(name = "team_size") %>% 
+  dplyr::arrange(-season)
+
+# Distinct reporters of excav surveys
+teams_late_season <- x$surveys %>% 
+  wastdr::filter_realsurveys() %>% 
+  dplyr::filter(lubridate::month(start_time) < 7) %>% 
+  dplyr::group_by(season, reporter) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  dplyr::group_by(season) %>% 
+  dplyr::tally(name = "team_size") %>% 
+  dplyr::arrange(-season)
+
+# Turtle tagging surveys: 4 weeks Nov/Dec
+early_season_surveys <- x$surveys %>% 
+  wastdr::filter_realsurveys() %>% 
+    dplyr::filter(lubridate::month(start_time) > 6) %>% 
+    dplyr::group_by(season) %>%
+    dplyr::summarise(
+      first_day = min(turtle_date),
+      last_day = max(turtle_date),
+      season_length_days = as.numeric(
+        lubridate::interval(first_day, last_day)
+      ) / (3600 * 24),
+      number_surveys = dplyr::n(),
+      hours_surveyed = round(sum(duration_hours))
+    ) %>% 
+  dplyr::left_join(teams_early_season, by="season")
+
+# Turtle nest excav surveys: 1 week Jan/Feb
+late_season_surveys <- x$surveys %>% 
+  wastdr::filter_realsurveys() %>% 
+    dplyr::filter(lubridate::month(start_time) < 7) %>% 
+    dplyr::group_by(season) %>%
+    dplyr::summarise(
+      first_day = min(turtle_date),
+      last_day = max(turtle_date),
+      season_length_days = as.numeric(
+        lubridate::interval(first_day, last_day)
+      ) / (3600 * 24),
+      number_surveys = dplyr::n(),
+      hours_surveyed = round(sum(duration_hours))
+    )%>% 
+  dplyr::left_join(teams_late_season, by="season")
 
 # -----------------------------------------------------------------------------#
 # Emergences: WAStD
@@ -306,8 +376,26 @@ total_turtles_season <-
   dplyr::select(season, species, emergences, processed, missed, processed_pct) %>% 
   janitor::clean_names(case="sentence")
 
+# Export to CSV
 total_turtles_season %>% 
   readr::write_csv(here::here(ld, "total_turtles_season.csv"))
+
+# Display helper
+total_turtles_gt <- function(data, species){
+  ttl <- glue::glue("Total number of {species} turtles")
+  data %>% 
+      gt::gt(
+    groupname_col=NULL,
+    caption = ttl
+  ) %>% 
+  gt::tab_header(
+    title=ttl,
+    subtitle="Turtle emergences grouped by season and species"
+  ) %>% 
+  gt::tab_spanner("Total Turtles", columns = c(Emergences)) %>% 
+  gt::tab_spanner("Emergences", columns = c(Processed, Missed))
+  
+}
 
 # -----------------------------------------------------------------------------#
 # Nesting success
@@ -354,7 +442,9 @@ total_nesting_by_season_species <-
     nesting = `successful-crawl` + nesting,
     unsure = `track-not-assessed` + `track-unsure` + unknown_nesting,
     non_nesting = `false-crawl` + non_nesting,
-    nesting_success = round(nesting * 100 / (nesting+unsure+non_nesting), 2)
+    nesting_success_pess = round(nesting * 100 / (nesting+unsure+non_nesting), 2),
+    nesting_success_split = round((nesting + (0.5 * unsure)) * 100 / (nesting+unsure+non_nesting), 2),
+    nesting_success_opt = round((nesting + unsure) * 100 / (nesting+unsure+non_nesting), 2)
   )
 
 total_nesting_by_season_species %>% 
@@ -363,11 +453,39 @@ total_nesting_by_season_species %>%
 w2_nesting_type_by_season_turtle %>% 
   readr::write_csv(here::here(ld, "total_nesting_by_season_turtle.csv"))
 
+# Display helper
+total_nesting_gt <- function(data, species){
+  data %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = glue::glue("{species} nesting by season tallied by ",
+                         "nesting success from tagging and track data")
+  ) %>% 
+  gt::tab_header(
+    title=glue::glue("Seasonal nesting totals: {species}"),
+    subtitle="Nesting by season tallied by nesting success"
+  ) %>%
+  gt::cols_label(
+    season = "Season",
+    species = "Species",
+    nesting = "Nesting confirmed",
+    unsure = "Nesting unsure",
+    non_nesting = "Non nesting",
+    nesting_success_pess = "At least",
+    nesting_success_opt = "At most",
+    nesting_success_split = "Split 50/50",
+  ) %>% 
+    gt::tab_spanner(
+      label = "Nesting Success",
+      columns = c(gt::contains("nesting_success"))
+    )
+}
+
 # -----------------------------------------------------------------------------#
 # Connectivity
 trt_conn <- 
   w2_all %>% 
-  dplyr::group_by(season, species, observed_location_code, location_code) %>% 
+  dplyr::group_by(season, species, place_code, location_code) %>% 
   dplyr::tally() %>% 
   dplyr::ungroup() %>% 
   tidyr::pivot_wider(
@@ -376,11 +494,87 @@ trt_conn <-
     values_from=n,
     values_fill = 0
   ) %>% 
-  dplyr::arrange(-season, observed_location_code, species)
+  dplyr::arrange(-season, place_code, species)
 
 trt_conn %>% 
   readr::write_csv(here::here(ld, "turtle_nesting_connectivity.csv"))
 
+# -----------------------------------------------------------------------------#
+# Morphometrics
+# 
+# CCL
+trt_morph_ccl <- w2 %>% 
+  dplyr::filter(!is.na(ccl)) %>% 
+  dplyr::group_by(season, species) %>% 
+  dplyr::summarise(
+    n = dplyr::n(),
+    ccl_mean = mean(ccl) %>% round(0),
+    ccl_sd = sd(ccl) %>% round(2),
+    ccl_min = min(ccl) %>% round(0),
+    ccl_max = max(ccl) %>% round(0),
+    # ccw_mean = mean(ccw) %>% round(0),
+    # ccw_sd = sd(ccw) %>% round(2),
+    # ccw_min = min(ccw) %>% round(0),
+    # ccw_max = max(ccw) %>% round(0),
+    .groups = "keep"
+  ) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(-season, species) %>% 
+  dplyr::mutate(
+    species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
+  ) %>% 
+  janitor::clean_names(case="sentence")
+
+# CCW
+trt_morph_ccw <- w2 %>% 
+  dplyr::filter(!is.na(ccw)) %>% 
+  dplyr::group_by(season, species) %>% 
+  dplyr::summarise(
+    n = dplyr::n(),
+    # ccl_mean = mean(ccl) %>% round(0),
+    # ccl_sd = sd(ccl) %>% round(2),
+    # ccl_min = min(ccl) %>% round(0),
+    # ccl_max = max(ccl) %>% round(0),
+    ccw_mean = mean(ccw) %>% round(0),
+    ccw_sd = sd(ccw) %>% round(2),
+    ccw_min = min(ccw) %>% round(0),
+    ccw_max = max(ccw) %>% round(0),
+    .groups = "keep"
+  ) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(-season, species) %>% 
+  dplyr::mutate(
+    species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
+  ) %>% 
+  janitor::clean_names(case="sentence")
+
+# Export to CSV
+trt_morph_ccl %>% readr::write_csv(here::here(ld, "trt_morph_ccl.csv"))
+trt_morph_ccw %>% readr::write_csv(here::here(ld, "trt_morph_ccw.csv"))
+
+# Display helper
+morph_gt <- function(data, species, metric){
+  ttl <- glue::glue(
+    "Morphometrics by season and species: {species} turtles {metric}")
+  
+  data %>% 
+    gt::gt(groupname_col = NULL, caption = ttl) %>% 
+    gt::tab_header(
+      title= ttl,
+      subtitle="Values in millimetres"
+    ) %>% 
+    gt::tab_spanner(
+      label = "Group",
+      columns = c(Season, Species, N)
+    ) %>% 
+    gt::tab_spanner(
+      label = "Curved Carapace Length (mm)",
+      columns = c(gt::contains("ccl"))
+    ) %>% gt::tab_spanner(
+      label = "Curved Carapace Width (mm)",
+      columns = c(gt::contains("ccw"))
+    )
+}
 
 # -----------------------------------------------------------------------------#
 # Damages and injuries
@@ -425,7 +619,6 @@ trt_dmg <- w2 %>%
 
 trt_dmg %>% 
   readr::write_csv(here::here(ld, "trt_dmg.csv"))
-
 
 trt_dmg_by_species_season <- trt_dmg %>% 
   dplyr::group_by(season, species, damage, total_turtles) %>% 
@@ -486,7 +679,7 @@ reflects all QA operations on WAMTRAM2 tagging data up to this date.
 
 # Survey effort
 Survey effort as shown here is calculated from surveys captured in WAStD.
-Test and training surveys are excluded.`
+Test and training surveys are excluded.
 
 The season length spans the dates of the first to the last survey of the season.
 
@@ -498,16 +691,20 @@ more accurate after these merged surveys have been un-merged.
 On days of night tagging and morning track counts there should be two surveys 
 per date.
 
+In the 2017-18 season, the new digital data capture system was introduced and 
+partially used in the third and fourth week of field work. The figures and numbers
+below reflect the absence of data captured only on paper, pending backfilling
+into WAStD. Once backfilled, the season length and survey effort will be similar
+to the effort shown in later seasons.
+
 In the 2020-21 season, monitoring effort was disrupted by thunderstorms and 
 cyclone activity in weeks 3 and 4. On 2020-12-09, the field team was evacuated 
 from Delambre Island.
 
-<!-- TODO field days per season Nov/Dec and Jan/Feb  -->
 
-```{r survey_effort}
-x$surveys %>% 
-  wastdr::filter_realsurveys() %>% 
-  wastdr::survey_season_stats()  %>% 
+```{r, eval=FALSE}
+# This makes more sense for places with continuous monitoring, e.g. Pt Hedland
+all_surveys %>% 
   janitor::clean_names(case="sentence") %>% 
   gt::gt(
     groupname_col=NULL,
@@ -519,6 +716,48 @@ x$surveys %>%
     subtitle="Survey stats grouped by rookery and season"
   )
 ```
+
+## Turtle tagging surveys
+We see a short 2017 season due to incomplete data capture through WAStD.
+Pending backfilling of paper datasheets, the 2017 season was about 18 days.
+
+The 2020 season was cut short by a week through a cyclone, data capture in the third
+and last week was already impacted by inclement weather.
+
+```{r}
+early_season_surveys %>%
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Seasonal overview of early season survey effort"
+  ) %>% 
+  # gt::fmt_date(c("First day", "Last day")) %>% # Friday, October 20, 2017
+  gt::tab_header(
+    title="Seasonal overview of early season survey effort",
+    subtitle="Survey stats grouped by rookery and season"
+  )
+```
+
+## Turtle nest excavation surveys
+
+The team size is impacted through incorrect data capture - if observers forget
+to update the forms with their name, the previously filled in name is recorded.
+This impacted at least the 2020 late season (team size was > 1).
+
+```{r}
+late_season_surveys %>%
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Seasonal overview of late season survey effort"
+  ) %>% 
+  # gt::fmt_date(c("First day", "Last day")) %>% # Friday, October 20, 2017
+  gt::tab_header(
+    title="Seasonal overview of late season survey effort",
+    subtitle="Survey stats grouped by rookery and season"
+  )
+```
+
 
 The following figure is saved as `DEL_survey_count_delambre-island.png`.
 
@@ -534,7 +773,6 @@ x$surveys %>%
   wastdr::filter_realsurveys() %>% 
   plot_survey_effort(local_dir = ld, placename = pn, prefix = pf, export = TRUE)
 ```
-
 <!--
 # List individual surveys with links to WAStD
 # x$surveys %>% survey_show_detail() %>% rt
@@ -616,22 +854,31 @@ Later in this report, we split the total emergences into nesting and non nesting
 
 This summary is exported as `total_turtles_season.csv`.
 
+The low numbers in the 2017-18 season can be explained with the first two weeks
+being captured on paper only pending backfilling of the data into WAStD.
+
 The low numbers in the 2020-21 season can be explained with thunderstorms and 
 cyclone activity in weeks 3 and 4 of the 4 week turtle monitoring expedition.
 
-```{r total_turtles_season}
+#### Flatback turtles
+```{r total_turtles_season_fb}
 total_turtles_season %>% 
-  gt::gt(
-    groupname_col=NULL,
-    caption = "Total number of turtles"
-  ) %>% 
-  # gt::fmt_date(c("First day", "Last day")) %>% # Friday, October 20, 2017
-  gt::tab_header(
-    title="Total numbers of turtles",
-    subtitle="Turtle emergences grouped by season and species"
-  ) %>% 
-  gt::tab_spanner("Total Turtles", columns = c(Emergences)) %>% 
-  gt::tab_spanner("Emergences", columns = c(Processed, Missed))
+  dplyr::filter(Species == "Natator depressus") %>% 
+  total_turtles_gt("Flatback")
+```
+
+#### Hawksbill turtles
+```{r total_turtles_season_hb}
+total_turtles_season %>% 
+  dplyr::filter(Species == "Eretmochelys imbricata") %>% 
+  total_turtles_gt("Hawksbill")
+```
+
+#### Green turtles
+```{r total_turtles_season_gn}
+total_turtles_season %>% 
+  dplyr::filter(Species == "Chelonia mydas") %>% 
+  total_turtles_gt("Green")
 ```
 
 ### Total, processed, and missed turtles per night
@@ -652,7 +899,9 @@ We show an interactive table, as the printed version is too long.
 This summary is exported as `total_turtles.csv`.
 
 ```{r total_turtles_date}
-total_turtles %>% rt()
+total_turtles %>% 
+  dplyr::arrange(Season, `Turtle date`) %>% 
+  rt()
 ```
 
 
@@ -693,6 +942,9 @@ plt_total_turtles_season
 
 This figure is exported as `turtles_proc_mis_by_season.png`.
 
+Missed turtles have only been captured since the (incomplete) 2017 season, and
+complete numbers of missed turtles are shown from the 2018 season onwards.
+
 ```{r total_turtles_date_fig, fig.height=12}
 turtles_proc_mis_by_season <- 
   ggplot2::ggplot(
@@ -712,7 +964,7 @@ turtles_proc_mis_by_season <-
   ggplot2::facet_grid(facets = ggplot2::vars(Season), scales = "free_x") +
   ggplot2::scale_x_continuous(labels = function(x) {fdate_as_tdate(x)}) +
   ggplot2::ggtitle(label="Total turtle emergences", 
-                   subtitle="Tagged vs missed by season") + 
+                   subtitle="Tagged (grey) vs missed (black) by season") + 
   ggplot2::labs(x="Date", y="Turtles") +
   ggplot2::theme_bw() +
   ggplot2::theme(legend.position="bottom") +
@@ -728,6 +980,7 @@ ggplot2::ggsave(
 
 turtles_proc_mis_by_season
 ```
+### Flatback turtles, all seasons
 
 ```{r total_turtles_fb_date_fig, fig.height=12}
 ggplot2::ggplot(
@@ -747,7 +1000,7 @@ ggplot2::ggplot(
   ggplot2::facet_grid(facets = ggplot2::vars(Season), scales = "free_x") +
   ggplot2::scale_x_continuous(labels = function(x) {fdate_as_tdate(x)}) +
   ggplot2::ggtitle(label="Total Flatback turtle emergences", 
-                   subtitle="Tagged vs missed by season") + 
+                    subtitle="Tagged (grey) vs missed (black) by season") + 
   ggplot2::labs(x="Date", y="Turtles") +
   ggplot2::theme_bw() +
   ggplot2::theme(legend.position="bottom") +
@@ -774,6 +1027,8 @@ WAMTRAM tagging records are grouped by season, species, and observation status
 The only record of an "initial sighting" is a historic sighting of a Leatherback
 turtle in 1995.
 
+We see a dip in numbers in the 2020 season due to the cyclone cutting short field work.
+
 This summary is exported as `turtles_new_rem_rec.csv` and shown in tables 
 below split by species.
 
@@ -791,6 +1046,8 @@ turtles_mcr <- w2 %>%
   janitor::clean_names(case="sentence") 
 ```
 
+### Flatback turtles
+
 ```{r trt_mcr_fb}
 turtles_mcr %>% 
   dplyr::filter(Species == "Natator depressus") %>% 
@@ -804,6 +1061,7 @@ turtles_mcr %>%
   )
 ```
 
+### Hawksbill turtles
 
 ```{r trt_mcr_hb}
 turtles_mcr %>% 
@@ -817,6 +1075,8 @@ turtles_mcr %>%
     # subtitle="Initial nesting vs Remigrant vs Resighting vs Initial sighting"
   )
 ```
+
+### Green turtles
 
 ```{r trt_mcr_gn}
 turtles_mcr %>% 
@@ -869,6 +1129,8 @@ trt_internesting <-
   dplyr::arrange(-season, species)
 ```
 
+### Flatback turtles
+
 ```{r intern_fb}
 trt_internesting %>% 
   dplyr::filter(species == "natator-depressus") %>% 
@@ -896,7 +1158,7 @@ trt_internesting %>%
   )
 ```
 
-
+### Hawksbill turtles
 
 ```{r intern_hb}
 trt_internesting %>% 
@@ -924,6 +1186,8 @@ trt_internesting %>%
     columns = dplyr::contains("Unknown nesting", ignore.case = FALSE)
   )
 ```
+
+### Green turtles
 
 ```{r intern_gn}
 trt_internesting %>% 
@@ -974,6 +1238,8 @@ clutch_freq <-
   )
 ```
 
+### Flatback turtles
+
 ```{r clutch_freq_fb}
 clutch_freq %>% 
   dplyr::filter(species == "natator-depressus") %>% 
@@ -994,6 +1260,7 @@ clutch_freq %>%
   
 ```
 
+### Hawksbill turtles
 
 ```{r clutch_freq_hb}
 clutch_freq %>% 
@@ -1015,6 +1282,7 @@ clutch_freq %>%
   
 ```
 
+### Green turtles
 
 ```{r clutch_freq_gn}
 clutch_freq %>% 
@@ -1033,113 +1301,69 @@ clutch_freq %>%
     "Number of successful clutches", 
     columns = !dplyr::contains("Season")
   )
-  
 ```
 
 ## Morphometrics
-Tagging data fields `w2$ccl` and `w2$ccw` are grouped by season and species, 
-summarised into mean, sd, min, max, and rounded to two decimals.
+Tagging data contains morphometric measurements "curved carapace length" (`w2$ccl`)
+and "curved carapace width" (`w2$ccw`).
 
-These summary statistics of curved carapace length and width in mm are shown below.
+Separately for each metric (ccl or ccw), records with existing measurements are 
+grouped by season and species, then summarised into mean, sd, min, and max.
 
-This summary as a whole is exported as `trt_morph.csv` but shown below 
-split by species.
+These summary statistics of curved carapace length and width are shown in 
+Millimetres below.
 
-```{r morph}
-trt_morph <- w2 %>% 
-  dplyr::filter(!is.na(ccl), !is.na(ccw)) %>% 
-  dplyr::group_by(season, species) %>% 
-  dplyr::summarise(
-    n = dplyr::n(),
-    ccl_mean = mean(ccl) %>% round(2),
-    ccl_sd = sd(ccl) %>% round(2),
-    ccl_min = min(ccl) %>% round(2),
-    ccl_max = max(ccl) %>% round(2),
-    ccw_mean = mean(ccw) %>% round(2),
-    ccw_sd = sd(ccw) %>% round(2),
-    ccw_min = min(ccw) %>% round(2),
-    ccw_max = max(ccw) %>% round(2),
-    .groups = "keep"
-  ) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::arrange(-season, species) %>% 
-  dplyr::mutate(
-    species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
-  ) %>% 
-  janitor::clean_names(case="sentence")
-```
+The two summaries are exported as `trt_morph_ccl/ccw.csv` but shown below 
+split by species and metric (ccl or ccw).
 
-```{r morph_fb}
-trt_morph %>%
+It is notable that the tagging database reports a very small number of CCL 
+measurements for Flatbacks in the past three seasons (3-5 per seasons), whereas 
+the far less often measured metric CCW is reported at numbers (175-318) comparable 
+to previous seasons.
+
+### Flatback turtles
+
+```{r morph_fb_ccl}
+trt_morph_ccl %>%
   dplyr::filter(Species == "Natator depressus") %>% 
-  gt::gt(
-    groupname_col=NULL,
-    caption = "Morphometrics by season and species: Flatback turtles"
-  ) %>% 
-  gt::tab_header(
-    title="Morphometrics by season and species: Flatback turtles",
-    subtitle="Values in millimetres, rounded to two decimals"
-  ) %>% 
-  gt::tab_spanner(
-    label = "Group",
-    columns = c(Season, Species, N)
-  ) %>% 
-  gt::tab_spanner(
-    label = "Curved Carapace Length (mm)",
-    columns = c(gt::contains("ccl"))
-  ) %>% gt::tab_spanner(
-    label = "Curved Carapace Width (mm)",
-    columns = c(gt::contains("ccw"))
-  )
+  morph_gt("Flatback", "CCL")
 ```
 
-```{r morph_hb}
-trt_morph %>% 
+```{r morph_fb_ccw}
+trt_morph_ccw %>%
+  dplyr::filter(Species == "Natator depressus") %>% 
+  morph_gt("Flatback", "CCW")
+```
+
+### Hawksbill turtles
+
+```{r morph_hb_ccl}
+trt_morph_ccl %>%
   dplyr::filter(Species == "Eretmochelys imbricata") %>% 
-  gt::gt(
-    groupname_col=NULL,
-    caption = "Morphometrics by season and species: Hawksbill turtles"
-  ) %>% 
-  gt::tab_header(
-    title="Morphometrics by season and species: Hawksbill turtles",
-    subtitle="Values in millimetres, rounded to two decimals"
-  ) %>% 
-  gt::tab_spanner(
-    label = "Group",
-    columns = c(Season, Species, N)
-  ) %>% 
-  gt::tab_spanner(
-    label = "Curved Carapace Length (mm)",
-    columns = c(gt::contains("ccl"))
-  ) %>% gt::tab_spanner(
-    label = "Curved Carapace Width (mm)",
-    columns = c(gt::contains("ccw"))
-  )
+  morph_gt("Hawksbill", "CCL")
 ```
 
-```{r morph_gn}
-trt_morph %>% 
-  dplyr::filter(Species == "Chelonia mydas") %>% 
-  gt::gt(
-    groupname_col=NULL,
-    caption = "Morphometrics by season and species: Green turtles"
-  ) %>% 
-  gt::tab_header(
-    title="Morphometrics by season and species: Green turtles",
-    subtitle="Values in millimetres, rounded to two decimals"
-  ) %>% 
-  gt::tab_spanner(
-    label = "Group",
-    columns = c(Season, Species, N)
-  ) %>% 
-  gt::tab_spanner(
-    label = "Curved Carapace Length (mm)",
-    columns = c(gt::contains("ccl"))
-  ) %>% gt::tab_spanner(
-    label = "Curved Carapace Width (mm)",
-    columns = c(gt::contains("ccw"))
-  )
+```{r morph_hb_ccw}
+trt_morph_ccw %>%
+  dplyr::filter(Species == "Eretmochelys imbricata") %>% 
+  morph_gt("Hawksbill", "CCW")
 ```
+
+### Green turtles
+
+```{r morph_gn_ccl}
+trt_morph_ccl %>%
+  dplyr::filter(Species == "Chelonia mydas") %>% 
+  morph_gt("Green", "CCL")
+```
+
+
+```{r morph_gn_ccw}
+trt_morph_ccw %>%
+  dplyr::filter(Species == "Chelonia mydas") %>% 
+  morph_gt("Green", "CCW")
+```
+
 
 ## Nesting success
 
@@ -1184,26 +1408,24 @@ As non nesting are counted:
 #### Caveats
 
 When calculating the nesting success as fraction of successful over total nesting, 
-we lump all degrees of uncertainty about the nesting success into the
-category of nesting failure. This includes the confirmed absence of a
-nest ("false crawl"), but also cases where the presence of a nest is
-unsure or not checked for. 
+we calculate three versions of nesting success.
 
-Similarly, the tagging records cater for a range of unknowns, which again could
+* The "pessimistic" success rate considers all unknowns as non nesting.
+* The "optimistic" success rate considers all unknowns as successful nesting.
+* The "split" success rate considers exactly half of all unknowns as successful nesting.
+
+Uncertain track count records include cases where the presence of a nest is unsure or not 
+checked for. The tagging records cater for a range of unknowns, which again could
 well be successfully completed clutches.
 
 The **data** are biased (both ways) by the observers' individual ability to 
 recognize a nest, and the opportunity to observe the clutch up to its successful 
 end.
 
-The **calculation** of nesting success lumps unknowns with negatives and therefore 
-presents a **conservative estimate**. 
-
-If we were to include unknowns (or a realistic fraction thereof) with successful 
-nesting, we would get an **optimistic estimate**.
-
 Nesting success measured during night tagging can be assumed to be lowered by
 the disruption through monitoring disturbance.
+
+We see again the dip in numbers in the shortened 2020 survey.
 
 <!--
 * Nesting success (optimistic) = yes + unsure / yes + unsure + no
@@ -1214,25 +1436,28 @@ the disruption through monitoring disturbance.
 
 This summary is exported as `total_nesting_by_season_species.csv`.
 
-```{r nesting_totals}
+### Flatback turtles
+
+```{r nesting_totals_fb}
 total_nesting_by_season_species %>%
-  dplyr::filter(season>2016) %>% 
-  gt::gt(
-    groupname_col=NULL,
-    caption = "Nesting by season and species tallied by nesting success from tagging and track data"
-  ) %>% 
-  gt::tab_header(
-    title="Seasonal nesting totals",
-    subtitle="Nesting by season and species tallied by nesting success"
-  ) %>%
-  gt::cols_label(
-    season = "Season",
-    species = "Species",
-    nesting = "Nesting confirmed",
-    unsure = "Nesting unsure",
-    non_nesting = "Non nesting",
-    nesting_success = "Nesting success"
-  )
+  dplyr::filter(season>2016, species == "Natator depressus") %>% 
+  total_nesting_gt("Flatback")
+```
+
+### Hawksbill turtles
+
+```{r nesting_totals_hb}
+total_nesting_by_season_species %>%
+  dplyr::filter(season>2016, species == "Eretmochelys imbricata") %>% 
+  total_nesting_gt("Hawksbill")
+```
+
+### Green turtles
+
+```{r nesting_totals_gn}
+total_nesting_by_season_species %>%
+  dplyr::filter(season>2016, species == "Chelonia mydas") %>% 
+  total_nesting_gt("Green")
 ```
 
 <!--  
@@ -1269,7 +1494,9 @@ refers to one excavated nest.
 
 ```{r hatch_succ}
 x$nest_excavations %>% 
+  dplyr::filter(emergence_success > 0, hatching_success > 0) %>% 
   wastdr::hatching_emergence_success() %>% 
+  dplyr::arrange(-season) %>% 
   dplyr::mutate(
     species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
   ) %>% 
@@ -1313,79 +1540,111 @@ In the original data, this is coded as column `observed_location_code`.
 
 The data is saved as `turtle_nesting_connectivity.csv`.
 
+## Site register
+To understand the site codes in the connectivity matrix, we show here the list
+of known sites.
+
+The `Code` describes nesting beaches; e.g. `DADI` is all of Delambre Island.
+The `Prefix` describes contiguous localities (e.g. `DA` Dampier Archipelago),
+which can be turtles rookeries, and can contain one or several nesting beaches.
+
+```{r}
+w2db$sites %>% 
+  janitor::clean_names(case="sentence") %>% 
+  rt()
+```
+
+```{r}
+w2db$sites %>%
+  dplyr::rename(
+    latitude = site_latitude,
+    longitude = site_longitude
+  ) %>% 
+  leaflet::leaflet(width = 800, height = 600) %>%
+    leaflet::addProviderTiles("Esri.WorldImagery", group = "Aerial") %>%
+    leaflet::addProviderTiles("OpenStreetMap.Mapnik", group = "Place names") %>%
+  leaflet::addMarkers(
+     group = "Sites",
+    label = ~ glue::glue("[{code}] {label}"), 
+    popup = ~ glue::glue(
+      "<h3>[{code}] {label}</h3>Rookery: {is_rookery}<br/>{description}"
+    )
+  ) %>%
+    leaflet::addLayersControl(
+      baseGroups = c("Aerial", "Place names"),
+      overlayGroups = c("Sites"),
+      options = leaflet::layersControlOptions(collapsed = FALSE)
+    )
+```
+
+## Flatback turtles
+
 ```{r trt_conn_fb}
 trt_conn %>% 
-  dplyr::filter(species == "natator-depressus") %>%
+  dplyr::filter(species == "natator-depressus", season==2020) %>%
+  dplyr::select(-species, -season) %>% 
   gt::gt(
     groupname_col=NULL,
-    caption = "Connectivity of Flatback turtles"
+    caption = "Connectivity of Flatback turtles in 2020-21"
   ) %>% 
   gt::tab_header(
-    title="Connectivity of Flatback turtles"
+    title="Connectivity of Flatback turtles in 2020-21"
   ) %>% 
   gt::cols_label(
-    season = "Season",
-    species = "Species",
-    observed_location_code = "Observed at"
+    place_code = "Observed at"
   ) %>% 
   gt::tab_spanner(
     label = "Initially observed at",
     columns = c(
-      -gt::contains("season"), 
-      -gt::contains("species"), 
-      -gt::contains("observed_location_code")
+      -gt::contains("place_code")
     )
   ) 
 ```
 
+## Hawksbill turtles
 
 ```{r trt_conn_hb}
 trt_conn %>% 
-  dplyr::filter(species == "eretmochelys-imbricata") %>%
+  dplyr::filter(species == "eretmochelys-imbricata", season==2020) %>%
+  dplyr::select(-species, -season) %>% 
   gt::gt(
     groupname_col=NULL,
-    caption = "Connectivity of Hawksbill turtles"
+    caption = "Connectivity of Hawksbill turtles in 2020-21"
   ) %>% 
   gt::tab_header(
-    title="Connectivity of Hawksbill turtles"
+    title="Connectivity of Hawksbill turtles in 2020-21"
   ) %>% 
   gt::cols_label(
-    season = "Season",
-    species = "Species",
-    observed_location_code = "Observed at"
+    place_code = "Observed at"
   ) %>% 
   gt::tab_spanner(
     label = "Initially observed at",
     columns = c(
-      -gt::contains("season"), 
-      -gt::contains("species"), 
-      -gt::contains("observed_location_code")
+      -gt::contains("place_code")
     )
   ) 
 ```
 
+## Green turtles
 
 ```{r trt_conn_gn}
 trt_conn %>% 
-  dplyr::filter(species == "chelonia-mydas") %>%
+  dplyr::filter(species == "chelonia-mydas", season==2020) %>%
+  dplyr::select(-species, -season) %>% 
   gt::gt(
     groupname_col=NULL,
-    caption = "Connectivity of Green turtles"
+    caption = "Connectivity of Green turtles in 2020-21"
   ) %>% 
   gt::tab_header(
-    title="Connectivity of Green turtles"
+    title="Connectivity of Green turtles in 2020-21"
   ) %>% 
   gt::cols_label(
-    season = "Season",
-    species = "Species",
-    observed_location_code = "Observed at"
+    place_code = "Observed at"
   ) %>% 
   gt::tab_spanner(
     label = "Initially observed at",
     columns = c(
-      -gt::contains("season"), 
-      -gt::contains("species"), 
-      -gt::contains("observed_location_code")
+      -gt::contains("place_code")
     )
   ) 
 ```
@@ -1407,22 +1666,55 @@ Summaries by damage type and damaged body part are shown below.
 Injured turtles with flipper amputations are more likely to be encountered, as
 they nest slower.
 
-### Frequent injuries
-
 The numbers shown as "Damaged turtles" are absolute numbers, the percentages
 shown as "Damage pct" are normalised over the number of encountered turtles 
 per respective season ("Total turtles").
 
+The tagging database holds no records of injuries seen in the 2009-10 season.
+
 This summary is exported as `trt_dmg_by_species_season.csv`.
 
-```{r dmg_type}
+### Flatback turtles
+
+```{r dmg_type_fb}
 trt_dmg_by_species_season %>% 
+  dplyr::filter(Species == "Natator depressus") %>% 
   gt::gt(
     groupname_col=NULL,
-    caption = "Most frequent injuries by season and species"
+    caption = "Most frequent injuries by season and species: Flatback turtles"
   ) %>% 
   gt::tab_header(
-    title="Most frequent injuries by season and species",
+    title="Most frequent injuries by season and species: Flatback turtles",
+    subtitle=""
+  ) 
+```
+
+### Hawksbill turtles
+
+```{r dmg_type_hb}
+trt_dmg_by_species_season %>% 
+  dplyr::filter(Species == "Eretmochelys imbricata") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Most frequent injuries by season and species: Hawksbill turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Most frequent injuries by season and species: Hawksbill turtles",
+    subtitle=""
+  ) 
+```
+
+### Green turtles
+
+```{r dmg_type_gn}
+trt_dmg_by_species_season %>% 
+  dplyr::filter(Species == "Chelonia mydas") %>% 
+  gt::gt(
+    groupname_col=NULL,
+    caption = "Most frequent injuries by season and species: Green turtles"
+  ) %>% 
+  gt::tab_header(
+    title="Most frequent injuries by season and species: Green turtles",
     subtitle=""
   ) 
 ```
@@ -1543,3 +1835,4 @@ x$nest_dist %>%
   dplyr::filter(encounter_encounter_type == "nest") %>% 
   wastdr::map_dist()
 ```
+
