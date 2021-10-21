@@ -16,6 +16,7 @@ vignette: >
   %\VignetteEngine{knitr::rmarkdown}
 params:
   area_name: 'Ningaloo'
+  season: 2021
 editor_options: 
   markdown: 
     wrap: 72
@@ -140,7 +141,7 @@ added to the descriptive statistics shown in this report.
 
 ```{r tracks_map_2020}
 x$tracks %>% 
-  wastdr::filter_wastd_season(2021) %>% 
+  wastdr::filter_wastd_season(params$season) %>% 
   wastdr::filter_realspecies() %>% 
   wastdr::map_tracks(sites = x$sites)
 ```
@@ -151,7 +152,7 @@ above map with individual records.
 
 ```{r tracks_map_2020_cluster}
 x$tracks %>% 
-  wastdr::filter_wastd_season(2021) %>% 
+  wastdr::filter_wastd_season(params$season) %>% 
   wastdr::filter_realspecies() %>% 
   wastdr::map_tracks(sites = x$sites, cluster = TRUE)
 ```
@@ -184,7 +185,7 @@ Missed tracks are contained in the exported `tracks.csv` with `nest_age` "missed
 
 ```{r tracks_missed}
 mt <- x$tracks %>% 
-  wastdr::filter_wastd_season(2021) %>% 
+  wastdr::filter_wastd_season(params$season) %>% 
   wastdr::filter_realspecies() %>% 
   dplyr::filter(nest_age == "missed")
 
@@ -205,7 +206,7 @@ disturbance or presence of predators.
 
 ```{r dist_map_2020}
 x$nest_dist %>% 
-  wastdr::filter_wastd_season(2021) %>%
+  wastdr::filter_wastd_season(params$season) %>%
   wastdr::map_dist()
 ```
 
@@ -227,6 +228,76 @@ x$nest_dist %>%
   # dplyr::filter(n>1) %>% 
   rt()
 ```
+
+### Disturbance near nests
+The following map show general disturbance or predator signs within 5m of nests 
+and within 60 days of the nesting event. This translates roughly to disturbances
+that could have impacted nesting success and excludes disturbances seen before
+the nest was laid or after the end of the incubation period.
+
+```{r}
+require(sf)
+# GDA2020 MGA Zone SRIDS: https://epsg.io/?q=gda2020+zone
+# Zone 49: 7849 # NIN
+# Zone 50: 7850 # THV, KAR, DEL
+# Zone 51: 7851 # PTH, BRO
+# Zone 52: 7852 # CDO
+wastd_crs <- 4326
+local_crs <- 7850 # TODO select by area coordinates
+
+tracks_gda2020 <- x$tracks %>%
+  dplyr::filter(
+    nest_type %in% c("successful-crawl", "nest", "track-unsure")) %>%
+  dplyr::mutate(
+    nest_laid = lubridate::ymd(calendar_date_awst),
+    expected_hatching = nest_laid + lubridate::days(60)
+  ) %>%
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs = wastd_crs) %>%
+  sf::st_transform(crs = local_crs)
+  # sf::st_buffer(dist = 5)
+
+# sf::st_crs(tracks_gda2020) # Tracks are in GDA2020 MGA Zone 51 now
+# mapview::mapview(tracks_gda2020)
+
+dist_gda2020 <- x$nest_dist %>%
+  dplyr::filter(encounter_encounter_type == "other") %>%
+  dplyr::mutate(disturbance_date = lubridate::ymd(calendar_date_awst)) %>%
+  sf::st_as_sf(coords = c("encounter_longitude", "encounter_latitude"),
+               crs = wastd_crs) %>%
+  sf::st_transform(crs = local_crs)
+
+dist_near_nests <- dist_gda2020 %>%
+  sf::st_join(tracks_gda2020, join = st_is_within_distance, dist = 5) %>%
+  dplyr::filter(disturbance_date > nest_laid, 
+                disturbance_date < expected_hatching) %>% 
+  dplyr::select(
+    encounter_id,
+    encounter_reporter_name,
+    encounter_leaflet_title,
+    encounter_absolute_admin_url,
+    encounter_name,
+    disturbance_date,
+    disturbance_cause,
+    disturbance_severity,
+    comments.x,
+    comments.y,
+    nest_type.y,
+    species.y,
+    nest_type_text.y,
+    disturbance_date,
+    geometry,
+    leaflet_title,
+    species_colours.y,
+    nest_type_text.y,
+    nest_laid,
+    expected_hatching
+  )
+
+if (nrow(dist_near_nests) > 0) {
+  mapview::mapview(dist_near_nests, zcol="disturbance_cause")
+}
+```
+
 
 ## Turtle tracks and nests season totals
 
