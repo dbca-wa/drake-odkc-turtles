@@ -1304,6 +1304,38 @@ clutch_freq %>%
 ```
 
 ## Morphometrics
+<!-- TODO use `w2db$obs_measurements` -->
+```{r}
+trt_morph <- 
+  w2db$obs_measurements %>% 
+  dplyr::left_join(w2db$enc, by="observation_id") %>% 
+  dplyr::filter(place_code==params$w2_place_code) %>% 
+  wastdr::add_dates(date_col="observation_datetime_utc", parse=FALSE)
+
+# unique(trt_morph$measurement_type_code)
+# "CCL" "CCL NOTCH" "CCW" "NOTCH" "Track Wmax" "WEIGHT K"
+# 
+morph_stats <- trt_morph %>% 
+  dplyr::left_join(species_lookup, by="species_code") %>% 
+  dplyr::rename(metric = measurement_type_code) %>% 
+  dplyr::group_by(species, season, metric) %>% 
+  dplyr::summarize(
+    n = dplyr::n(),
+    mean = mean(measurement_value),
+    sd = sd(measurement_value),
+    min = min(measurement_value),
+    max = max(measurement_value)
+  ) %>% 
+  dplyr::ungroup() %>% 
+  dplyr::arrange(species, -season)
+
+morph_stats %>% 
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt()
+```
+
+
+
 Tagging data contains morphometric measurements "curved carapace length" (`w2$ccl`)
 and "curved carapace width" (`w2$ccw`).
 
