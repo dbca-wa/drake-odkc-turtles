@@ -20,7 +20,7 @@ params:
   area_name: Delambre Island
   prefix: DEL
   w2_filepath: 'data/wamtram.csv'
-  w2_rds_filepath: 'data/w2.RData'
+  w2_rds_filepath: 'data/w2.rds'
   w2_observed_location_code: 'DA'
   w2_place_code: 'DADI'
   w2_exported_on: '20 Sept 2021'
@@ -182,6 +182,7 @@ w2 %>%
 #   EGG_COUNT_METHOD = col_character(),
 #   COMMENTS = col_character(),
 #   CCL = col_double(),
+#   # there are other measurements like CCL_NOTCH not in this CSV export
 #   CCW = col_double(),
 #   DATUM_CODE = col_character(),
 #   LATITUDE = col_double(),
@@ -263,11 +264,11 @@ late_season_surveys <- x$surveys %>%
 # -----------------------------------------------------------------------------#
 # Emergences: WAStD
 # 
-# Missed turtles during tagging
+# Missed turtles from form "Turtle Track or Nest" filled during tagging
 # We don't filter by track_age
 # This includes "missed just now" from tagging, 
 # "fresh" and "old" from morning track count.
-wastd_missed_turtles <- 
+wastd_missed_turtles_single <- 
   x$tracks %>% 
   wastdr::filter_realspecies() %>% 
   dplyr::filter(
@@ -278,9 +279,35 @@ wastd_missed_turtles <-
       "track-not-assessed")
   ) %>% 
   dplyr::group_by(season, turtle_date, species) %>% 
-  dplyr::tally(name = "missed") %>% 
+  dplyr::tally(name = "missed_single") %>% 
   dplyr::ungroup() 
- 
+
+# Missed turtles from "Track Tally"
+# This data comes from either saturated beaches (CDO) or backfilled datasheets
+wastd_missed_turtles_tally <- 
+  x$track_tally %>% 
+  wastdr::filter_realspecies() %>% 
+  dplyr::filter(
+    nest_type %in% c(
+      "successful-crawl", 
+      "false-crawl", 
+      "track-unsure", 
+      "track-not-assessed")
+  ) %>% 
+  dplyr::group_by(season, turtle_date, species) %>% 
+  dplyr::summarize(missed_tally = sum(tally)) %>%
+  dplyr::ungroup() 
+
+# Combined from forms "Turtle Track or Nest" and "Track Tally"
+wastd_missed_turtles <-
+  wastd_missed_turtles_single %>% 
+  dplyr::full_join(wastd_missed_turtles_tally, 
+                   by=c("species", "season", "turtle_date")) %>% 
+  tidyr::replace_na(list(missed_single=0, missed_tally=0)) %>% 
+  dplyr::mutate(missed = missed_single + missed_tally) %>%
+  dplyr::select(-missed_single, -missed_tally)
+
+
 # B from night tagging
 # unique(w2$turtle_status) "T" "Q" "N" "P" "A" "R" 
 # processed: "T" "Q" "P" "A" "R" - missed: "N" NA
@@ -319,11 +346,11 @@ w2_non_tagged_turtles <- w2 %>%
   dplyr::ungroup()
 
 # Total emergences = missed (WAStD) + processed (w2)
-total_turtles <- dplyr::full_join(
-  wastd_missed_turtles,
-  w2_processed_turtles,
-  by=c("species", "season", "turtle_date")
-) %>% 
+# Important to replace NA with 0 before adding, as num + NA = NA
+total_turtles <- 
+  wastd_missed_turtles %>% 
+  dplyr::full_join(w2_processed_turtles, by=c("species", "season", "turtle_date")) %>% 
+  tidyr::replace_na(list(missed=0, processed=0)) %>%
   dplyr::mutate(
     emergences = processed + missed,
     processed_pct = round(processed * 100 / (emergences), 2)
@@ -332,7 +359,9 @@ total_turtles <- dplyr::full_join(
   dplyr::mutate(
     species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
   ) %>% 
-  dplyr::select(season, turtle_date, species, emergences, processed, missed, processed_pct) %>% 
+  dplyr::select(
+    season, turtle_date, species, emergences, processed, missed, processed_pct
+  ) %>% 
   janitor::clean_names(case="sentence")
 
 # Season x species tally of wastd_missed_turtles
@@ -366,6 +395,7 @@ total_turtles_season <-
   # we skip tagged/non tagged as there is only one non tagged (historic sighting)
   # dplyr::full_join(tagged_turtles_season_totals, by=c("species", "season")) %>% 
   # dplyr::full_join(non_tagged_turtles_season_totals, by=c("species", "season")) %>% 
+  tidyr::replace_na(list(missed=0, processed=0)) %>%
   dplyr::mutate(
     emergences = processed+missed,
     processed_pct = round(processed * 100 / (emergences), 2)) %>% 
@@ -405,13 +435,35 @@ total_turtles_gt <- function(data, species){
 # w2$clutch_completed %>% unique()
 # Y yes, N no, P possible, U uncertain, D did not check
 # 
-# Nesting success by season and species: season summary (tracks)
-wastd_nesting_type_by_season_age_species <-
+# Nesting success by season and species: season summary 
+# From ToN
+wastd_nesting_type_by_season_age_species_single <-
   x$tracks %>% 
   wastdr::filter_realspecies() %>% 
-  wastdr::nesting_type_by_area_season_species() %>% 
-  dplyr::arrange(-season)
+  dplyr::group_by(area_name, season, species, nest_type) %>%
+    dplyr::tally() %>%
+    dplyr::ungroup() %>%
+    tidyr::spread(nest_type, n, fill = 0)
 
+# From TT
+wastd_nesting_type_by_season_age_species_tally <-
+  x$track_tally %>% 
+  wastdr::filter_realspecies() %>% 
+  dplyr::rename(area_name = encounter_area_name) %>% 
+  dplyr::group_by(area_name, season, species, nest_type) %>%
+    dplyr::summarise(n=sum(tally)) %>%
+    dplyr::ungroup() %>%
+    tidyr::spread(nest_type, n, fill = 0)
+
+# Combined - TODO
+wastd_nesting_type_by_season_age_species <-
+  dplyr::bind_rows(wastd_nesting_type_by_season_age_species_single %>% dplyr::add_rownames(), 
+          wastd_nesting_type_by_season_age_species_tally %>% dplyr::add_rownames()) %>% 
+    dplyr::group_by(rowname, area_name, season, species) %>% 
+    dplyr::summarise_all(sum) %>% 
+  tidyr::replace_na(list("body-pit"=0, "track-not-assessed"=0)) %>%
+  dplyr::arrange(-season)
+  
 # Nesting success by season and species: season summary (tagging)
 w2_nesting_type_by_season_species <- 
   w2 %>% 
@@ -713,7 +765,7 @@ all_surveys %>%
   # gt::fmt_date(c("First day", "Last day")) %>% # Friday, October 20, 2017
   gt::tab_header(
     title="Seasonal overview of survey effort",
-    subtitle="Survey stats grouped by rookery and season"
+    subtitle="Survey stats grouped by rookery and season, dates are turtle dates"
   )
 ```
 
