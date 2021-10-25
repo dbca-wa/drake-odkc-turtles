@@ -15,7 +15,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 params:
-  area_name: 'Ningaloo'
+  area_name: 'Cable Beach Broome'
   season: 2021
 editor_options: 
   markdown: 
@@ -290,11 +290,13 @@ dist_near_nests <- dist_gda2020 %>%
     species_colours.y,
     nest_type_text.y,
     nest_laid,
-    expected_hatching
+    expected_hatching,
+    season.x
   )
 
 if (nrow(dist_near_nests) > 0) {
-  mapview::mapview(dist_near_nests, zcol="disturbance_cause")
+    mapview::mapview(dist_near_nests, zcol="disturbance_cause")
+    # dplyr::filter(disturbance_cause == "vehicle", season.x==2020) %>% 
 }
 ```
 
