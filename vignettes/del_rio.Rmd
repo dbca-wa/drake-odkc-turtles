@@ -37,6 +37,7 @@ body, .main-container {max-width: 100%; margin-left: auto; margin-right: auto;}
 ```{r setup, message=FALSE, warning=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 options(rmarkdown.html_vignette.check_title = FALSE)
+library(tidyverse)
 library(wastdr)
 library(sparkline)
 library(ggplot2)
@@ -555,54 +556,99 @@ trt_conn %>%
 # Morphometrics
 # 
 # CCL
-trt_morph_ccl <- w2 %>% 
-  dplyr::filter(!is.na(ccl)) %>% 
-  dplyr::group_by(season, species) %>% 
-  dplyr::summarise(
-    n = dplyr::n(),
-    ccl_mean = mean(ccl) %>% round(0),
-    ccl_sd = sd(ccl) %>% round(2),
-    ccl_min = min(ccl) %>% round(0),
-    ccl_max = max(ccl) %>% round(0),
-    # ccw_mean = mean(ccw) %>% round(0),
-    # ccw_sd = sd(ccw) %>% round(2),
-    # ccw_min = min(ccw) %>% round(0),
-    # ccw_max = max(ccw) %>% round(0),
-    .groups = "keep"
-  ) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::arrange(-season, species) %>% 
-  dplyr::mutate(
-    species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
-  ) %>% 
-  janitor::clean_names(case="sentence")
+# trt_morph_ccl <- w2 %>% 
+#   dplyr::filter(!is.na(ccl)) %>% 
+#   dplyr::group_by(season, species) %>% 
+#   dplyr::summarise(
+#     n = dplyr::n(),
+#     ccl_mean = mean(ccl) %>% round(0),
+#     ccl_sd = sd(ccl) %>% round(2),
+#     ccl_min = min(ccl) %>% round(0),
+#     ccl_max = max(ccl) %>% round(0),
+#     # ccw_mean = mean(ccw) %>% round(0),
+#     # ccw_sd = sd(ccw) %>% round(2),
+#     # ccw_min = min(ccw) %>% round(0),
+#     # ccw_max = max(ccw) %>% round(0),
+#     .groups = "keep"
+#   ) %>% 
+#   dplyr::ungroup() %>% 
+#   dplyr::arrange(-season, species) %>% 
+#   dplyr::mutate(
+#     species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
+#   ) %>% 
+#   janitor::clean_names(case="sentence")
 
 # CCW
-trt_morph_ccw <- w2 %>% 
-  dplyr::filter(!is.na(ccw)) %>% 
-  dplyr::group_by(season, species) %>% 
-  dplyr::summarise(
+# trt_morph_ccw <- w2 %>% 
+#   dplyr::filter(!is.na(ccw)) %>% 
+#   dplyr::group_by(season, species) %>% 
+#   dplyr::summarise(
+#     n = dplyr::n(),
+#     # ccl_mean = mean(ccl) %>% round(0),
+#     # ccl_sd = sd(ccl) %>% round(2),
+#     # ccl_min = min(ccl) %>% round(0),
+#     # ccl_max = max(ccl) %>% round(0),
+#     ccw_mean = mean(ccw) %>% round(0),
+#     ccw_sd = sd(ccw) %>% round(2),
+#     ccw_min = min(ccw) %>% round(0),
+#     ccw_max = max(ccw) %>% round(0),
+#     .groups = "keep"
+#   ) %>% 
+#   dplyr::ungroup() %>% 
+#   dplyr::arrange(-season, species) %>% 
+#   dplyr::mutate(
+#     species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
+#   ) %>% 
+#   janitor::clean_names(case="sentence")
+
+# Export to CSV
+# trt_morph_ccl %>% readr::write_csv(here::here(ld, "trt_morph_ccl.csv"))
+# trt_morph_ccw %>% readr::write_csv(here::here(ld, "trt_morph_ccw.csv"))
+trt_morph <- 
+  w2db$obs_measurements %>% 
+  dplyr::left_join(w2db$enc, by="observation_id") %>% 
+  dplyr::filter(place_code==params$w2_place_code) %>% 
+  wastdr::add_dates(date_col="observation_datetime_utc", parse=FALSE)
+
+# unique(trt_morph$measurement_type_code)
+# "CCL" "CCL NOTCH" "CCW" "NOTCH" "Track Wmax" "WEIGHT K"
+# 
+morph_stats <- trt_morph %>% 
+  dplyr::left_join(species_lookup, by="species_code") %>% 
+  dplyr::rename(metric = measurement_type_code) %>% 
+  dplyr::group_by(species, season, metric) %>% 
+  dplyr::summarize(
     n = dplyr::n(),
-    # ccl_mean = mean(ccl) %>% round(0),
-    # ccl_sd = sd(ccl) %>% round(2),
-    # ccl_min = min(ccl) %>% round(0),
-    # ccl_max = max(ccl) %>% round(0),
-    ccw_mean = mean(ccw) %>% round(0),
-    ccw_sd = sd(ccw) %>% round(2),
-    ccw_min = min(ccw) %>% round(0),
-    ccw_max = max(ccw) %>% round(0),
-    .groups = "keep"
+    mean = mean(measurement_value) %>% round(0),
+    sd = sd(measurement_value) %>% round(2),
+    min = min(measurement_value) %>% round(0),
+    max = max(measurement_value) %>% round(0)
   ) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::arrange(-season, species) %>% 
+  dplyr::ungroup()%>% 
+  dplyr::arrange(species, -season)
+
+morph_stats %>%  readr::write_csv(here::here(ld, "trt_morph.csv"))
+
+morph_stats_gt <- morph_stats %>%
   dplyr::mutate(
     species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
   ) %>% 
-  janitor::clean_names(case="sentence")
+  janitor::clean_names(case="sentence") 
 
-# Export to CSV
-trt_morph_ccl %>% readr::write_csv(here::here(ld, "trt_morph_ccl.csv"))
-trt_morph_ccw %>% readr::write_csv(here::here(ld, "trt_morph_ccw.csv"))
+# Morphometrics QA table
+morph_qa <- trt_morph %>% 
+  dplyr::left_join(species_lookup, by="species_code") %>% 
+  dplyr::group_by(species, measurement_type_code) %>%
+  dplyr::summarise(
+    chart = sparkline::spk_chr(measurement_value, type="line")
+  ) %>% 
+  dplyr::ungroup()
+
+morph_qa_html <- morph_qa %>%
+  gt::gt() %>%
+  gt::fmt_markdown(columns = gt::vars(chart)) %>% 
+  gt:::as.tags.gt_tbl() %>% 
+  htmltools::attachDependencies(htmlwidgets::getDependency("sparkline"))
 
 # Display helper
 morph_gt <- function(data, species, metric){
@@ -1352,50 +1398,21 @@ clutch_freq %>%
   gt::tab_spanner(
     "Number of successful clutches", 
     columns = !dplyr::contains("Season")
-  )
+
+      )
 ```
 
 ## Morphometrics
-<!-- TODO use `w2db$obs_measurements` -->
-```{r}
-trt_morph <- 
-  w2db$obs_measurements %>% 
-  dplyr::left_join(w2db$enc, by="observation_id") %>% 
-  dplyr::filter(place_code==params$w2_place_code) %>% 
-  wastdr::add_dates(date_col="observation_datetime_utc", parse=FALSE)
 
-# unique(trt_morph$measurement_type_code)
-# "CCL" "CCL NOTCH" "CCW" "NOTCH" "Track Wmax" "WEIGHT K"
-# 
-morph_stats <- trt_morph %>% 
-  dplyr::left_join(species_lookup, by="species_code") %>% 
-  dplyr::rename(metric = measurement_type_code) %>% 
-  dplyr::group_by(species, season, metric) %>% 
-  dplyr::summarize(
-    n = dplyr::n(),
-    mean = mean(measurement_value),
-    sd = sd(measurement_value),
-    min = min(measurement_value),
-    max = max(measurement_value)
-  ) %>% 
-  dplyr::ungroup() %>% 
-  dplyr::arrange(species, -season)
+Tagging data contains morphometric measurements "curved carapace length" 
+(`w2$ccl`) and "curved carapace width" (`w2$ccw`). In error, some ccl measurements
+were entered as `CCL NOTCH` instead of `CCL`. Therefore, we use the raw database
+export here.
 
-morph_stats %>% 
-  janitor::clean_names(case="sentence") %>% 
-  gt::gt()
-```
-
-
-
-Tagging data contains morphometric measurements "curved carapace length" (`w2$ccl`)
-and "curved carapace width" (`w2$ccw`).
-
-Separately for each metric (ccl or ccw), records with existing measurements are 
-grouped by season and species, then summarised into mean, sd, min, and max.
-
-These summary statistics of curved carapace length and width are shown in 
-Millimetres below.
+Separately for each metric (ccl, ccl notch, ccw), records with existing 
+measurements are grouped by season and species, then summarised into 
+number of records, mean, sd, min, and max. The SD is rounded to two decimals,
+mean, min, max are rounded to 0 decimals. Values are in millimetres.
 
 The two summaries are exported as `trt_morph_ccl/ccw.csv` but shown below 
 split by species and metric (ccl or ccw).
@@ -1405,49 +1422,46 @@ measurements for Flatbacks in the past three seasons (3-5 per seasons), whereas
 the far less often measured metric CCW is reported at numbers (175-318) comparable 
 to previous seasons.
 
-### Flatback turtles
+### QA: Suspiciously small turtles
+The following table lists measurements of CCL, CCL NOTCH, or CCW below 500mm.
+Some of these records could be missing a digit (e.g. trailing zero).
 
-```{r morph_fb_ccl}
-trt_morph_ccl %>%
-  dplyr::filter(Species == "Natator depressus") %>% 
-  morph_gt("Flatback", "CCL")
+```{r}
+# morph_qa_html
+trt_morph %>% 
+  dplyr::left_join(species_lookup, by="species_code") %>% 
+  dplyr::filter(measurement_type_code %in% c("CCL NOTCH", "CCL", "CCW"), 
+                measurement_value < 500) %>% 
+  dplyr::select(
+    turtle_id, observation_id, measurement_type_code, measurement_value
+  ) %>% 
+  rt()
 ```
 
-```{r morph_fb_ccw}
-trt_morph_ccw %>%
+
+### Flatback turtles
+
+```{r morph_fb}
+morph_stats_gt %>% 
   dplyr::filter(Species == "Natator depressus") %>% 
-  morph_gt("Flatback", "CCW")
+  gt::gt()
 ```
 
 ### Hawksbill turtles
 
 ```{r morph_hb_ccl}
-trt_morph_ccl %>%
+morph_stats_gt %>% 
   dplyr::filter(Species == "Eretmochelys imbricata") %>% 
-  morph_gt("Hawksbill", "CCL")
-```
-
-```{r morph_hb_ccw}
-trt_morph_ccw %>%
-  dplyr::filter(Species == "Eretmochelys imbricata") %>% 
-  morph_gt("Hawksbill", "CCW")
+  gt::gt()
 ```
 
 ### Green turtles
 
 ```{r morph_gn_ccl}
-trt_morph_ccl %>%
+morph_stats_gt %>% 
   dplyr::filter(Species == "Chelonia mydas") %>% 
-  morph_gt("Green", "CCL")
+  gt::gt()
 ```
-
-
-```{r morph_gn_ccw}
-trt_morph_ccw %>%
-  dplyr::filter(Species == "Chelonia mydas") %>% 
-  morph_gt("Green", "CCW")
-```
-
 
 ## Nesting success
 
