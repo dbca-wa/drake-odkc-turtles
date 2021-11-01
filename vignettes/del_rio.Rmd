@@ -458,8 +458,8 @@ wastd_nesting_type_by_season_age_species_tally <-
 
 # Combined - TODO
 wastd_nesting_type_by_season_age_species <-
-  dplyr::bind_rows(wastd_nesting_type_by_season_age_species_single %>% dplyr::add_rownames(), 
-          wastd_nesting_type_by_season_age_species_tally %>% dplyr::add_rownames()) %>% 
+  dplyr::bind_rows(wastd_nesting_type_by_season_age_species_single %>% tibble::rownames_to_column(), 
+          wastd_nesting_type_by_season_age_species_tally %>% tibble::rownames_to_column()) %>% 
     dplyr::group_by(rowname, area_name, season, species) %>% 
     dplyr::summarise_all(sum) %>% 
   tidyr::replace_na(list("body-pit"=0, "track-not-assessed"=0)) %>%
@@ -539,6 +539,7 @@ total_nesting_gt <- function(data, species){
 trt_conn <- 
   w2_all %>% 
   dplyr::group_by(season, species, place_code, location_code) %>% 
+  dplyr::rename(resighted_at=place_code) %>% 
   dplyr::tally() %>% 
   dplyr::ungroup() %>% 
   tidyr::pivot_wider(
@@ -547,7 +548,41 @@ trt_conn <-
     values_from=n,
     values_fill = 0
   ) %>% 
-  dplyr::arrange(-season, place_code, species)
+  dplyr::arrange(-season, resighted_at, species)
+
+trt_conn_loc <- 
+  w2_all %>% 
+  dplyr::group_by(season, species, observed_location_code, location_code) %>% 
+  dplyr::rename(resighted_at=observed_location_code) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  tidyr::pivot_wider(
+    names_from=location_code, 
+    names_sort = TRUE, 
+    values_from=n,
+    values_fill = 0
+  ) %>% 
+  dplyr::arrange(-season, resighted_at, species)
+
+filter_conn <- function(data, ssn=2020, spc="natator-depressus"){
+  data %>% 
+    dplyr::filter(season==ssn, species==spc) %>% 
+    dplyr::select(-season, -species) %>%
+    dplyr::select_if(~!(all(is.na(.)) | all(. == 0))) %>% 
+    dplyr::filter_at(dplyr::vars(-resighted_at), dplyr::any_vars(. != 0))
+}
+
+gt_conn <- function(data, season=2020, species="Flatback"){
+  cpt <- 
+    "Connectivity of {species} turtles in {season}-{season+1-2000}" %>% 
+    glue::glue()
+  
+  data %>% 
+    gt::gt(groupname_col=NULL, caption = cpt) %>% 
+    gt::tab_header(title=cpt) %>% 
+    gt::tab_spanner(label = "Initially observed at",
+      columns = c(-gt::contains("resighted_at"))) 
+}
 
 trt_conn %>% 
   readr::write_csv(here::here(ld, "turtle_nesting_connectivity.csv"))
@@ -616,6 +651,7 @@ trt_morph <-
 morph_stats <- trt_morph %>% 
   dplyr::left_join(species_lookup, by="species_code") %>% 
   dplyr::rename(metric = measurement_type_code) %>% 
+  dplyr::filter(measurement_value>500) %>% # QA: exclude decimal typos
   dplyr::group_by(species, season, metric) %>% 
   dplyr::summarize(
     n = dplyr::n(),
@@ -646,7 +682,7 @@ morph_qa <- trt_morph %>%
 
 morph_qa_html <- morph_qa %>%
   gt::gt() %>%
-  gt::fmt_markdown(columns = gt::vars(chart)) %>% 
+  gt::fmt_markdown(columns = c(chart)) %>% 
   gt:::as.tags.gt_tbl() %>% 
   htmltools::attachDependencies(htmlwidgets::getDependency("sparkline"))
 
@@ -1425,6 +1461,7 @@ to previous seasons.
 ### QA: Suspiciously small turtles
 The following table lists measurements of CCL, CCL NOTCH, or CCW below 500mm.
 Some of these records could be missing a digit (e.g. trailing zero).
+We exclude measurements below 500 mm (50 cm) from the summary.
 
 ```{r}
 # morph_qa_html
@@ -1676,75 +1713,56 @@ w2db$sites %>%
 ```
 
 ## Flatback turtles
+### 2020-21
 
-```{r trt_conn_fb}
+```{r trt_conn_fb_2020}
 trt_conn %>% 
-  dplyr::filter(species == "natator-depressus", season==2020) %>%
-  dplyr::select(-species, -season) %>% 
-  gt::gt(
-    groupname_col=NULL,
-    caption = "Connectivity of Flatback turtles in 2020-21"
-  ) %>% 
-  gt::tab_header(
-    title="Connectivity of Flatback turtles in 2020-21"
-  ) %>% 
-  gt::cols_label(
-    place_code = "Observed at"
-  ) %>% 
-  gt::tab_spanner(
-    label = "Initially observed at",
-    columns = c(
-      -gt::contains("place_code")
-    )
-  ) 
+  filter_conn(2020, "natator-depressus") %>% 
+  gt_conn(2020, "Flatback")
 ```
+
+### 2019-20
+
+```{r trt_conn_fb_2019}
+trt_conn %>% 
+  filter_conn(2019, "natator-depressus") %>% 
+  gt_conn(2019, "Flatback")
+```
+
 
 ## Hawksbill turtles
+### 2020-21
 
-```{r trt_conn_hb}
+```{r trt_conn_hb_2020}
 trt_conn %>% 
-  dplyr::filter(species == "eretmochelys-imbricata", season==2020) %>%
-  dplyr::select(-species, -season) %>% 
-  gt::gt(
-    groupname_col=NULL,
-    caption = "Connectivity of Hawksbill turtles in 2020-21"
-  ) %>% 
-  gt::tab_header(
-    title="Connectivity of Hawksbill turtles in 2020-21"
-  ) %>% 
-  gt::cols_label(
-    place_code = "Observed at"
-  ) %>% 
-  gt::tab_spanner(
-    label = "Initially observed at",
-    columns = c(
-      -gt::contains("place_code")
-    )
-  ) 
+  filter_conn(2020, "eretmochelys-imbricata") %>% 
+  gt_conn(2020, "Hawksbill")
 ```
 
-## Green turtles
+### 2019-20
 
-```{r trt_conn_gn}
+```{r trt_conn_hb_2019}
 trt_conn %>% 
-  dplyr::filter(species == "chelonia-mydas", season==2020) %>%
-  dplyr::select(-species, -season) %>% 
-  gt::gt(
-    groupname_col=NULL,
-    caption = "Connectivity of Green turtles in 2020-21"
-  ) %>% 
-  gt::tab_header(
-    title="Connectivity of Green turtles in 2020-21"
-  ) %>% 
-  gt::cols_label(
-    place_code = "Observed at"
-  ) %>% 
-  gt::tab_spanner(
-    label = "Initially observed at",
-    columns = c(
-      -gt::contains("place_code")
-    )
-  ) 
+  filter_conn(2019, "eretmochelys-imbricata") %>% 
+  gt_conn(2019, "Hawksbill")
+```
+
+
+## Green turtles
+### 2020-21
+
+```{r trt_conn_gn_2020}
+trt_conn %>% 
+  filter_conn(2020, "chelonia-mydas") %>% 
+  gt_conn(2020, "Green")
+```
+
+### 2019-20
+
+```{r trt_conn_gn_2019}
+trt_conn %>% 
+  filter_conn(2019, "chelonia-mydas") %>% 
+  gt_conn(2019, "Green")
 ```
 
 <!-- 
