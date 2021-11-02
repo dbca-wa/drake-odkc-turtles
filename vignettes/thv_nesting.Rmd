@@ -1,0 +1,398 @@
+---
+title: "Thevenard Nesting Area"
+author: "NWSFTCP, DBCA"
+date: "`r Sys.time()`"
+output:
+  html_document:
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+    fig_width: 10
+    fig_height: 6
+    code_folding: hide
+    theme: lumen
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+vignette: |
+  %\VignetteIndexEntry{thv-nesting} 
+  %\VignetteEncoding{UTF-8} 
+  %\VignetteEngine{knitr::rmarkdown}
+params:
+  area_name: Thevenard Island
+  prefix: THV
+  w2_filepath: 'data/wamtram.csv'
+  wastd_filepath: 'data/wastd_thv.rds'
+  w2_rds_filepath: 'data/w2.rds'
+  w2_observed_location_code: 'TH'
+  w2_place_code: 'THEE'
+  w2_exported_on: '20 Sept 2021'
+  export_dir: 'inst/reports/tagging'
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+```{r setup, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+options(rmarkdown.html_vignette.check_title = FALSE)
+library(tidyverse)
+library(wastdr)
+library(sparkline)
+library(ggplot2)
+library(gt)
+library(reactable)
+library(sf)
+
+if(require(mapview)) mapview::mapviewOptions(
+  fgb = FALSE,
+  basemaps = c("Esri.WorldImagery", 
+               "Esri.WorldShadedRelief", 
+               "OpenTopoMap",
+               "OpenStreetMap"),
+  layers.control.pos = "topright")
+
+# -----------------------------------------------------------------------------#
+# Helpers
+# 
+# Rendered tables: gt
+# Interactive tables: reactable
+rt <- . %>% 
+  reactable::reactable(
+    ., 
+    filterable = T, 
+    sortable = T, 
+    searchable = T,
+    defaultColDef = reactable::colDef(html = TRUE)
+  )
+
+# -----------------------------------------------------------------------------#
+# Data export
+# 
+zipfn <- wastdr::urlize(params$area_name)
+fn <- here::here(params$export_dir, zipfn)
+if (!fs::file_exists(fn)) {
+  "Creating dir {fn}" %>% glue::glue() %>% wastdr::wastdr_msg_info()
+  fs::dir_create(fn, recurse = TRUE)
+}
+
+# Data labels
+pn <- params$area_name
+pf <- params$prefix
+ld <- fn
+
+# -----------------------------------------------------------------------------#
+# WAStD data: load snapshot from ETL
+# 
+drake::loadd("wastd_data")
+
+x <- wastd_data %>%
+  wastdr::filter_wastd_turtledata(area_name = params$area_name)
+
+x %>% wastdr::export_wastd_turtledata(outdir = fn, filename = zipfn)
+
+saveRDS(x, file = here::here(params$wastd_filepath), compress="xz")
+
+# -----------------------------------------------------------------------------#
+# WAMTRAM direct database export
+species_lookup <- tibble::tribble(
+  ~ species_code, ~ species,
+  "HK", "eretmochelys-imbricata",
+  "FB", "natator-depressus",
+  "LB", "dermochelys-coriacea", 
+  "GN", "chelonia-mydas"
+)
+
+w2db <- readRDS(here::here(params$w2_rds_filepath)) 
+
+w2tags <- w2db$enc %>% 
+  dplyr::filter(grepl("TH", place_code)) %>% 
+  dplyr::left_join(species_lookup, by="species_code") %>%
+  wastdr::add_dates(date_col = "observation_datetime_utc", parse_date = FALSE)
+
+# -----------------------------------------------------------------------------#
+# Sites and options
+sites0 <- geojsonsf::geojson_sf(here::here("data/areas.geojson"))
+sites1 <- geojsonsf::geojson_sf(here::here("data/areas1.geojson"))
+sites2 <- geojsonsf::geojson_sf(here::here("data/areas2.geojson"))
+sites3 <- geojsonsf::geojson_sf(here::here("data/areas3.geojson"))
+```
+
+
+```{r, eval=FALSE}
+x <- readRDS(here::here(params$wastd_filepath))
+w2db <- readRDS(here::here(params$w2_rds_filepath))
+```
+
+# Option 1
+
+
+```{r}
+tracks_sites1 <- 
+  x$tracks %>% 
+  dplyr::select(
+    latitude, longitude, when, calendar_date_awst, season,
+    leaflet_title, nest_age, nest_type, species
+  ) %>% 
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs=4326) %>% 
+  sf::st_join(sites1)
+
+tag_sites1 <-
+  w2tags %>% 
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs=4326) %>% 
+  sf::st_join(sites1)
+
+```
+
+```{r}
+sites1_thv <- sites1 %>% 
+  dplyr::filter(grepl("Thevenard", name))
+
+mapview::mapview(
+  list(sites1_thv, tag_sites1, tracks_sites1),
+  layer.name=c("Sites Option 1", "Tags", "Tracks"),
+  zcol=c("name", "season", "season"),
+  alpha = c(0.2, 1, 1))
+```
+
+```{r}
+tracks_sites1_tally <- 
+  tracks_sites1 %>% 
+  wastdr::sf_as_tbl() %>% 
+  dplyr::group_by(name, species, season) %>% 
+  dplyr::tally(name = "tracks") %>% 
+  dplyr::ungroup()
+
+tag_sites1_tally <- 
+  tag_sites1 %>% 
+    wastdr::sf_as_tbl() %>% 
+  dplyr::group_by(name, species, season) %>% 
+  dplyr::tally(name = "tags") %>% 
+  dplyr::ungroup()
+
+tally_sites1 <-
+  tracks_sites1_tally %>% 
+  dplyr::full_join(tag_sites1_tally, by=c("name", "species", "season")) %>% 
+  dplyr::arrange(name, -season, species)
+```
+
+```{r}
+tally_sites1 %>% rt
+```
+
+
+# Option 2
+
+```{r}
+tracks_sites2 <- 
+  x$tracks %>% 
+  dplyr::select(
+    latitude, longitude, when, calendar_date_awst, season,
+    leaflet_title, nest_age, nest_type, species
+  ) %>% 
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs=4326) %>% 
+  sf::st_join(sites2)
+
+tag_sites2 <-
+  w2tags %>% 
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs=4326) %>% 
+  sf::st_join(sites2)
+
+```
+
+```{r}
+sites2_thv <- sites2 %>% 
+  dplyr::filter(grepl("Thevenard", name))
+
+mapview::mapview(
+  list(sites2_thv, tag_sites2, tracks_sites2),
+  layer.name=c("Sites Option 2", "Tags", "Tracks"),
+  zcol=c("name", "season", "season"),
+  alpha = c(0.2, 1, 1))
+```
+
+```{r}
+tracks_sites2_tally <- 
+  tracks_sites2 %>% 
+  wastdr::sf_as_tbl() %>% 
+  dplyr::group_by(name, species, season) %>% 
+  dplyr::tally(name = "tracks") %>% 
+  dplyr::ungroup()
+
+tag_sites2_tally <- 
+  tag_sites2 %>% 
+    wastdr::sf_as_tbl() %>% 
+  dplyr::group_by(name, species, season) %>% 
+  dplyr::tally(name = "tags") %>% 
+  dplyr::ungroup()
+
+tally_sites2 <-
+  tracks_sites2_tally %>% 
+  dplyr::full_join(tag_sites2_tally, by=c("name", "species", "season")) %>% 
+  dplyr::arrange(name, -season, species)
+```
+
+```{r}
+tally_sites2 %>% rt
+```
+
+
+# Option 3
+
+```{r}
+tracks_sites3 <- 
+  x$tracks %>% 
+  dplyr::select(
+    latitude, longitude, when, calendar_date_awst, season,
+    leaflet_title, nest_age, nest_type, species
+  ) %>% 
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs=4326) %>% 
+  sf::st_join(sites3)
+
+tag_sites3 <-
+  w2tags %>% 
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs=4326) %>% 
+  sf::st_join(sites3)
+
+```
+
+```{r}
+sites3_thv <- sites3 %>% 
+  dplyr::filter(grepl("Thevenard", name))
+
+mapview::mapview(
+  list(sites3_thv, tag_sites3, tracks_sites3),
+  layer.name=c("Sites Option 3", "Tags", "Tracks"),
+  zcol=c("name", "season", "season"),
+  alpha = c(0.2, 1, 1))
+```
+
+```{r}
+tracks_sites3_tally <- 
+  tracks_sites3 %>% 
+  wastdr::sf_as_tbl() %>% 
+  dplyr::group_by(name, species, season) %>% 
+  dplyr::tally(name = "tracks") %>% 
+  dplyr::ungroup()
+
+tag_sites3_tally <- 
+  tag_sites3 %>% 
+    wastdr::sf_as_tbl() %>% 
+  dplyr::group_by(name, species, season) %>% 
+  dplyr::tally(name = "tags") %>% 
+  dplyr::ungroup()
+
+tally_sites3 <-
+  tracks_sites3_tally %>% 
+  dplyr::full_join(tag_sites3_tally, by=c("name", "species", "season")) %>% 
+  dplyr::arrange(name, -season, species)
+```
+
+```{r}
+tally_sites3 %>% rt
+```
+
+# Tracks
+
+```{r}
+x$tracks %>% 
+  wastdr::filter_wastd_season(2020) %>% 
+  wastdr::filter_realspecies() %>% 
+  wastdr::map_tracks()
+```
+
+```{r}
+library(leaflet.extras)
+x$tracks %>% 
+  wastdr::filter_wastd_season(2020) %>% 
+  wastdr::filter_realspecies() %>% 
+  dplyr::filter(species=="natator-depressus") %>% 
+  leaflet() %>%
+  leaflet::addProviderTiles("Esri.WorldImagery", group = "Aerial") %>%
+  leaflet::addProviderTiles("OpenStreetMap.Mapnik", group = "Place names") %>%
+  addHeatmap(
+    lng = ~longitude, lat = ~latitude, #intensity = ~mag,
+    blur = 20, max = 0.05, radius = 15
+  )
+```
+
+# Comparison
+
+## Missed and morning FB tracks 2020-21 seasons
+
+```{r}
+
+summary1 <- tally_sites1 %>% 
+  dplyr::rename(tracks1=tracks) %>% 
+  dplyr::select(-tags) %>% 
+  dplyr::filter(species=="natator-depressus", season==2020)
+
+summary2 <- tally_sites2 %>% 
+  dplyr::rename(tracks2=tracks) %>% 
+  dplyr::select(-tags) %>% 
+  dplyr::filter(species=="natator-depressus", season==2020)
+
+summary3 <- tally_sites3 %>% 
+  dplyr::rename(tracks3=tracks) %>% 
+  dplyr::select(-tags) %>% 
+  dplyr::filter(species=="natator-depressus", season==2020)
+
+comp <- 
+  summary1 %>% 
+  dplyr::left_join(summary2, by=c("name", "species", "season")) %>% 
+  dplyr::left_join(summary3, by=c("name", "species", "season")) %>% 
+  dplyr::mutate(
+    diff31 = tracks3 - tracks1,
+    diff21 = tracks2 - tracks1,
+    diff32 = tracks3 - tracks2,
+    pct31 = round(100 * diff31 / tracks3, 0),
+    pct32 = round(100 * diff32 / tracks3, 0),
+    pct21 = round(100 * diff21 / tracks3, 0)
+  )
+  
+comp %>% gt::gt()
+```
+
+## Missed and morning FB tracks all seasons
+
+```{r}
+tracks_sites1_tally_all <- 
+  tracks_sites1 %>% 
+  wastdr::sf_as_tbl() %>% 
+  dplyr::filter(species=="natator-depressus") %>% 
+  dplyr::group_by(name, species) %>% 
+  dplyr::tally(name = "tracks1") %>% 
+  dplyr::ungroup()
+
+tracks_sites2_tally_all <- 
+  tracks_sites2 %>% 
+  wastdr::sf_as_tbl() %>% 
+  dplyr::filter(species=="natator-depressus") %>% 
+  dplyr::group_by(name, species) %>% 
+  dplyr::tally(name = "tracks2") %>% 
+  dplyr::ungroup()
+
+tracks_sites3_tally_all <- 
+  tracks_sites3 %>% 
+  wastdr::sf_as_tbl() %>% 
+  dplyr::filter(species=="natator-depressus") %>% 
+  dplyr::group_by(name, species) %>% 
+  dplyr::tally(name = "tracks3") %>% 
+  dplyr::ungroup()
+
+compa <- 
+  tracks_sites1_tally_all %>% 
+  dplyr::left_join(tracks_sites2_tally_all, by=c("name", "species")) %>% 
+  dplyr::left_join(tracks_sites3_tally_all, by=c("name", "species")) %>% 
+  dplyr::mutate(
+    diff31 = tracks3 - tracks1,
+    diff21 = tracks2 - tracks1,
+    diff32 = tracks3 - tracks2,
+    pct31 = round(100 * diff31 / tracks3, 0),
+    pct32 = round(100 * diff32 / tracks3, 0),
+    pct21 = round(100 * diff21 / tracks3, 0)
+  )
+  
+
+compa %>% gt::gt()
+```

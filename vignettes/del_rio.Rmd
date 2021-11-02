@@ -15,7 +15,9 @@ output:
     toc: yes
     toc_depth: '3'
 vignette: |
-  %\VignetteIndexEntry{wastd} %\VignetteEncoding{UTF-8} %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{delambre} 
+  %\VignetteEncoding{UTF-8} 
+  %\VignetteEngine{knitr::rmarkdown}
 params:
   area_name: Delambre Island
   prefix: DEL
