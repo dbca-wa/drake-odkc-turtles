@@ -50,7 +50,7 @@ odkc2020 <- function() {
     # ------------------------------------------------------------------------ #
     # SETUP
     dl_odkc = Sys.getenv("ODKC_DOWNLOAD", unset = TRUE),
-    wastd_data_yr = Sys.getenv("WASTD_YEAR", unset = 2019L),
+    wastd_data_yr = Sys.getenv("WASTD_YEAR", unset = 2020L),
     odkc_yr = Sys.getenv("ODKC_YEAR", unset = 2020L),
     up_ex = Sys.getenv("ODKC_IMPORT_UPDATE_EXISTING", unset = FALSE),
     up_media = Sys.getenv("ODKC_IMPORT_UPLOAD_MEDIA", unset = TRUE),

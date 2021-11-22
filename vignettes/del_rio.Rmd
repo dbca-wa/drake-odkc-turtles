@@ -1214,7 +1214,7 @@ ggplot2::ggplot(
   NULL
 ```
 
-## New, remigrant, recaptured turtles
+## Primary tagged, resighted, remigrant turtles
 <!--
 Per species:
 
@@ -1226,13 +1226,57 @@ Total processed
 Missed turtles
 Total turtles recorded
 Mean nightly turtles
+
+
+Definitions:
+
+* Initial Sighting: A sighting of an unprocessed and unidentified turtle without
+  any processing (tagging). The animal leaves the encounter untagged and unidentifiable.
+* Initial Nesting: First sighting and processing (tagging) of a previously 
+  untagged turtle. In subsequent encounters, the turtle can be identified by the
+  applied tags.
+* Resighting: Repeated sighting of a tagged turtle within the same season. The 
+  turtle was last encountered in the same season.
+* Remigrant: First sighting of a tagged turtle in a new season. The turtle was
+  last encountered in a previous season.
+
+
+Within one season, the first recorded processing of a turtle should be either
+an "Initial Nesting" or a "Remigrant".
+
+Example encounter history of a remigrant turtle in 2019:
+
 -->
 
-WAMTRAM tagging records are grouped by season, species, and observation status
-(initial nesting, remigrant, resighting, initial sighting) and tallied.
+```{r, fig.height=7, fig.width=7, include=FALSE, eval=FALSE}
+remigrant_case_history <- function(data, ssn, case_no){ 
+  remigrants <- data %>% 
+    dplyr::filter(season==ssn, observation_status=="Remigrant")
+  data %>% 
+    dplyr::filter(turtle_id==remigrants$turtle_id[case_no])
+}
 
-The only record of an "initial sighting" is a historic sighting of a Leatherback
-turtle in 1995.
+remi <- remigrant_case_history(w2_all, 2019, 2)
+remi %>% rt()
+ggplot(
+  remi, 
+  aes(x=lubridate::isoweek(calendar_date_awst), 
+      y=1, 
+      colour=observation_status,
+      shape=observed_location_code)
+  ) +
+  geom_point(cex=5) +
+  labs(title="Case history of one turtle", x="ISO Week") +
+  facet_wrap("season", ncol=1)
+```
+
+
+WAMTRAM tagging records are grouped by season, species, and observation status
+("Primary tagging", "Within Season Recapture", and "Inter Season Recapture") 
+and tallied.
+
+The only record of an "Initial sighting" is a historic sighting of a Leatherback
+turtle in 1995, so we omit this category altogether here.
 
 We see a dip in numbers in the 2020 season due to the cyclone cutting short field work.
 
@@ -1258,6 +1302,7 @@ turtles_mcr <- w2 %>%
 ```{r trt_mcr_fb}
 turtles_mcr %>% 
   dplyr::filter(Species == "Natator depressus") %>% 
+  dplyr::select(-"Initial sighting") %>% 
   gt::gt(
     groupname_col=NULL,
     caption = "Recapture status by season of Flatback turtles"
@@ -1265,14 +1310,19 @@ turtles_mcr %>%
   gt::tab_header(
     title="Recapture status by season of Flatback turtles"
     # subtitle="Initial nesting vs Remigrant vs Resighting vs Initial sighting"
-  )
+  ) %>% 
+  gt::cols_label(
+    "Initial nesting" = "Primary Tagging",
+    "Resighting" = "Within Season Recapture",
+    "Remigrant" = "Inter Season Recapture")
 ```
 
 ### Hawksbill turtles
 
 ```{r trt_mcr_hb}
 turtles_mcr %>% 
-  dplyr::filter(Species == "Eretmochelys imbricata") %>% 
+  dplyr::filter(Species == "Eretmochelys imbricata") %>%  
+  dplyr::select(-"Initial sighting") %>%
   gt::gt(
     groupname_col=NULL,
     caption = "Recapture status by season of Hawksbill turtles"
@@ -1280,14 +1330,19 @@ turtles_mcr %>%
   gt::tab_header(
     title="Recapture status by season of Hawksbill turtles"
     # subtitle="Initial nesting vs Remigrant vs Resighting vs Initial sighting"
-  )
+  ) %>% 
+  gt::cols_label(
+    "Initial nesting" = "Primary Tagging",
+    "Resighting" = "Within Season Recapture",
+    "Remigrant" = "Inter Season Recapture")
 ```
 
 ### Green turtles
 
 ```{r trt_mcr_gn}
 turtles_mcr %>% 
-  dplyr::filter(Species == "Chelonia mydas") %>% 
+  dplyr::filter(Species == "Chelonia mydas") %>%  
+  dplyr::select(-"Initial sighting") %>%
   gt::gt(
     groupname_col=NULL,
     caption = "Recapture status by season of Green turtles"
@@ -1295,7 +1350,11 @@ turtles_mcr %>%
   gt::tab_header(
     title="Recapture status by season of Green turtles"
     # subtitle="Initial nesting vs Remigrant vs Resighting vs Initial sighting"
-  )
+  ) %>% 
+  gt::cols_label(
+    "Initial nesting" = "Primary Tagging",
+    "Resighting" = "Within Season Recapture",
+    "Remigrant" = "Inter Season Recapture")
 ```
 <!--
 -   Add figure "remigration interval": show the number of remigrants

@@ -114,7 +114,7 @@ odkc_tt_as_wastd_ae <- function(data,
       sex = turtle_sex %>% tidyr::replace_na("na"),
       health = "alive",
       maturity = turtle_maturity %>% tidyr::replace_na("na"),
-      habitat = nest_habitat,
+      # habitat = nest_habitat,
       activity = "general-breeding-activity", # models.NESTING_ACTIVITY_CHOICES
       nesting_event = nest_observed_nesting_success, # nesting success
       scanned_for_pit_tags = ifelse(

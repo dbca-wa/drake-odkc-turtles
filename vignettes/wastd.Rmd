@@ -15,7 +15,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 params:
-  area_name: 'Cable Beach Broome'
+  area_name: 'Delambre Island'
   season: 2021
 editor_options: 
   markdown: 
@@ -59,8 +59,10 @@ if (!fs::file_exists(fn)) {
 ```
 
 # Overview
-This top level summary is exported as `just_the_data_thanks.csv` and
-shows totals of tracks, disturbance / predation, live sightings and strandings 
+This top level summary is exported both as `just_the_data_thanks.csv` 
+and `just_the_data_thanks.rds`. The latter can be opened directly in R through
+`readRDS("just_the_data_thanks.rds")`.
+It shows totals of tracks, disturbance / predation, live sightings and strandings 
 plus track tallies grouped and sorted per area, site, and calendar date (AWST).
 Individually encountered tracks are split up by nesting success. 
 Track tallies, which are only collected in specific places like Cape Domett,
@@ -70,10 +72,10 @@ A very detailed explanation of the columns in this table is hosted
 [here](https://dbca-wa.github.io/wastdr/reference/summarise_wastd_data_per_day_site.html).
 
 ```{r top_level_summary}
-summarise_wastd_data_per_day_site(x) %T>% 
-  readr::write_csv(here::here(fn, "just_the_data_thanks.csv")) %>% 
-  janitor::clean_names(case="sentence") %>%
-  rt
+jtd <- summarise_wastd_data_per_day_site(x) 
+jtd %>% saveRDS(here::here(fn, "just_the_data_thanks.rds"))
+jtd %>% readr::write_csv(here::here(fn, "just_the_data_thanks.csv"))
+jtd %>% janitor::clean_names(case="sentence") %>% rt()
 ```
 
 This report is a story **about** data. It explains, visualises, and
@@ -140,10 +142,11 @@ added to the descriptive statistics shown in this report.
 ## Turtle Nesting Current Season
 
 ```{r tracks_map_2020}
-x$tracks %>% 
+tr <- x$tracks %>% 
   wastdr::filter_wastd_season(params$season) %>% 
-  wastdr::filter_realspecies() %>% 
-  wastdr::map_tracks(sites = x$sites)
+  wastdr::filter_realspecies() 
+
+tr %>% wastdr::map_tracks(sites = x$sites)
 ```
 
 For performance, we include the same map with tracks clustered by species.
@@ -151,11 +154,21 @@ On slow machines with large datasets, this map will perform better than the
 above map with individual records.
 
 ```{r tracks_map_2020_cluster}
-x$tracks %>% 
-  wastdr::filter_wastd_season(params$season) %>% 
-  wastdr::filter_realspecies() %>% 
-  wastdr::map_tracks(sites = x$sites, cluster = TRUE)
+tr %>% wastdr::map_tracks(sites = x$sites, cluster = TRUE)
 ```
+
+
+
+```{r}
+tr %>% 
+  dplyr::group_by(calendar_date_awst, species) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  tidyr::pivot_wider(names_from="species", values_from = "n", values_fill = 0) %>% 
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt()
+```
+
 
 
 ## QA: tracks outside of known sites
@@ -190,8 +203,62 @@ mt <- x$tracks %>%
   dplyr::filter(nest_age == "missed")
 
 # mt %>% rt
+# mt %>% gt::gt()
 mt %>% wastdr::map_tracks(sites = x$sites)
 ```
+
+## Processed turtles
+Encounters with living animals (training species excluded) in the current season
+include processed animals.
+
+We will attach tag history shortly, but for now only show the raw encounters.
+
+```{r}
+pt <- x$animals %>% 
+  wastdr::filter_wastd_season(params$season) %>% 
+  wastdr::filter_realspecies() %>% 
+  wastdr::filter_alive()
+
+pt %>% 
+  dplyr::group_by(calendar_date_awst, species) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  tidyr::pivot_wider(names_from="species", values_from = "n",values_fill = 0) %>% 
+  janitor::clean_names(case="sentence") %>% 
+  gt::gt()
+
+pt %>% map_mwi(sites = x$sites)
+```
+
+## Tags
+Tags (flipper/PIT) and biopsies encountered together with processed animals 
+(re-sighted, applied new, etc) are listed here for the current season.
+
+```{r}
+tags <- x$turtle_tags %>% 
+  wastdr::filter_wastd_season(params$season) %>% 
+  wastdr::filter_realspecies() %>% 
+  dplyr::mutate(wastd=glue::glue("<a href=\"https://wastd.dbca.wa.gov.au{encounter_absolute_admin_url}\">wastd</a>"))
+
+
+
+tags %>% 
+  dplyr::select(
+tag_type,
+tag_location,
+name,
+status,
+calendar_date_awst,
+    encounter_name,
+    encounter_reporter_name,
+    encounter_when,
+    encounter_leaflet_title,
+    
+    wastd
+  ) %>% 
+  rt()
+```
+
 
 ## Disturbance, predation: nests and general
 General disturbance and signs of predator presence is captured through the 
@@ -614,10 +681,14 @@ The ODK form "Turtle Tagging", as well as data import from the legacy turtle
 tagging database WAMTRAM, will show up as a live sighting with a nesting
 activity.
 
-All of the above forms feed into WAStD AnimalEncounters, which are shown in the map below.
+All of the above forms feed into WAStD AnimalEncounters, 
+which are shown in the map below.
+
+Current season data only.
 
 ```{r mwi_map_resc}
 x$animals %>% 
+  wastdr::filter_wastd_season(params$season) %>% 
   wastdr::filter_alive() %>% 
   wastdr::map_mwi(sites = x$sites)
 ```
@@ -626,8 +697,11 @@ x$animals %>%
 The ODK form "Marine Wildlife Incident" captures encounters with dead animals 
 (including turtles), which then become WAStD AnimalEncounters.
 
+Current season data only.
+
 ```{r mwi_map_str}
 x$animals %>% 
+  wastdr::filter_wastd_season(params$season) %>% 
   wastdr::filter_dead() %>% 
   wastdr::map_mwi(sites = x$sites)
 ```
@@ -818,7 +892,7 @@ rec_surveys %>%
 -->
 
 ## QA: Suspiciously long surveys
-Surveys running for more than 6 hours could have been erroneously merged from 
+Surveys running for more than 12 hours could have been erroneously merged from 
 two separate surveys, or they are truly long surveys.
 
 Fixing these requires individual inspection and full fluency in WAStD's operation.
@@ -841,7 +915,7 @@ Protocol:
 * Having all candidate surveys open in the data curation portal:
   * mark both as "production",
   * adjust start and end times to be one one day only, then 
-  * aave and continue editing the "recipient" survey, then refresh the "view" 
+  * save and continue editing the "recipient" survey, then refresh the "view" 
     and verify that additional encounters were adopted.
   * Save and continue editing the "donor" survey, refresh the "view" and
     verify that the encounters of the incorrect date are gone from the list of
@@ -865,7 +939,7 @@ long_surveys <- x$surveys %>%
   dplyr::filter(
     lubridate::interval(
       start = start_time, 
-      end = end_time) > lubridate::hours(6))
+      end = end_time) > lubridate::hours(12))
 
 long_surveys %>%
   dplyr::select(
