@@ -238,24 +238,19 @@ Tags (flipper/PIT) and biopsies encountered together with processed animals
 tags <- x$turtle_tags %>% 
   wastdr::filter_wastd_season(params$season) %>% 
   wastdr::filter_realspecies() %>% 
-  dplyr::mutate(wastd=glue::glue("<a href=\"https://wastd.dbca.wa.gov.au{encounter_absolute_admin_url}\">wastd</a>"))
+  dplyr::mutate(wastd=glue::glue("<a href=\"https://wastd.dbca.wa.gov.au{encounter_absolute_admin_url}\">{encounter_name}</a>"))
 
-
-
-tags %>% 
+tags %>%
   dplyr::select(
-tag_type,
-tag_location,
-name,
-status,
-calendar_date_awst,
-    encounter_name,
+    calendar_date_awst,
+    tag_type,
+    tag_location,
+    name,
+    status,
     encounter_reporter_name,
-    encounter_when,
-    encounter_leaflet_title,
-    
     wastd
-  ) %>% 
+  ) %>%
+  janitor::clean_names(case="sentence") %>% 
   rt()
 ```
 
