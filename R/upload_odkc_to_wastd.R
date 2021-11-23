@@ -256,37 +256,9 @@ upload_odkc_to_wastd <- function(data,
       api_url = api_url,
       api_token = api_token,
       verbose = verbose
-    ),
-
-
-    svy = wastdr::wastd_create_update_skip(
-      #upload_surveys(
-      data$svy_create,
-      data$svy_update,
-      data$svy_skip,
-      update_existing = update_existing,
-      serializer = "surveys",
-      label = "Surveys",
-      api_url = api_url,
-      api_token = api_token,
-      verbose = verbose
-    ),
-
-    survey_media = upload_survey_media(data$survey_media_create,
-                         upload = up_media,
-                         api_url = api_url,
-                         api_token = api_token,
-                         verbose = verbose),
-
-    media = upload_media(data$media_create,
-                         upload = up_media,
-                         api_url = api_url,
-                         api_token = api_token,
-                         verbose = verbose)
-
+    )
 
   )
-
   # Tagging > AE ------------------------------------------------------------#
   if("tt_create" %in% names(data)){
 
@@ -386,6 +358,31 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     )
   }
+
+  # Surveys come after tagging so they adopt tagging AnimalEncounters in WAStD
+  res$svy = wastdr::wastd_create_update_skip(
+    data$svy_create,
+    data$svy_update,
+    data$svy_skip,
+    update_existing = update_existing,
+    serializer = "surveys",
+    label = "Surveys",
+    api_url = api_url,
+    api_token = api_token,
+    verbose = verbose
+  )
+
+  res$survey_media = upload_survey_media(data$survey_media_create,
+                                     upload = up_media,
+                                     api_url = api_url,
+                                     api_token = api_token,
+                                     verbose = verbose)
+
+  res$media = upload_media(data$media_create,
+                       upload = up_media,
+                       api_url = api_url,
+                       api_token = api_token,
+                       verbose = verbose)
 
   res
 }
