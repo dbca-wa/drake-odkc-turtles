@@ -24,7 +24,7 @@ generate_qa_users_report <- function(odkc_ex, user_mapping, year){
 generate_qa_users_report_w2 <- function(
   user_mapping, w2_yr, w2_data, verbose = wastdr::get_wastdr_verbose()){
   "Rendering QA for WAMTRAM users in {w2_yr}..." %>%
-    glue::glue() %>% wastdr::wastdr_msg_info()
+    glue::glue() %>% wastdr::wastdr_msg_info(verbose=verbose)
   fn_out <- here::here("vignettes", glue::glue("qa_users_w2{w2_yr}.html"))
   fn_in <- here::here("vignettes", "qa_users_w2.Rmd")
   user_qa_report  = rmarkdown::render(fn_in, output_file = fn_out, quiet=FALSE)

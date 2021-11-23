@@ -37,7 +37,7 @@
 #' visNetwork::visSave(vis_drake_graph(wamtram()), "drake_graph.html")
 #' drake::vis_drake_graph(wamtram())
 #' drake::clean()
-#' drake::clean("wastd_users") # after updating WAStD user aliases
+#' drake::clean("w2_data")
 #' drake::make(plan = wamtram(), targets = c("upload_to_wastd"))
 #' drake::make(wamtram(), lock_envir = FALSE)
 #'
@@ -55,42 +55,42 @@ wamtram <- function() {
 
     # ------------------------------------------------------------------------ #
     # EXTRACT
-    # save(w2_data, file="inst/w2.RData", compress="xz")
-    # load("inst/w2.RData")
-    w2_data = wastdr::download_w2_data(
-      ord = c("YmdHMS", "Ymd"),
-      tz = "Australia/Perth",
-      db_drv = Sys.getenv("W2_DRV"),
-      db_srv = Sys.getenv("W2_SRV"),
-      db_name = Sys.getenv("W2_DB"),
-      db_user = Sys.getenv("W2_UN"),
-      db_pass = Sys.getenv("W2_PW"),
-      db_port = Sys.getenv("W2_PT"),
-      verbose = wastdr::get_wastdr_verbose()
-    ),
+    # saveRDS(w2, file = here::here("data-raw/w2.rds"), compress="xz")
+    w2_data = readRDS(here::here("data/w2.rds")),
+    # w2_data = wastdr::download_w2_data(
+    #   ord = c("YmdHMS", "Ymd"),
+    #   tz = "Australia/Perth",
+    #   db_drv = Sys.getenv("W2_DRV"),
+    #   db_srv = Sys.getenv("W2_SRV"),
+    #   db_name = Sys.getenv("W2_DB"),
+    #   db_user = Sys.getenv("W2_UN"),
+    #   db_pass = Sys.getenv("W2_PW"),
+    #   db_port = Sys.getenv("W2_PT"),
+    #   verbose = wastdr::get_wastdr_verbose()
+    # ),
 
     # ------------------------------------------------------------------------ #
     # TRANSFORM
     wastd_users = wastdr::download_wastd_users(),
-    user_mapping = make_user_mapping_w2(w2_data, wastd_users),
+    w2_user_mapping = make_user_mapping_w2(w2_data, wastd_users),
 
     # QA Reports: inspect user mappings - flag dissimilar matches
     # https://github.com/dbca-wa/wastdr/issues/21
-    user_qa = generate_qa_users_report_w2(user_mapping, w2_yr, w2_data),
+    user_qa = generate_qa_users_report_w2(w2_user_mapping, w2_yr, w2_data),
 
     # Resume:
     # load("data/w2dev.RData")
     #
     # Source data transformed into target format
-    w2_tf = w2_as_wastd(w2_data, user_mapping),
+    w2_tf = w2_as_wastd(w2_data, w2_user_mapping),
     # Sites
     # site_qa = generate_qa_sites_report_w2(w2_data, w2_tf, w2_yr),
 
     # ------------------------------------------------------------------------ #
     # LOAD
-    wastd_data_min = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
+    wastd_data_min = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr)
     # Skip logic compares existing data in target DB with new data to upload
-    w2_up = split_create_update_skip_w2(w2_tf, wastd_data_min),
+    # w2_up = split_create_update_skip_w2(w2_tf, wastd_data_min),
     # Upload (skip, update, create as per skip logic)
     # upload_to_wastd = upload_w2_to_wastd(w2_up, update_existing = up_ex)
   )

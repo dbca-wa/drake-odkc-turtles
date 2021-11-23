@@ -18,63 +18,96 @@
 #' }
 w2_tag_as_wastd_tagobs <- function(data, user_mapping) {
   wastd_handlers <- user_mapping %>%
-    dplyr::transmute(handler = legacy_username, handler_id = pk)
+    dplyr::transmute(tagger_person_id = legacy_userid, handler_id = pk)
+
+  w2_handlers <- data %>%
+    magrittr::extract2("enc") %>%
+    dplyr::select(observation_id, tagger_person_id) %>%
+    dplyr::left_join(wastd_handlers, by="tagger_person_id") %>%
+    tidyr::replace_na(list(handler_id=1))
 
   wastd_recorders <- user_mapping %>%
-    dplyr::transmute(recorder = legacy_username, recorder_id = pk)
+    dplyr::transmute(reporter_person_id = legacy_userid, recorder_id = pk)
+
+  w2_recorders <- data %>%
+    magrittr::extract2("enc") %>%
+    dplyr::select(observation_id, reporter_person_id) %>%
+    dplyr::left_join(wastd_recorders, by="reporter_person_id") %>%
+    tidyr::replace_na(list(recorder_id=1))
 
 
-#
-#   tag_name = sanitize_tag_label(t["tag_name"])
-#   enc = AnimalEncounter.objects.get(
-#     source_id=make_wamtram_source_id(t["observation_id"]))
-#
-#   new_data = dict(
-#     encounter_id=enc.id,
-#     tag_type='flipper-tag',
-#     handler_id=enc.observer_id,
-#     recorder_id=enc.reporter_id,
-#     name=tag_name,
-#     tag_location=make_tag_side(t["attached_on_side"], t["tag_position"]),
-#     status=m["tag_status"][t["tag_state"]],
-#     comments='{0}\nLTag label: {1}\nOriginal status: {2}'.format(
-#       t["comments"], t["tag_label"], t["tag_state"]),
-#   )
+  tag_sides <- tibble::tribble(
+    ~tag_location, ~attached_on_side, ~tag_position,
+    "flipper-front-left-1",  "L", 1,
+    "flipper-front-left-2",  "L", 2,
+    "flipper-front-left-3",  "L", 3,
+    "flipper-front-left",    "L", NA,
+    "flipper-front-right-1", "R", 1,
+    "flipper-front-right-2", "R", 2,
+    "flipper-front-right-3", "R", 3,
+    "flipper-front-right",   "R", NA
+  )
+
+  # TAG_STATUS_CHOICES = (                                          # TRT_TAG_STATES
+  #   ('ordered', 'ordered from manufacturer'),
+  #   ('produced', 'produced by manufacturer'),
+  #   ('delivered', 'delivered to HQ'),
+  #   ('allocated', 'allocated to field team'),
+  #   (TAG_STATUS_APPLIED_NEW, 'applied new'),                    # A1, AE
+  #   (TAG_STATUS_DEFAULT, 're-sighted associated with animal'),  # OX, P, P_OK, RQ, P_ED
+  #   ('reclinched', 're-sighted and reclinched on animal'),      # RC
+  #   ('removed', 'taken off animal'),                            # OO, R
+  #   ('found', 'found detached'),
+  #   ('returned', 'returned to HQ'),
+  #   ('decommissioned', 'decommissioned'),
+  #   ('destroyed', 'destroyed'),
+  #   ('observed', 'observed in any other context, see comments'), )
+
+  tag_states <- tibble::tribble(
+    ~tag_state, ~status,
+    "A1",  'applied-new',
+    "AE",  'applied-new',
+    "ae",  'applied-new',
+    "OX",  'resighted',
+    "P",   'resighted',
+    "p",   'resighted',
+    "P_OK",'resighted',
+    "RQ",  'resighted',
+    "P_ED",'resighted',
+    "R",   'removed',
+    "OO",  'removed',
+    "RC",  'reclinched'
+  )
 
 
-  # {
-  #   'observation_id': '267425',
-  #   'recorded_tag_id': '394783',
-  #   'tag_name': 'WB 9239',
-  #   'tag_state': 'A1',
-  #   'attached_on_side': 'R',
-  #   'tag_position': 'NA',
-  #   'comments': 'NA',
-  #   'tag_label': 'NA',
-  #   }
+
   data %>%
-    wastdr::sf_as_tbl() %>%
-    # filter:
-    #   if t["tag_state"] in ["A2", "PX", "0", "#", "Q", "M", "M1", "N", "0L", "NA"]:
-    #     logger.info("Skipping tag obs with status {0}".format(t["tag_state"]))
-    #   return None
+    magrittr::extract2("obs_flipper_tags") %>%
+    # wastdr::sf_as_tbl() %>%
+    dplyr::filter(!(tag_state %in% c("A2", "PX", "0", "#", "Q", "M", "M1", "N", "0L", "NA"))) %>%
     dplyr::transmute(
       # https://github.com/dbca-wa/wastd/blob/master/shared/models.py#L259
       source = 20,
       source_id = recorded_tag_id,
       encounter_source="wamtram",
       encounter_source_id = observation_id,
-      handler = reporter, # TODO
-      recorder = reporter, # TODO
+      # handler = reporter,
+      # recorder = reporter,
+      # handler_id = 1, # TODO enc.observer_id
+      # reporter_id = 1, # TODO enc.reporter_id
       tag_type = 'flipper-tag',
-      name = tag_name,
-      tag_location = tag_location, # make_tag_side(t["attached_on_side"], t["tag_position"]),
-      status = tag_status, # m["tag_status"][t["tag_state"]],
-      comments = tag_comments # '{0}\nLTag label: {1}\nOriginal status: {2}'.format(t["comments"], t["tag_label"], t["tag_state"]),
+      attached_on_side=attached_on_side,
+      tag_position=tag_position,
+      tag_state=tag_state,
+      name = tag_name, # TODO sanitize
+      comments = glue::glue("Tag status: {tag_state}")
     ) %>%
-    dplyr::left_join(wastd_handlers, by = "handler") %>% # wastd User PK
-    dplyr::left_join(wastd_recorders, by = "recorder") %>% # wastd User PK
-    dplyr::select(-handler, -recorder) %>% # drop odkc_username
+    dplyr::left_join(w2_handlers, by = c("encounter_source_id"="observation_id")) %>%
+    dplyr::left_join(w2_recorders, by = c("encounter_source_id"="observation_id")) %>%
+    dplyr::left_join(tag_sides, by = c("attached_on_side", "tag_position")) %>%
+    dplyr::left_join(tag_states, by="tag_state") %>%
+    dplyr::select(-tagger_person_id, -reporter_person_id,
+                  -attached_on_side, -tag_position, -tag_state) %>% # drop odkc_username
     # If data == tracks or mwi, drop all NA subgroups
     # If data == tracks_*, there are only non-NA records
     dplyr::filter_at(
