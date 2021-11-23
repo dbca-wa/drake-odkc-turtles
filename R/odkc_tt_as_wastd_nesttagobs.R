@@ -28,7 +28,8 @@ odkc_tt_as_wastd_nesttagobs <- function(data) {
       comments = nest_nest_tag_comments
     ) %>%
     dplyr::filter_at(
-      dplyr::vars(-source, -source_id, -encounter_source, -encounter_source_id),
+      dplyr::vars(-source, -source_id, -encounter_source, -encounter_source_id,
+                  -ft1_ft1_name, -date_nest_laid),
       dplyr::any_vars(!is.na(.))
     )
 }
