@@ -34,7 +34,8 @@ odkc_tracks_as_wastd_nesttagobs <- function(data) {
       comments = nest_tag_tag_comments
     ) %>%
     dplyr::filter_at(
-      dplyr::vars(-source, -source_id, -encounter_source, -encounter_source_id),
+      dplyr::vars(-source, -source_id, -encounter_source, -encounter_source_id,
+                  -date_nest_laid),
       dplyr::any_vars(!is.na(.))
     )
 }
