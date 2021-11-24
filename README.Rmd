@@ -49,12 +49,9 @@ The spreadsheet is post-processed:
 # HTTP status returned: 400 for existing, 201 for new
 # Append new users to spreadsheet: username, name, email, phone, role
 library(wastdr)
-users <- here::here("data/users_wptp2020.csv") %>%
+users <- here::here("inst/users_nin2020.csv") %>%
  readr::read_csv(col_types = "ccccc") %>%
- wastdr::wastd_bulk_post("users",
- #api_url = Sys.getenv("WASTDR_API_DEV_URL"),
- #api_token = Sys.getenv("WASTDR_API_DEV_TOKEN"),
- verbose = TRUE)
+ wastdr::wastd_bulk_post("users", verbose = TRUE)
 ```
 
 

@@ -67,7 +67,7 @@ actions_table <- a %>%
     label = "WASTD User profile (chosen as most likely)",
     columns = c(role, pk, username, name, nickname, aliases, email, phone)
   )  
-}
+} else {actions_table <- NULL}
 ```
 
 # User matching results {.tabset}
@@ -107,7 +107,11 @@ Your actions:
         lower dissimilarity measure (or even drop off the validation shortlist).
 
 ```{r view_match_table, echo=FALSE}
-actions_table
+if (is.null(actions_table)) {
+  wastdr::wastdr_msg_success("No mismatches found")
+} else {
+    actions_table
+}
 ```
 
 

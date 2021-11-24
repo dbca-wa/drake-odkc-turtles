@@ -10,7 +10,8 @@
 w2_as_wastd <- function(data, user_mapping){
   list(
     tt = w2_as_wastd_ae(data, user_mapping),
-    tt_tag = w2_tag_as_wastd_tagobs(data, user_mapping)
+    tt_tag = w2_tag_as_wastd_tagobs(data, user_mapping),
+    tt_pit = w2_pit_as_wastd_tagobs(data)
     # w2data$obs_flippertags > tagobs (utils.py:1842)
     # tt_dmg = w2_dmg_as_wastd_turtledmg(odkc_data$tt_dmg),
     # tt_tsc = w2_as_wastd_turtledmg(odkc_data$tt),

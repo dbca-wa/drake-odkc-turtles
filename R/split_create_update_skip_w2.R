@@ -34,13 +34,14 @@ split_create_update_skip_w2 <- function(w2_tf, wastd_data) {
     . %>% dplyr::anti_join(wastd_data$enc, by = obs_match)
   obs_update <- . %>% dplyr::semi_join(enc_upd, by = obs_match)
   obs_skip <-   . %>% dplyr::semi_join(enc_skp, by = obs_match)
+  # Can't combine `encounter_source_id` <integer> and `encounter_source_id` <character>.
 
   res <- list(
     # Tagging > AE ------------------------------------------------------------#
     # AE
     tt_create = w2_tf$tt %>% enc_create(),
     tt_update = w2_tf$tt %>% enc_update(),
-    tt_skip = w2_tf$tt %>% enc_skip()
+    tt_skip = w2_tf$tt %>% enc_skip(),
 
     # # Obs
     # tt_dmg_create = w2_tf$tt_dmg %>% obs_create()
@@ -59,13 +60,13 @@ split_create_update_skip_w2 <- function(w2_tf, wastd_data) {
     # tt_mor_update = w2_tf$tt_mor %>% obs_update()
     # tt_mor_skip = w2_tf$tt_mor %>% obs_skip()
     #
-    # tt_tag_create = w2_tf$tt_tag %>% obs_create()
-    # tt_tag_update = w2_tf$tt_tag %>% obs_update()
-    # tt_tag_skip = w2_tf$tt_tag %>% obs_skip()
+    tt_tag_create = w2_tf$tt_tag %>% obs_create(),
+    tt_tag_update = w2_tf$tt_tag %>% obs_update(),
+    tt_tag_skip = w2_tf$tt_tag %>% obs_skip(),
     #
-    # tt_tag_create = w2_tf$tt_tag %>% obs_create()
-    # tt_tag_update = w2_tf$tt_tag %>% obs_update()
-    # tt_tag_skip = w2_tf$tt_tag %>% obs_skip()
+    tt_pit_create = w2_tf$tt_pit %>% obs_create(),
+    tt_pit_update = w2_tf$tt_pit %>% obs_update(),
+    tt_pit_skip = w2_tf$tt_pit %>% obs_skip()
     #
     # tt_nto_create = w2_tf$tt_nto %>% obs_create()
     # tt_nto_update = w2_tf$tt_nto %>% obs_update()

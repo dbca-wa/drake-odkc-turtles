@@ -47,7 +47,7 @@ wamtram()
 visNetwork::visSave(vis_drake_graph(wamtram()), "drake_graph.html")
 drake::vis_drake_graph(wamtram())
 drake::clean()
-drake::clean("wastd_users") # after updating WAStD user aliases
+drake::clean("w2_data")
 drake::make(plan = wamtram(), targets = c("upload_to_wastd"))
 drake::make(wamtram(), lock_envir = FALSE)
 

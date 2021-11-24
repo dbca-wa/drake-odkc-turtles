@@ -20,8 +20,11 @@ w2_tag_as_wastd_tagobs <- function(data, user_mapping) {
   wastd_handlers <- user_mapping %>%
     dplyr::transmute(tagger_person_id = legacy_userid, handler_id = pk)
 
-  w2_handlers <- data %>%
+  enc <- data %>%
     magrittr::extract2("enc") %>%
+    dplyr::mutate(observation_id = as.character(observation_id))
+
+  w2_handlers <- enc %>%
     dplyr::select(observation_id, tagger_person_id) %>%
     dplyr::left_join(wastd_handlers, by="tagger_person_id") %>%
     tidyr::replace_na(list(handler_id=1))
@@ -29,8 +32,7 @@ w2_tag_as_wastd_tagobs <- function(data, user_mapping) {
   wastd_recorders <- user_mapping %>%
     dplyr::transmute(reporter_person_id = legacy_userid, recorder_id = pk)
 
-  w2_recorders <- data %>%
-    magrittr::extract2("enc") %>%
+  w2_recorders <- enc %>%
     dplyr::select(observation_id, reporter_person_id) %>%
     dplyr::left_join(wastd_recorders, by="reporter_person_id") %>%
     tidyr::replace_na(list(recorder_id=1))
@@ -88,9 +90,9 @@ w2_tag_as_wastd_tagobs <- function(data, user_mapping) {
     dplyr::transmute(
       # https://github.com/dbca-wa/wastd/blob/master/shared/models.py#L259
       source = 20,
-      source_id = recorded_tag_id,
+      source_id = as.character(recorded_tag_id),
       encounter_source="wamtram",
-      encounter_source_id = observation_id,
+      encounter_source_id = observation_id %>% as.character(),
       # handler = reporter,
       # recorder = reporter,
       # handler_id = 1, # TODO enc.observer_id

@@ -38,7 +38,7 @@
 #' drake::vis_drake_graph(wamtram())
 #' drake::clean()
 #' drake::clean("w2_data")
-#' drake::make(plan = wamtram(), targets = c("upload_to_wastd"))
+#' drake::make(plan = wamtram(), targets = c("user_qa"))
 #' drake::make(wamtram(), lock_envir = FALSE)
 #'
 #' deps_code(quote(knitr_in("doc/qa_sites_w2.Rmd")))
@@ -88,9 +88,9 @@ wamtram <- function() {
 
     # ------------------------------------------------------------------------ #
     # LOAD
-    wastd_data_min = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr)
+    wastd_data_min = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
     # Skip logic compares existing data in target DB with new data to upload
-    # w2_up = split_create_update_skip_w2(w2_tf, wastd_data_min),
+    w2_up = split_create_update_skip_w2(w2_tf, wastd_data_min)
     # Upload (skip, update, create as per skip logic)
     # upload_to_wastd = upload_w2_to_wastd(w2_up, update_existing = up_ex)
   )

@@ -4,6 +4,7 @@
 # etlTurtleNesting
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 The package etlTurtleNesting contains the ETL and QA for Turtle Nesting
@@ -25,27 +26,26 @@ remotes::install_github("dbca-wa/etlTurtleNesting")
 
 New users can be added to WAStD in batches before each field season.
 Local coordinators will provide a spreadsheet with columns “name” (full
-name, correct! spelling and capitalisation), “email”, “phone”.
+name, correct\! spelling and capitalisation), “email”, “phone”.
 
 The spreadsheet is post-processed:
 
--   Open with option “quoted columns as text”
--   username (A), name (B), email, phone, role (C-E)
--   Formula for username: `=SUBSTITUTE(LOWER(B2), " ", "_")`
--   Format phone as text and prefix with +61
--   Save as CSV with “quote all text columns”
+  - Open with option “quoted columns as text”
+  - username (A), name (B), email, phone, role (C-E)
+  - Formula for username: `=SUBSTITUTE(LOWER(B2), " ", "_")`
+  - Format phone as text and prefix with +61
+  - Save as CSV with “quote all text columns”
+
+<!-- end list -->
 
 ``` r
 # Step 1: New users (username, name, phone, email, role)
 # HTTP status returned: 400 for existing, 201 for new
 # Append new users to spreadsheet: username, name, email, phone, role
 library(wastdr)
-users <- here::here("data/users_wptp2020.csv") %>%
+users <- here::here("inst/users_nin2020.csv") %>%
  readr::read_csv(col_types = "ccccc") %>%
- wastdr::wastd_bulk_post("users",
- #api_url = Sys.getenv("WASTDR_API_DEV_URL"),
- #api_token = Sys.getenv("WASTDR_API_DEV_TOKEN"),
- verbose = TRUE)
+ wastdr::wastd_bulk_post("users", verbose = TRUE)
 ```
 
 ## Import ODKC data, export WAStD data, create reports and outputs
