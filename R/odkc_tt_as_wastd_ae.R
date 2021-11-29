@@ -117,6 +117,7 @@ odkc_tt_as_wastd_ae <- function(data,
       # habitat = nest_habitat,
       activity = "general-breeding-activity", # models.NESTING_ACTIVITY_CHOICES
       nesting_event = nest_observed_nesting_success, # nesting success
+      nesting_disturbed = nest_nesting_disturbed,
       scanned_for_pit_tags = ifelse(
         is.null(pit_pit_left_name),
         "present",
