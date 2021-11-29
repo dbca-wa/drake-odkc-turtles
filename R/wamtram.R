@@ -20,20 +20,11 @@
 #'                      api_token = Sys.getenv("WASTDR_API_TEST_TOKEN"))
 #' wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_URL"),
 #'                      api_token = Sys.getenv("WASTDR_API_TOKEN"))
-#' Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
-#' Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
-#' Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA=TRUE)
-#' Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA=FALSE)
-#' Sys.setenv(ODKC_DOWNLOAD=TRUE) # Dl media files
-#' Sys.setenv(ODKC_DOWNLOAD=FALSE)
 #'
 #' library(etlTurtleNesting)
 #' library(wastdr)
 #' library(drake)
 #'
-#' drake::loadd("w2_data")
-#'
-#' wamtram()
 #' visNetwork::visSave(vis_drake_graph(wamtram()), "drake_graph.html")
 #' drake::vis_drake_graph(wamtram())
 #' drake::clean()
@@ -56,7 +47,7 @@ wamtram <- function() {
     # ------------------------------------------------------------------------ #
     # EXTRACT
     # saveRDS(w2, file = here::here("data-raw/w2.rds"), compress="xz")
-    w2_data = readRDS(here::here("data/w2.rds")),
+    w2_data = readRDS(here::here("inst/w2.rds")),
     # w2_data = wastdr::download_w2_data(
     #   ord = c("YmdHMS", "Ymd"),
     #   tz = "Australia/Perth",
@@ -90,9 +81,9 @@ wamtram <- function() {
     # LOAD
     wastd_data_min = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
     # Skip logic compares existing data in target DB with new data to upload
-    w2_up = split_create_update_skip_w2(w2_tf, wastd_data_min)
+    w2_up = split_create_update_skip_w2(w2_tf, wastd_data_min),
     # Upload (skip, update, create as per skip logic)
-    # upload_to_wastd = upload_w2_to_wastd(w2_up, update_existing = up_ex)
+    upload_to_wastd = upload_w2_to_wastd(w2_up, update_existing = up_ex)
   )
 }
 

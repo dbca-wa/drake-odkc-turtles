@@ -30,25 +30,16 @@ wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_TEST_URL"),
                      api_token = Sys.getenv("WASTDR_API_TEST_TOKEN"))
 wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_URL"),
                      api_token = Sys.getenv("WASTDR_API_TOKEN"))
-Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
-Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
-Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA=TRUE)
-Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA=FALSE)
-Sys.setenv(ODKC_DOWNLOAD=TRUE) # Dl media files
-Sys.setenv(ODKC_DOWNLOAD=FALSE)
 
 library(etlTurtleNesting)
 library(wastdr)
 library(drake)
 
-drake::loadd("w2_data")
-
-wamtram()
 visNetwork::visSave(vis_drake_graph(wamtram()), "drake_graph.html")
 drake::vis_drake_graph(wamtram())
 drake::clean()
 drake::clean("w2_data")
-drake::make(plan = wamtram(), targets = c("upload_to_wastd"))
+drake::make(plan = wamtram(), targets = c("user_qa"))
 drake::make(wamtram(), lock_envir = FALSE)
 
 deps_code(quote(knitr_in("doc/qa_sites_w2.Rmd")))
