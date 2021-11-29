@@ -38,7 +38,6 @@ odkc_tsi_as_wastd_ae <- function(data, user_mapping) {
         "Form filled in from {observation_start_time} to ",
         "{observation_end_time}\n"
       ),
-      # TODO: prefer incident_observed_at_manual if given
       where = glue::glue(
         "POINT ({encounter_observed_at_longitude}",
         " {encounter_observed_at_latitude})"
@@ -47,6 +46,7 @@ odkc_tsi_as_wastd_ae <- function(data, user_mapping) {
       location_accuracy_m = encounter_observed_at_accuracy,
       when = lubridate::format_ISO8601(observation_start_time, usetz = TRUE),
       taxon = "Cheloniidae",
+      health="alive",
       species = encounter_species %>% tidyr::replace_na("na"),
       sex = encounter_sex %>% tidyr::replace_na("na"),
       maturity = encounter_maturity %>% tidyr::replace_na("na"),
