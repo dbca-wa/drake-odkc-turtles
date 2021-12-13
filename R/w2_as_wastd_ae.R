@@ -87,30 +87,58 @@ w2_as_wastd_ae <- function(data,
       "NA", "na"
     )
 
-  # TODO should this be clutch_completed?
-  # unique(w2_data$enc$clutch_completed)
-  # R> unique(w2_data$enc$activity_is_nesting)
-  # [1] "Y" "U" "N" NA
-  nesting_event_lookup <-
-    tibble::tribble(
-      ~ activity_is_nesting, ~ nesting_event,
-      "Y", "present",
-      "N", "absent",
-      "U", "na"
-    )
+
+  # unique(w2_data$enc$clutch_completed) $"Y" "U" "N" NA  "D" "P" "u" "n" "E" "y" "-
+  # unique(w2_data$enc$nesting) # "Y" "N" "U" "P" NA  "D"
+  # unique(w2_data$enc$activity_is_nesting) # "Y" "U" "N" NA
+  #
+  # How it's done in DEL RIO using WAStD tracks and w2.rds / obs summary CSV
+  # #' Convert WAMTRAM `clutch_completed` values into `successful_nesting`
+  # annotate_w2_nesting_success <- . %>%
+  #   dplyr::mutate(
+  #     successful_nesting =
+  #       dplyr::case_when(
+  #         clutch_completed == "Y" ~ "nesting",
+  #         clutch_completed == "N" ~ "non_nesting",
+  #         TRUE ~ "unknown_nesting" # "U", "P", "D", NA
+  #       ))
+  nesting_lookup <- tibble::tribble(
+    ~clutch_completed, ~nesting_disturbed, ~nesting_event,
+    "Y", "absent", "nest-with-eggs", # yes
+    "y", "absent", "nest-with-eggs", # yes
+    "N", "present", "no-nest", # no
+    "n", "present", "no-nest", # no
+    "U", "na", "unsure-if-nest", # uncertain
+    "u", "na", "unsure-if-nest", # uncertain
+    "P", "na", "nest-unsure-of-eggs", # possible
+    "D", "na", "na", # didn't check
+    "-", "na", "na", # didn't check
+    "E", "na", "na", # what is this
+    NA,  "na", "na" # didn't check
+  )
 
   # R> unique(w2_data$enc$condition_code)
   # [1] NA  "F" "D" "P" "G" "U" "H" "M"
+  # condition_code          condition_label
+  # 1              D     Carcase - decomposed
+  # 2              F          Carcase - fresh
+  # 3              G               Good - fat
+  # 4              H               Live & fit
+  # 5              I           Injured but OK
+  # 6              M                 Moribund
+  # 7              P              Poor - thin
+  # 8              U Floater - unable to dive
   health_lookup <-
     tibble::tribble(
       ~ condition_code, ~ health,
-      "F", "dead-edible",     # Carcase - fresh
-      "G", "alive",           # Good - fat
-      "H", "alive",           # Live & fit
+      "F", "dead-edible",             # Carcase - fresh
+      "G", "alive",                   # Good - fat
+      "H", "alive",                   # Live & fit
       "I", "alive-injured",           # Injured but OK
       "M", "alive-injured",           # Moribund
       "P", "alive-injured",           # Poor - thin
       "NA", "na"
+
     )
 
   # R> unique(w2_data$enc$sex)
@@ -123,7 +151,7 @@ w2_as_wastd_ae <- function(data,
       "I", "na"
     )
 
-  # checked_for_injuries = # TODO map did_not_check_for_injury"
+  # checked_for_injuries = # TODO map did_not_check_for_injury
 
   # Transform data
   data$enc %>%
@@ -136,6 +164,7 @@ w2_as_wastd_ae <- function(data,
       behaviour = glue::glue(
         "Species ID confidence: {identification_confidence}\n",
         "Activity when encountered: {activity_label} {activity_description}\n",
+        "Nesting: {nesting}, clutch completed: {clutch_completed}\n",
         "Location: {location_code} {place_code} {label} {place_description}.",
         "Rookery: {is_rookery}, beach approach: {beach_approach}, beach aspect: {beach_aspect}\n"
         # # Left to map
@@ -177,22 +206,22 @@ w2_as_wastd_ae <- function(data,
       maturity = "adult",
       # scanned_for_pit_tags = TODO,
       # checked_for_flipper_tags = TODO,
-      # checked_for_injuries = # TODO map did_not_check_for_injury" "alive"
+      # checked_for_injuries = ,# TODO map did_not_check_for_injury" "alive"
       #
       # Retain for left joins:
       species_code = species_code,
       beach_position_code = beach_position_code,
       activity_code = activity_code,
-      activity_is_nesting = activity_is_nesting,
-      sex_w2 = sex,
-      condition_code = condition_code
+      clutch_completed = clutch_completed, # > nesting_lookup
+      sex_w2 = sex, # sex
+      condition_code = condition_code # health
     ) %>%
     dplyr::left_join(wastd_reporters, by = "reporter") %>% # wastd User PK
     dplyr::left_join(wastd_observers, by = "observer") %>% # wastd User PK
     dplyr::left_join(species_lookup, by="species_code") %>%
     dplyr::left_join(habitat_lookup, by="beach_position_code") %>%
     dplyr::left_join(activity_lookup, by="activity_code") %>%
-    dplyr::left_join(nesting_event_lookup, by="activity_is_nesting") %>%
+    dplyr::left_join(nesting_lookup, by="clutch_completed") %>%
     dplyr::left_join(health_lookup, by="condition_code") %>%
     dplyr::left_join(sex_lookup, by="sex_w2") %>%
     # Discard joining cols:
@@ -201,7 +230,7 @@ w2_as_wastd_ae <- function(data,
                   -species_code,
                   -beach_position_code,
                   -activity_code,
-                  -activity_is_nesting,
+                  -clutch_completed,
                   -condition_code,
                   -sex_w2
     ) %>%

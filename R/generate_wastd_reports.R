@@ -16,6 +16,20 @@
 #' output_file = here::here("vignettes/wastd_del.html"))
 #' }
 generate_wastd_reports <- function(wastd_data){
+  # save wastd_data.rds
+  saveRDS(wastd_data, file=here::here("vignettes", "wastd_data.rds"))
+
+  # # Overview dashboard
+  # a <- "wa_overview"
+  # fn <- here::here("vignettes", glue::glue("{wastdr::urlize(a)}.html"))
+  # wastdr::wastdr_msg_info(glue::glue("Rendering report for {a} to {fn}..."))
+  # rmarkdown::render(
+  #   here::here("vignettes/wa_overview.Rmd"),
+  #   params = list(wastd_data = "Delambre Island"),
+  #   output_file = fn
+  # )
+  # wastdr::wastdr_msg_success(glue::glue("Compiled {fn}."))
+
   # Delambre RIO report
   # Add other tagging reports here
   a <- "del_rio"

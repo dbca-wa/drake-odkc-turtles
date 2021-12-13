@@ -4,7 +4,7 @@ author: "Florian Mayer, DBCA"
 date: "`r Sys.Date()`"
 output: html_document
 params:
-  flipper_tag: "WA70458"
+  flipper_tag: "WB24384"
 ---
 
 ```{r setup, include=FALSE}

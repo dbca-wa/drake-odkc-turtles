@@ -1,0 +1,73 @@
+---
+title: "WA turtle monitoring overview"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+    theme: 
+      version: 4
+      bootswatch: flatly
+params:
+  wastd_data: NULL
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(wastdr)
+```
+
+
+```{r}
+if (is.null(wastd_data)) wastd_data <- drake::loadd("wastd_data")
+
+tracks <- wastd_data$tracks %>% 
+  wastdr::filter_wastd_season(2020) %>% 
+  wastdr::filter_realspecies()
+
+taggings <- wastd_data$animals %>% 
+  wastdr::filter_wastd_season(2020) %>% 
+  wastdr::filter_realspecies()
+
+animal_enc_types <- taggings %>% 
+  dplyr::group_by(encounter_type) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup()
+
+no_tracks <- tracks %>% nrow()
+
+surveys <- wastd_data$surveys %>% 
+  wastdr::filter_wastd_season(2020) %>% 
+  wastdr::filter_realsurveys()
+
+svy_stats <- surveys %>% 
+  wastdr::survey_season_stats()
+
+svy_hrs <- svy_stats$hours_surveyed
+svy_no <- svy_stats$number_surveys
+```
+
+    
+Column {data-width=600}
+-------------------------------------
+    
+### Map
+    
+```{r}
+
+```
+   
+Column {data-width=400}
+-------------------------------------
+   
+### Chart 2
+
+```{r}
+flexdashboard::valueBox(no_tracks, caption = "Turtle Tracks counted", icon="fa-thumbs-up")
+flexdashboard::valueBox(svy_no, caption = "Surveys", icon="fa-thumbs-up")
+flexdashboard::valueBox(svy_hrs, caption = "Survey hours", icon="fa-thumbs-up")
+```   
+ 
+### Chart 3
+    
+```{r}
+```

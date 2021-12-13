@@ -1,0 +1,122 @@
+---
+title: "Turtle morphometrics"
+date: "`r Sys.time()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    fig_width: 10
+    fig_height: 6
+    code_folding: hide
+    theme: lumen
+vignette: >
+  %\VignetteIndexEntry{morphometrics}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+editor_options: 
+  markdown: 
+    wrap: 72
+params:
+  w2_path: 'inst/w2.rds'
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(etlTurtleNesting)
+library(wastdr)
+library(dplyr)
+library(gt)
+library(ggplot2)
+library(leaflet)
+library(leaflet.minicharts)
+```
+
+# Data
+```{r load_data}
+w2 = readRDS(here::here(params$w2_path))
+```
+
+The data analysed here is a snapshot of the turtle tagging database retrieved on
+`r w2$downloaded_on`.
+We exclude data captured at Thevenard and Delambre Island 2021 for now.
+
+# Morphometrics
+We show number of observations (n), min, max, mean, sd, and median for morphometric
+measurements of type CCL (curved carapace length), CCL Notch (CCL entered into 
+wrong field), CCW (curved carapace width) for nesting female Flatback turtles 
+by rookery.
+
+Caveats: The dataset could contain incorrect data, mainly with decimal point errors.
+The data contain live sightings (daytime in-water captures), night taggings 
+of nesting turtles, stranded injured or dead turtles, as well as juvenile animals.
+
+## Morphometrics table
+
+```{r table_data}
+morph <- w2$obs_measurements %>% 
+  dplyr::left_join(w2$enc, by="observation_id") %>% 
+  dplyr::filter(species_code=="FB", nesting=="Y", sex=="F") 
+
+morph_stats <- morph %>% 
+  dplyr::group_by(
+    location_code,
+    measurement_type_code
+  ) %>% 
+  dplyr::summarise(
+    n = dplyr::n(),
+    min = min(measurement_value),
+    max = max(measurement_value),
+    mean = mean(measurement_value),
+    sd = sd(measurement_value),
+    median = median(measurement_value),
+    .groups = "keep"
+  ) %>% 
+  dplyr::ungroup() %>%
+  dplyr::filter(n>100) %>% 
+  dplyr::arrange(measurement_type_code, location_code)
+
+morph_stats %>% 
+  gt::gt() %>% 
+  gt::tab_header(title="Flatback Morphometrics") %>% 
+  gt::cols_label(
+    location_code = "Rookery",
+    measurement_type_code = "Measurement"
+  )
+```
+
+## Morphometrics histogram 
+We show selected morphometrics (CCL, CCL NOTCH, CCW) for the three most sampled
+rookeries, Barrow (BW), Dampier Archipelago (DA), Mundabullangana (MN), and
+Port Hedland (PH).
+
+```{r plot_data, fig.height=9, fig.width=7}
+morph %>% 
+  dplyr::filter(
+    measurement_type_code %in% c("CCL", "CCL NOTCH", "CCW"),
+    location_code %in% c("BW", "DA", "MN", "PH")
+    ) %>% 
+  dplyr::mutate(
+    morphometric = measurement_type_code, 
+    measurement = measurement_value) %>% 
+  ggplot(aes(x=measurement, fill=morphometric)) +
+  ggplot2::labs(
+    title="Morphometric measurements of nesting female Flatback turtles",
+    subtitle=paste0(
+      "Locations: Barrow (BW), Dampier Archipelago (DA), Mundabunllangana (MN), Port Hedland (PH)\n",
+      "Measurements: Curved Carapace Length (CCL / CCL NOTCH) and Width (CCW)"),
+    x="Measurement [mm]",
+    y="Number of turtles"
+    ) +
+  ggplot2::xlim(c(600, 1000)) +
+  geom_histogram(binwidth=5, colour="black") +
+  facet_wrap("location_code", ncol=1) +
+  theme_classic()
+```
+
