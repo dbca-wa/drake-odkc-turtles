@@ -233,36 +233,40 @@ teams_late_season <- x$surveys %>%
   dplyr::arrange(season)
 
 # Turtle tagging surveys: 4 weeks Nov/Dec
-early_season_surveys <- x$surveys %>% 
-  wastdr::filter_realsurveys() %>% 
-    dplyr::filter(lubridate::month(start_time) > 6) %>% 
-    dplyr::group_by(season) %>%
-    dplyr::summarise(
-      first_day = min(calendar_date_awst),
-      last_day = max(calendar_date_awst),
-      season_length_days = (as.numeric(
-        lubridate::interval(first_day, last_day)
-      ) / (3600 * 24)) + 1,
-      number_surveys = dplyr::n(),
-      hours_surveyed = round(sum(duration_hours))
-    ) %>% 
-  dplyr::left_join(teams_early_season, by="season")
+early_season_surveys <- x$surveys %>%
+  wastdr::filter_realsurveys() %>%
+  dplyr::filter(lubridate::month(start_time) > 10,
+                # from 11 Nov onwards
+                lubridate::day(start_time) > 10) %>%
+  dplyr::group_by(season) %>%
+  dplyr::summarise(
+    first_day = min(calendar_date_awst),
+    last_day = max(calendar_date_awst),
+    season_length_days = (as.numeric(
+      lubridate::interval(first_day, last_day)
+    ) / (3600 * 24)) + 1,
+    number_surveys = dplyr::n(),
+    number_surveyed_days = dplyr::n_distinct(calendar_date_awst),
+    hours_surveyed = round(sum(duration_hours))
+  ) %>%
+  dplyr::left_join(teams_early_season, by = "season")
 
 # Turtle nest excav surveys: 1 week Jan/Feb
-late_season_surveys <- x$surveys %>% 
-  wastdr::filter_realsurveys() %>% 
-    dplyr::filter(lubridate::month(start_time) < 7) %>% 
-    dplyr::group_by(season) %>%
-    dplyr::summarise(
-      first_day = min(calendar_date_awst),
-      last_day = max(calendar_date_awst),
-      season_length_days = (as.numeric(
-        lubridate::interval(first_day, last_day)
-      ) / (3600 * 24)) + 1,
-      number_surveys = dplyr::n(),
-      hours_surveyed = round(sum(duration_hours))
-    )%>% 
-  dplyr::left_join(teams_late_season, by="season")
+late_season_surveys <- x$surveys %>%
+  wastdr::filter_realsurveys() %>%
+  dplyr::filter(lubridate::month(start_time) < 7) %>%
+  dplyr::group_by(season) %>%
+  dplyr::summarise(
+    first_day = min(calendar_date_awst),
+    last_day = max(calendar_date_awst),
+    season_length_days = (as.numeric(
+      lubridate::interval(first_day, last_day)
+    ) / (3600 * 24)) + 1,
+    number_surveys = dplyr::n(),
+    number_surveyed_days = dplyr::n_distinct(calendar_date_awst),
+    hours_surveyed = round(sum(duration_hours))
+  ) %>%
+  dplyr::left_join(teams_late_season, by = "season")
 
 # Needed to normalise total_turtles_season
 season_lenghts <- early_season_surveys %>% 
@@ -871,11 +875,12 @@ all_surveys %>%
 ```
 
 ## Turtle tagging surveys
-We see a short 2017 season due to incomplete data capture through WAStD.
-Pending backfilling of paper datasheets, the 2017 season was about 18 days.
-
 The 2020 season was cut short by a week through a cyclone, data capture in the third
 and last week was already impacted by inclement weather.
+
+Early season surveys are counted as surveys between 15 November to the end the December.
+The main field trip begins after 15 Movember, but some years (e.g. 2017) show
+some additional, unrelated surveys.
 
 ```{r}
 early_season_surveys %>%
