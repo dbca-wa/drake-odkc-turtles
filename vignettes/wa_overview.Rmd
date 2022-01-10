@@ -18,32 +18,51 @@ library(wastdr)
 
 
 ```{r}
-if (is.null(wastd_data)) wastd_data <- drake::loadd("wastd_data")
+# Load data
+wastd_data <- drake::readd("wastd_data")
 
-tracks <- wastd_data$tracks %>% 
-  wastdr::filter_wastd_season(2020) %>% 
-  wastdr::filter_realspecies()
+# helpers > move to wastdr
+filter_calendar_year_2021 <- . %>% 
+  dplyr::mutate(calendar_year = datetime %>% lubridate::year()) %>% 
+  dplyr::filter(calendar_year==2021)
 
-taggings <- wastd_data$animals %>% 
-  wastdr::filter_wastd_season(2020) %>% 
-  wastdr::filter_realspecies()
-
-animal_enc_types <- taggings %>% 
-  dplyr::group_by(encounter_type) %>% 
-  dplyr::tally() %>% 
-  dplyr::ungroup()
-
-no_tracks <- tracks %>% nrow()
-
+# surveys ---------------------------------------------------------------------#
 surveys <- wastd_data$surveys %>% 
-  wastdr::filter_wastd_season(2020) %>% 
+  dplyr::mutate(datetime = start_time) %>% 
+  filter_calendar_year_2021() %>% 
+  # wastdr::filter_wastd_season(2020) %>% 
   wastdr::filter_realsurveys()
 
 svy_stats <- surveys %>% 
   wastdr::survey_season_stats()
 
-svy_hrs <- svy_stats$hours_surveyed
-svy_no <- svy_stats$number_surveys
+# tracks ----------------------------------------------------------------------#  
+tracks <- wastd_data$tracks %>% 
+  # wastdr::filter_wastd_season(2020) %>% 
+  filter_calendar_year_2021() %>% 
+  wastdr::filter_realspecies()
+
+no_tracks <- tracks %>% nrow()
+
+# animals ---------------------------------------------------------------------#
+turtles <- wastd_data$animals %>% 
+  # wastdr::filter_wastd_season(2020) %>% 
+  filter_calendar_year_2021() %>% 
+  dplyr::filter(taxon == "Cheloniidae") %>% 
+  wastdr::filter_realspecies()
+
+# AnimalEncounters with alive turtles in cal year 2021 excluding training records
+turtles_tagged <- turtles %>% 
+  filter_alive() %>% 
+  dplyr::filter(encounter_type == "tagging")
+
+no_turtles_tagged <- turtles_tagged %>% nrow()
+
+animal_enc_types <- turtles %>% 
+  dplyr::group_by(encounter_type, species) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  tidyr::spread(encounter_type, n)
 ```
 
     
@@ -53,21 +72,50 @@ Column {data-width=600}
 ### Map
     
 ```{r}
-
+turtles_tagged %>% map_mwi(sites=wastd_data$sites, cluster=T)
 ```
    
 Column {data-width=400}
 -------------------------------------
    
-### Chart 2
+### Surveys {.value-box}
 
 ```{r}
-flexdashboard::valueBox(no_tracks, caption = "Turtle Tracks counted", icon="fa-thumbs-up")
-flexdashboard::valueBox(svy_no, caption = "Surveys", icon="fa-thumbs-up")
-flexdashboard::valueBox(svy_hrs, caption = "Survey hours", icon="fa-thumbs-up")
+# Stats go per season == FY, filter by cal year gets two rows needing to sum
+flexdashboard::valueBox(
+  sum(svy_stats$number_surveys), caption = "Surveys", icon="fa-pencil")
+```   
+
+### Survey hours {.value-box}
+
+```{r}
+flexdashboard::valueBox(
+  sum(svy_stats$hours_surveyed), caption = "Survey hours", icon="fa-hourglass-half")
 ```   
  
-### Chart 3
-    
+### Turtles Tagged {.value-box}
+
 ```{r}
+flexdashboard::valueBox(
+  no_turtles_tagged, caption = "Turtles Tagged", icon="fa-eye")
+```   
+
+### Turtle Tracks {.value-box}
+
+```{r}
+flexdashboard::valueBox(
+  no_tracks, caption = "Turtle Tracks", icon="fa-shoe-prints")
+```   
+
+### Animal handling
+
+```{r}
+animal_enc_types %>% 
+  dplyr::mutate(
+    species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
+  ) %>% 
+  janitor::clean_names(case="title") %>% 
+  gt::gt() %>% 
+  gt::tab_header(title = "Turtle encounters by type")
 ```
+
