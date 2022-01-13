@@ -13,19 +13,24 @@ params:
 
 ```{r setup, include=FALSE}
 library(flexdashboard)
+library(drake)
+library(gt)
+library(reactable)
 library(wastdr)
 ```
 
-
-```{r}
-# Load data
+```{r load_data}
 wastd_data <- drake::readd("wastd_data")
+```
 
+```{r helpers}
 # helpers > move to wastdr
 filter_calendar_year_2021 <- . %>% 
   dplyr::mutate(calendar_year = datetime %>% lubridate::year()) %>% 
   dplyr::filter(calendar_year==2021)
+```
 
+```{r process_data}
 # surveys ---------------------------------------------------------------------#
 surveys <- wastd_data$surveys %>% 
   dplyr::mutate(datetime = start_time) %>% 
@@ -58,6 +63,12 @@ turtles_tagged <- turtles %>%
 
 no_turtles_tagged <- turtles_tagged %>% nrow()
 
+animal_enc_types_area <- turtles %>% 
+  dplyr::group_by(encounter_type, area_name, species) %>% 
+  dplyr::tally() %>% 
+  dplyr::ungroup() %>% 
+  tidyr::spread(encounter_type, n)
+
 animal_enc_types <- turtles %>% 
   dplyr::group_by(encounter_type, species) %>% 
   dplyr::tally() %>% 
@@ -71,8 +82,9 @@ Column {data-width=600}
     
 ### Map
     
-```{r}
-turtles_tagged %>% map_mwi(sites=wastd_data$sites, cluster=T)
+```{r out_map}
+turtles_tagged %>% 
+  map_mwi(sites=wastd_data$sites, cluster=TRUE, split_species=TRUE)
 ```
    
 Column {data-width=400}
@@ -80,7 +92,7 @@ Column {data-width=400}
    
 ### Surveys {.value-box}
 
-```{r}
+```{r out_srv_count}
 # Stats go per season == FY, filter by cal year gets two rows needing to sum
 flexdashboard::valueBox(
   sum(svy_stats$number_surveys), caption = "Surveys", icon="fa-pencil")
@@ -88,34 +100,53 @@ flexdashboard::valueBox(
 
 ### Survey hours {.value-box}
 
-```{r}
+```{r out_srv_hrs}
 flexdashboard::valueBox(
   sum(svy_stats$hours_surveyed), caption = "Survey hours", icon="fa-hourglass-half")
 ```   
  
 ### Turtles Tagged {.value-box}
 
-```{r}
+```{r out_trt_count}
 flexdashboard::valueBox(
   no_turtles_tagged, caption = "Turtles Tagged", icon="fa-eye")
 ```   
 
 ### Turtle Tracks {.value-box}
 
-```{r}
+```{r out_trk_count}
 flexdashboard::valueBox(
   no_tracks, caption = "Turtle Tracks", icon="fa-shoe-prints")
 ```   
 
 ### Animal handling
 
-```{r}
+All of WA
+
+```{r out_enc_area}
 animal_enc_types %>% 
   dplyr::mutate(
     species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
   ) %>% 
   janitor::clean_names(case="title") %>% 
-  gt::gt() %>% 
-  gt::tab_header(title = "Turtle encounters by type")
+  gt::gt()
+```
+DBCA core programs: Thevenard, Delambre, Eco Beach, Roebuck Bay
+
+```{r out_enc_core}
+animal_enc_types_area %>% 
+  dplyr::filter(
+    area_name %in% c(
+      "Delambre Island",
+      "Thevenard Island",
+      "Eco Beach",
+      "Roebuck Bay"
+    )
+  ) %>% 
+  dplyr::mutate(
+    species=stringr::str_to_sentence(species) %>% stringr::str_replace("-"," ")
+  ) %>% 
+  janitor::clean_names(case="title") %>% 
+  reactable::reactable(filterable = TRUE)
 ```
 
