@@ -86,7 +86,7 @@ Suggestions and ideas for additional summaries or visualisations are
 welcome [here](https://github.com/dbca-wa/wastdr/issues).
 
 ```{r export_data}
-x %>% wastdr::export_wastd_turtledata(outdir = fn, filename = zipfn)
+x %>% wastdr::export_wastd_turtledata(outdir = fn, filename = zipfn, zip=FALSE)
 # readRDS(fs::path(fn, "wastd_data.rds")) to restore x
 ```
 
@@ -710,7 +710,6 @@ This summary is exported as `survey_season_stats.csv`.
 
 ```{r svy_stats, fig.width=10}
 survey_season_stats <- x$surveys %>% 
-  wastdr::filter_realsurveys() %>% 
   wastdr::survey_season_stats() 
 
 survey_season_stats %>% 
