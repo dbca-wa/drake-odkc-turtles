@@ -2,7 +2,7 @@
 % Please edit documentation in R/w2_pit_as_wastd_tagobs.R
 \name{w2_pit_as_wastd_tagobs}
 \alias{w2_pit_as_wastd_tagobs}
-\title{Transform odkc_data$mwi_tag into WAStD TagObservations.}
+\title{Transform w2_data into WAStD TagObservations.}
 \usage{
 w2_pit_as_wastd_tagobs(data)
 }
@@ -16,7 +16,7 @@ A tibble suitable to
 \code{\link{wastd_POST}("tag-observations")}
 }
 \description{
-Transform odkc_data$mwi_tag into WAStD TagObservations.
+Transform w2_data into WAStD TagObservations.
 }
 \examples{
 \dontrun{

@@ -35,12 +35,13 @@ library(etlTurtleNesting)
 library(wastdr)
 library(drake)
 
-Sys.setenv(W2_IMPORT_UPDATE_EXISTING=TRUE)
+Sys.setenv(W2_IMPORT_UPDATE_EXISTING=FALSE)
 
 visNetwork::visSave(vis_drake_graph(wamtram()), "drake_graph.html")
 drake::vis_drake_graph(wamtram())
 drake::clean()
 drake::clean("w2_tf")
+drake::make(plan = wamtram())
 drake::make(plan = wamtram(), targets = c("user_qa"))
 drake::make(etlTurtleNesting::wamtram(), lock_envir = FALSE)
 

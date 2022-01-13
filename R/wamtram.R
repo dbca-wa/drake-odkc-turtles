@@ -25,12 +25,13 @@
 #' library(wastdr)
 #' library(drake)
 #'
-#' Sys.setenv(W2_IMPORT_UPDATE_EXISTING=TRUE)
+#' Sys.setenv(W2_IMPORT_UPDATE_EXISTING=FALSE)
 #'
 #' visNetwork::visSave(vis_drake_graph(wamtram()), "drake_graph.html")
 #' drake::vis_drake_graph(wamtram())
 #' drake::clean()
 #' drake::clean("w2_tf")
+#' drake::make(plan = wamtram())
 #' drake::make(plan = wamtram(), targets = c("user_qa"))
 #' drake::make(etlTurtleNesting::wamtram(), lock_envir = FALSE)
 #'
@@ -48,7 +49,7 @@ wamtram <- function() {
 
     # ------------------------------------------------------------------------ #
     # EXTRACT
-    # w2_data <- download_w2_data()
+    # w2_data <- wastdr::download_w2_data()
     # saveRDS(w2_data, file = here::here("inst/w2.rds"), compress="xz")
     w2_data = readRDS(here::here("inst/w2.rds")),
     # w2_data = wastdr::download_w2_data(

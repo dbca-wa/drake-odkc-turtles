@@ -1,4 +1,4 @@
-#' Transform odkc_data$mwi_tag into WAStD TagObservations.
+#' Transform w2_data into WAStD TagObservations.
 #'
 #'
 #' @seealso https://github.com/dbca-wa/wastd/blob/master/wastd/observations/utils.py#L1849
