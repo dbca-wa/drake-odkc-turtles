@@ -72,17 +72,18 @@ upload_w2_to_wastd <- function(data,
     verbose = verbose
   )
 
-  # res$tt_dmg = wastdr::wastd_create_update_skip(
-  #   data$tt_dmg_create,
-  #   data$tt_dmg_update,
-  #   data$tt_dmg_skip,
-  #   update_existing = update_existing,
-  #   serializer = "turtle-damage-observations",
-  #   label = "TurtleDamageObservations (TT)",
-  #   api_url = api_url,
-  #   api_token = api_token,
-  #   verbose = verbose
-  # )
+  # Turtle Damages
+  res$tt_dmg = wastdr::wastd_create_update_skip(
+    data$tt_dmg_create,
+    data$tt_dmg_update,
+    data$tt_dmg_skip,
+    update_existing = update_existing,
+    serializer = "turtle-damage-observations",
+    label = "TurtleDamageObservations (TT)",
+    api_url = api_url,
+    api_token = api_token,
+    verbose = verbose
+  )
   #
   # res$tt_tsc = wastdr::wastd_create_update_skip(
   #   data$tt_tsc_create,

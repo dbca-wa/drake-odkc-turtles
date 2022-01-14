@@ -30,7 +30,7 @@
 #' visNetwork::visSave(vis_drake_graph(wamtram()), "drake_graph.html")
 #' drake::vis_drake_graph(wamtram())
 #' drake::clean()
-#' drake::clean("w2_tf")
+#' drake::clean("w2_up")
 #' drake::make(plan = wamtram())
 #' drake::make(plan = wamtram(), targets = c("user_qa"))
 #' drake::make(etlTurtleNesting::wamtram(), lock_envir = FALSE)
