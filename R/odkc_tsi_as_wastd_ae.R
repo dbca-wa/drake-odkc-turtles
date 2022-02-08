@@ -30,8 +30,10 @@ odkc_tsi_as_wastd_ae <- function(data, user_mapping) {
     dplyr::transmute(
       source = "odk", # wastd.observations.models.SOURCE_CHOICES
       source_id = id,
-      observer = reporter,
-      reporter = reporter,
+      observer = reporter %>%
+        stringr::str_squish() %>%
+        stringr::str_to_lower(),
+      reporter = observer,
       comments = glue::glue(
         "Device ID {device_id}\n",
         "Observer activity: {encounter_observer_acticity}\n",

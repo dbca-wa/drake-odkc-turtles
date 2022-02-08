@@ -43,7 +43,7 @@ upload_to_sharepoint <- function(wastd_reports = NULL){
   # Upload DEL / WPTP to Rio
   dst_rio <- get_todays_folder_sharepoint("Turtles Rio Tinto")
   source_files_del <- fs::dir_ls(here::here("inst/reports"), recurse = TRUE, regex="delambre")
-  source_files_wptp <- fs::dir_ls(here::here("inst/reports"), recurse = TRUE, regex="west-pilbara")
+  source_files_wptp <- fs::dir_ls(here::here("inst/reports"), recurse = TRUE, regex="cape-lambert|caravan-park")
   # add del_rio when approved
   # source_files_rio <- fs::dir_ls(here::here("inst/reports"), recurse = TRUE, regex="rio")
   source_files_qa <- fs::dir_ls(here::here("inst/reports"), regex="qa_")

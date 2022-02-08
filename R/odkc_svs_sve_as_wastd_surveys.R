@@ -66,7 +66,9 @@ odkc_svs_sve_as_wastd_surveys <- function(svs, sve, user_mapping){
     surveys <- svs %>%
         wastdr::sf_as_tbl() %>%
         dplyr::transmute(
-            reporter = reporter,
+            reporter = reporter %>%
+              stringr::str_squish() %>%
+              stringr::str_to_lower(),
             source = "odk", # wastd.observations.models.SOURCE_CHOICES
             source_id = id,
             device_id = device_id,

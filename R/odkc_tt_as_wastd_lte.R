@@ -29,8 +29,10 @@ odkc_tt_as_wastd_lte <- function(data, user_mapping) {
         dplyr::transmute(
             source = "odk", # wastd.observations.models.SOURCE_CHOICES
             source_id = id,
-            reporter = reporter,
-            observer = reporter,
+            observer = reporter %>%
+              stringr::str_squish() %>%
+              stringr::str_to_lower(),
+            reporter = observer,
             where = glue::glue(
                 "POINT ({overview_location_longitude}",
                 " {overview_location_latitude})"

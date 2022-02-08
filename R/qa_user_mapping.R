@@ -42,7 +42,6 @@ annotate_user_mapping <- function(user_mapping){
         ) %>%
         dplyr::select(
             odkc_username,
-            odkc_un_trim,
             wastd_matched,
             search_wastd,
             dist,

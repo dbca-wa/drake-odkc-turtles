@@ -40,8 +40,7 @@ make_user_mapping <- function(odkc_data, wastd_users,
     tagging_names <- c()
   }
 
-
-  odkc_reporters <- unique(
+  odkc_reporters <-
     c(
       tagging_names,
       odkc_data$tracks$reporter,
@@ -52,32 +51,39 @@ make_user_mapping <- function(odkc_data, wastd_users,
       odkc_data$sve$reporter,
       odkc_data$tsi$reporter
     ) %>%
-      tidyr::replace_na("Turtles")
-  )
+    tidyr::replace_na("Turtles") %>%
+    stringr::str_squish() %>%
+    stringr::str_to_lower() %>%
+    unique()
+
 
   glue::glue(
     "Mapping {nrow(odkc_reporters)} ODKC usernames to ",
     "{nrow(wastd_users)} WAStD user profiles...") %>%
     wastdr::wastdr_msg_info(verbose = verbose)
 
-  wastd_users <- wastd_users %>%
-    dplyr::filter(is_active=TRUE) %>%
+  w_users <- wastd_users %>%
+    dplyr::filter(is_active==TRUE) %>%
     dplyr::mutate(
       wastd_usernames = paste(username, name, aliases, sep=",") %>%
-        stringr::str_remove_all(",$|,,$")
+        stringr::str_remove_all(",$|,,$") %>%
+        stringr::str_to_lower()
     )%>%
-    tidyr::separate_rows(wastd_usernames, sep=",")
+    tidyr::separate_rows(wastd_usernames, sep=",") %>%
+    dplyr::arrange(wastd_usernames) %>%
+    dplyr::filter(!duplicated(wastd_usernames)) %>%
+    invisible()
 
   out <- tibble::tibble(
-    odkc_username = odkc_reporters,
-    odkc_un_trim = stringr::str_squish(
-      odkc_username
-      # stringr::str_remove_all(odkc_username, "[:punct:]")
-    )
-  ) %>%
+    odkc_username = odkc_reporters
+    # odkc_un_trim = stringr::str_squish(
+    #   odkc_username
+    #   # stringr::str_remove_all(odkc_username, "[:punct:]")
+    # )
+    ) %>%
     fuzzyjoin::stringdist_left_join(
-      wastd_users,
-      by = c(odkc_un_trim = "wastd_usernames"),
+      w_users,
+      by = c("odkc_username" = "wastd_usernames"),
       ignore_case = TRUE,
       method = "jw",
       max_dist = 1000,
@@ -85,8 +91,8 @@ make_user_mapping <- function(odkc_data, wastd_users,
     ) %>%
     dplyr::group_by(odkc_username) %>%
     dplyr::top_n(1, -dist) %>%
-    dplyr::arrange(odkc_username) %>%
-    dplyr::ungroup()
+    dplyr::ungroup() %>%
+    dplyr::arrange(odkc_username)
   # %>% dplyr::select(-odkc_un_trim)
 
   "Done, returning user mapping." %>%

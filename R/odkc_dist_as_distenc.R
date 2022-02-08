@@ -31,8 +31,10 @@ odkc_dist_as_distenc <- function(data, user_mapping) {
     dplyr::transmute(
       source = "odk", # wastd.observations.models.SOURCE_CHOICES
       source_id = id,
-      reporter = reporter,
-      observer = reporter,
+      observer = reporter %>%
+        stringr::str_squish() %>%
+        stringr::str_to_lower(),
+      reporter = observer,
       where = glue::glue(
         "POINT ({disturbanceobservation_location_longitude}",
         " {disturbanceobservation_location_latitude})"

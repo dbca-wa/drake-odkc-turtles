@@ -46,8 +46,10 @@ odkc_tt_as_wastd_ae <- function(data,
       source = "odk",
       # wastd.observations.models.SOURCE_CHOICES
       source_id = id,
-      observer = reporter,
-      reporter = reporter,
+      observer = reporter %>%
+        stringr::str_squish() %>%
+        stringr::str_to_lower(),
+      reporter = observer,
       behaviour = glue::glue(
         "Form {meta_instance_name} filled in from {observation_start_time} to ",
         "{observation_end_time} in capture mode '{encounter_capture_mode}'.\n",

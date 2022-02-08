@@ -42,8 +42,10 @@ odkc_tracks_as_wastd_tne <- function(data, user_mapping) {
     dplyr::transmute(
       source = "odk", # wastd.observations.models.SOURCE_CHOICES
       source_id = id,
-      reporter = reporter, # user_mapping$odkc_username
-      observer = reporter,
+      observer = reporter %>%
+        stringr::str_squish() %>%
+        stringr::str_to_lower(),
+      reporter = observer,
       comments = glue::glue("Device ID {device_id}"),
       where = glue::glue(
         "POINT ({details_observed_at_longitude}",

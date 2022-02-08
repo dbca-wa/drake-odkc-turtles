@@ -45,19 +45,15 @@ actions_table <- a %>%
   gt::gt() %>%
   gt::fmt_markdown(columns = gt::everything()) %>%
   gt::cols_label(
-    odkc_username = gt::html("<h5>They wrote</h5>\n<small>ODK Collect username</small>"),
+    odkc_username = gt::html("<h5>Cleaned</h5>\n<small>ODK Collect username</small>"),
     active_at = gt::html("<small>Active at</small>"),
-    odkc_un_trim = gt::html("<h5>We searched</h5>\n<small>Cleaned ODK name</small>"),
     wastd_matched = gt::html("<h5>We matched</h5>\n<small>WAStD User</small>"),
     search_wastd = gt::html("<h5>Search</h5>\n<small>likely candidates</small>"),
     dist = gt::html("<h5>Dissimilarity</h5>\n<small>smaller = better</small>")
   ) %>%
   gt::tab_spanner(
     label = "WASTD User match",
-    columns = c(odkc_username,
-                   active_at,
-                   odkc_un_trim,
-                   wastd_matched, search_wastd, dist)
+    columns = c(odkc_username, active_at, wastd_matched, search_wastd, dist)
   ) %>%
   gt::tab_spanner(
     label = "WASTD User profile (chosen as best match)",
