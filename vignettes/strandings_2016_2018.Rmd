@@ -1,0 +1,105 @@
+---
+title: "Strandings 2016-18"
+author: "Florian Mayer, DBCA"
+date: "27/01/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(wastdr)
+```
+
+```{r load_data}
+drake::loadd("wastd_data")
+
+rt <- . %>% 
+  reactable::reactable(
+    ., 
+    filterable = T, 
+    sortable = T, 
+    searchable = T,
+    defaultColDef = reactable::colDef(html = TRUE)
+  )
+```
+
+Data was accessed on `r wastd_data$downloaded_on`.
+
+We filter AnimalEncounters to those with turtles in calendar years 2016-18
+and split them by live and dead turtles.
+We exclude tagged turtles (which can also record damages/injuries).
+
+```{r filter_data}
+ani <- wastd_data$animals %>% 
+  dplyr::mutate(calendar_year = datetime %>% lubridate::year()) %>% 
+  dplyr::filter(calendar_year>=2016, calendar_year<=2018) %>%  
+  dplyr::filter(taxon=="Cheloniidae")
+
+ani_dead <- ani %>% filter_dead()
+ani_alive <- ani %>% filter_alive() %>% dplyr::filter(health!="na")
+
+dmg <- wastd_data$turtle_dmg %>% 
+  dplyr::filter(calendar_year>=2016, calendar_year<=2018)
+morph <- wastd_data$turtle_morph %>% 
+  dplyr::filter(calendar_year>=2016, calendar_year<=2018)
+
+```
+
+# Exports
+Both alive and dead turtles are exported to CSV and RDS (to open in R), 
+plus damages and morphometrics for combined dead and alive animals.
+```{r export_data}
+dest <- "inst/reports/strandings_2016_2018"
+
+ani_alive %>% saveRDS(here::here(dest, "alive.rds"))
+ani_alive %>% readr::write_csv(here::here(dest, "alive.csv"))
+
+ani_dead %>% saveRDS(here::here(dest, "dead.rds"))
+ani_dead %>% readr::write_csv(here::here(dest, "dead.csv"))
+
+dmg %>% saveRDS(here::here(dest, "dmg.rds"))
+dmg %>% readr::write_csv(here::here(dest, "dmg.csv"))
+
+morph %>% saveRDS(here::here(dest, "morph.rds"))
+morph %>% readr::write_csv(here::here(dest, "morph.csv"))
+```
+
+
+# Strandings
+This map provides a quick overview of stranding locations.
+
+```{r map_dead}
+ani_dead %>% map_mwi()
+```
+The following table previews the contents of the CSV "ani_dead.csv".
+
+```{r show_dead}
+ani_dead %>% rt()
+```
+
+
+# Rescues / non-mortalities
+
+This map provides a quick overview of rescue/non-mortalities locations.
+
+```{r map_alive}
+ani_alive %>% map_mwi()
+```
+
+
+The following table previews the contents of the CSV "ani_alive.csv".
+
+```{r show_alive}
+ani_alive %>% rt()
+```
+
+# Damages (dead and alive)
+```{r show_dmg}
+dmg %>% rt
+```
+
+# Morphometrics (dead and alive)
+```{r show_morph}
+morph %>% rt
+```
+
