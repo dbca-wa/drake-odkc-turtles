@@ -44,14 +44,14 @@ split_create_update_skip_w2 <- function(w2_tf, wastd_data) {
     tt_update = w2_tf$tt %>% enc_update(),
     tt_skip = w2_tf$tt %>% enc_skip(),
 
-    # # Obs
+    # Obs
     tt_dmg_create = w2_tf$tt_dmg %>% obs_create(),
     tt_dmg_update = w2_tf$tt_dmg %>% obs_update(),
     tt_dmg_skip = w2_tf$tt_dmg %>% obs_skip(),
-    # #
-    # tt_tsc_create = w2_tf$tt_tsc %>% obs_create()
-    # tt_tsc_update = w2_tf$tt_tsc %>% obs_update()
-    # tt_tsc_skip = w2_tf$tt_tsc %>% obs_skip()
+
+    tt_tsc_create = w2_tf$tt_tsc %>% obs_create(),
+    tt_tsc_update = w2_tf$tt_tsc %>% obs_update(),
+    tt_tsc_skip = w2_tf$tt_tsc %>% obs_skip(),
     #
     # tt_log_create = w2_tf$tt_log %>% obs_create()
     # tt_log_update = w2_tf$tt_log %>% obs_update()

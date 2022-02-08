@@ -155,66 +155,70 @@ w2_as_wastd_ae <- function(data,
 
   # Transform data
   data$enc %>%
-    dplyr::filter(turtle_status != "E") %>%           # discard records in error
+
+    # # discard records in error
+    # TODO this loses 20k records but the inverse finds none
+    # dplyr::filter(turtle_status != "E") %>%
+
     dplyr::transmute(
       source = "wamtram", # wastd.observations.models.SOURCE_CHOICES
       source_id = observation_id %>% as.character(),
-      observer = tagger_person_id,
-      reporter = reporter_person_id,
-      behaviour = glue::glue(
-        "Species ID confidence: {identification_confidence}\n",
-        "Activity when encountered: {activity_label} {activity_description}\n",
-        "Nesting: {nesting}, clutch completed: {clutch_completed}\n",
-        "Location: {location_code} {place_code} {label} {place_description}.",
-        "Rookery: {is_rookery}, beach approach: {beach_approach}, beach aspect: {beach_aspect}\n"
-        # # Left to map
-        # original_observation_id
-        # measurer_person_id > handler
-        # measurer_reporter_person_id > recorder
-        # nesting number_of_eggs egg_count_method > NestObs
-        # measurements > morph
-        # action_taken
-        # comment_from recorded tags table
-        #
-        #   #
-        # "turtle_id"
-        # "scars_left" "scars_right" "other_tags" "other_tags_identification_type"
-        # "transfer_id" "mund" "mund_id" "entered_by_person_id"
-        #
-        # "tag_scar_not_checked"
-        # "scars_left_scale_1" "scars_left_scale_2" "scars_left_scale_3"
-        # "scars_right_scale_1" "scars_right_scale_2" "scars_right_scale_3"
-        #
-        # "cc_length_not_measured" "cc_notch_length_not_measured" "cc_width_not_measured"
-        #
-        # # Health / Injuries / Mortality
-        # "did_not_check_for_injury" "alive"
-        #
-        # "observation_status"
-        # "display_this_observation" "label" "prefix"
-        # "description"
-        #
-        # "" "" "turtle_status" ""
-        # "cause_of_death" "re_entered_population"
-        # "original_turtle_id"  "tag" "turtle_name"
-      ),
-      when = observation_datetime_utc,
-      where = glue::glue("POINT ({longitude} {latitude})"),
-      location_accuracy = "10",
-      location_accuracy_m = 10,
-      taxon = "Cheloniidae",
-      maturity = "adult",
-      # scanned_for_pit_tags = TODO,
-      # checked_for_flipper_tags = TODO,
-      # checked_for_injuries = ,# TODO map did_not_check_for_injury" "alive"
+    observer = tagger_person_id,
+    reporter = reporter_person_id,
+    behaviour = glue::glue(
+      "Species ID confidence: {identification_confidence}\n",
+      "Activity when encountered: {activity_label} {activity_description}\n",
+      "Nesting: {nesting}, clutch completed: {clutch_completed}\n",
+      "Location: {location_code} {place_code} {label} {place_description}.",
+      "Rookery: {is_rookery}, beach approach: {beach_approach}, beach aspect: {beach_aspect}\n"
+      # # Left to map
+      # original_observation_id
+      # measurer_person_id > handler
+      # measurer_reporter_person_id > recorder
+      # nesting number_of_eggs egg_count_method > NestObs
+      # measurements > morph
+      # action_taken
+      # comment_from recorded tags table
       #
-      # Retain for left joins:
-      species_code = species_code,
-      beach_position_code = beach_position_code,
-      activity_code = activity_code,
-      clutch_completed = clutch_completed, # > nesting_lookup
-      sex_w2 = sex, # sex
-      condition_code = condition_code # health
+      #   #
+      # "turtle_id"
+      # "scars_left" "scars_right" "other_tags" "other_tags_identification_type"
+      # "transfer_id" "mund" "mund_id" "entered_by_person_id"
+      #
+      # "tag_scar_not_checked"
+      # "scars_left_scale_1" "scars_left_scale_2" "scars_left_scale_3"
+      # "scars_right_scale_1" "scars_right_scale_2" "scars_right_scale_3"
+      #
+      # "cc_length_not_measured" "cc_notch_length_not_measured" "cc_width_not_measured"
+      #
+      # # Health / Injuries / Mortality
+      # "did_not_check_for_injury" "alive"
+      #
+      # "observation_status"
+      # "display_this_observation" "label" "prefix"
+      # "description"
+      #
+      # "" "" "turtle_status" ""
+      # "cause_of_death" "re_entered_population"
+      # "original_turtle_id"  "tag" "turtle_name"
+    ),
+    when = observation_datetime_utc,
+    where = glue::glue("POINT ({longitude} {latitude})"),
+    location_accuracy = "10",
+    location_accuracy_m = 10,
+    taxon = "Cheloniidae",
+    maturity = "adult",
+    # scanned_for_pit_tags = TODO,
+    # checked_for_flipper_tags = TODO,
+    # checked_for_injuries = ,# TODO map did_not_check_for_injury" "alive"
+    #
+    # Retain for left joins:
+    species_code = species_code,
+    beach_position_code = beach_position_code,
+    activity_code = activity_code,
+    clutch_completed = clutch_completed, # > nesting_lookup
+    sex_w2 = sex, # sex
+    condition_code = condition_code # health
     ) %>%
     dplyr::left_join(wastd_reporters, by = "reporter") %>% # wastd User PK
     dplyr::left_join(wastd_observers, by = "observer") %>% # wastd User PK
@@ -233,8 +237,7 @@ w2_as_wastd_ae <- function(data,
                   -clutch_completed,
                   -condition_code,
                   -sex_w2
-    ) %>%
-    invisible()
+    )
 }
 
 # use_test("w2_as_wastd_ae") # nolint

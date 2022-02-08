@@ -12,8 +12,8 @@ w2_as_wastd <- function(data, user_mapping){
     tt = w2_as_wastd_ae(data, user_mapping),
     tt_tag = w2_tag_as_wastd_tagobs(data, user_mapping),
     tt_pit = w2_pit_as_wastd_tagobs(data),
-    tt_dmg = w2_dmg_as_wastd_turtledmg(data)
-    # tt_tsc = w2_as_wastd_turtledmg(odkc_data$tt), # tag scars are turtledamageobs
+    tt_dmg = w2_dmg_as_wastd_turtledmg(data),
+    tt_tsc = w2_tag_as_wastd_turtledmg(data) # obs_tags with M/M1 > turtledamageobs
     # tt_log = w2_log_as_wastd_loggerobs(odkc_data$tt_log),
     # tt_mor = w2_as_wastd_turtlemorph(odkc_data$tt, user_mapping),
     # tt_nto = w2_as_wastd_nesttagobs(odkc_data$tt),

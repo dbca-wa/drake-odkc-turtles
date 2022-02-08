@@ -50,6 +50,11 @@ w2_tag_as_wastd_tagobs <- function(data, user_mapping) {
     "flipper-front-right",   "R", NA
   )
 
+  #   unique(w2_data$obs_flipper_tags$tag_state)
+  #  "A1"   "P"    "#"    "Q"    "P_OK" "N"    "R"    "PX"   "M"    "P_ED" NA
+  #  "RQ"   "A2"   "AE"   "OO"   "RC"   "M1"
+  #  "OX"   "ae"   "p"    "0L"
+
   # TAG_STATUS_CHOICES = (                                          # TRT_TAG_STATES
   #   ('ordered', 'ordered from manufacturer'),
   #   ('produced', 'produced by manufacturer'),
@@ -109,7 +114,7 @@ w2_tag_as_wastd_tagobs <- function(data, user_mapping) {
     dplyr::left_join(tag_sides, by = c("attached_on_side", "tag_position")) %>%
     dplyr::left_join(tag_states, by="tag_state") %>%
     dplyr::select(-tagger_person_id, -reporter_person_id,
-                  -attached_on_side, -tag_position, -tag_state) %>% # drop odkc_username
+                  -attached_on_side, -tag_position, -tag_state) %>%
     # If data == tracks or mwi, drop all NA subgroups
     # If data == tracks_*, there are only non-NA records
     dplyr::filter_at(
