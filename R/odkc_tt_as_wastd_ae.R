@@ -95,7 +95,9 @@ odkc_tt_as_wastd_ae <- function(data,
          ),
 
         # Geolocation captured in ODK
-        encounter_capture_mode != "new" ~ glue::glue(
+        (encounter_capture_mode != "new" &
+           !is.na(realtime_nest_location_longitude) &
+           !is.na(realtime_nest_location_latitude)) ~ glue::glue(
           "POINT ({realtime_nest_location_longitude} ",
           "{realtime_nest_location_latitude})"
         ),

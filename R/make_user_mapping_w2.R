@@ -28,6 +28,11 @@ make_user_mapping_w2 <- function(w2_data, wastd_users, verbose = wastdr::get_was
     w2_data$persons %>%
     tidyr::drop_na(clean_name) %>%
     dplyr::filter(clean_name != "") %>%
+    dplyr::mutate(
+      clean_name = clean_name %>%
+        stringr::str_squish() %>%
+        stringr::str_to_lower()
+    ) %>%
     dplyr::select(person_id, clean_name) %>%
     unique()
 
@@ -35,19 +40,22 @@ make_user_mapping_w2 <- function(w2_data, wastd_users, verbose = wastdr::get_was
     dplyr::filter(is_active = TRUE) %>%
     dplyr::mutate(
       wastd_usernames = paste(username, name, aliases, sep = ",") %>%
-        stringr::str_remove_all(",$|,,$")
+        stringr::str_remove_all(",$|,,$") %>%
+        stringr::str_to_lower()
     ) %>%
-    tidyr::separate_rows(wastd_usernames, sep = ",")
+    tidyr::separate_rows(wastd_usernames, sep = ",") %>%
+    dplyr::arrange(wastd_usernames) %>%
+    dplyr::filter(!duplicated(wastd_usernames)) %>%
+    invisible()
 
   out <- unique_legacy_users %>%
     dplyr::transmute(
       legacy_userid = person_id,
-      legacy_username = clean_name,
-      legacy_un_trim = stringr::str_squish(clean_name)
+      legacy_username = clean_name
       ) %>%
     fuzzyjoin::stringdist_left_join(
       wastd_users,
-      by = c(legacy_un_trim = "wastd_usernames"),
+      by = c(legacy_username = "wastd_usernames"),
       ignore_case = TRUE,
       method = "jw",
       max_dist = 1000,

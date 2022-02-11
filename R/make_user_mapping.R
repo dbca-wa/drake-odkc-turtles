@@ -68,7 +68,7 @@ make_user_mapping <- function(odkc_data, wastd_users,
       wastd_usernames = paste(username, name, aliases, sep=",") %>%
         stringr::str_remove_all(",$|,,$") %>%
         stringr::str_to_lower()
-    )%>%
+    ) %>%
     tidyr::separate_rows(wastd_usernames, sep=",") %>%
     dplyr::arrange(wastd_usernames) %>%
     dplyr::filter(!duplicated(wastd_usernames)) %>%

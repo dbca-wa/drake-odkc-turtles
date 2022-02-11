@@ -69,7 +69,6 @@ annotate_user_mapping_w2 <- function(user_mapping){
         ) %>%
         dplyr::select(
             legacy_username,
-            legacy_un_trim,
             legacy_userid,
             wastd_matched,
             search_wastd,
