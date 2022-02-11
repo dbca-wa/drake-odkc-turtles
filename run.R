@@ -2,7 +2,6 @@ library(etlTurtleNesting)
 library(wastdr)
 library(drake)
 library(ruODK)
-library(googlesheets4)
 
 # drake::drake_cache(here::here(".drake"))$unlock() # Recover failed run
 
@@ -10,6 +9,7 @@ library(googlesheets4)
 Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)     # Speedrun
 
 Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA=TRUE)
+# Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA=FALSE)
 Sys.setenv(RU_VERBOSE=FALSE)
 Sys.setenv(WASTDR_VERBOSE=TRUE)
 
