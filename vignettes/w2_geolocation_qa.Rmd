@@ -1,0 +1,181 @@
+---
+title: "Turtle Tagging DB (WAMTRAM 2) geolocation QA"
+date: "`r Sys.time()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    fig_width: 10
+    fig_height: 6
+    code_folding: hide
+    theme: lumen
+vignette: >
+  %\VignetteIndexEntry{w2_geolocation_qa}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+params:
+  w2_data: NULL
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+library(wastdr)
+
+if (is.null(params$w2_data)){
+  wastdr::wastdr_msg_info("Using locally saved database snapshot")
+  w2_data <- readRDS(here::here("inst/w2.rds"))
+  # w2_data <- drake::loadd("w2_data")
+} else {
+  wastdr::wastdr_msg_info("Using data via vignette parameters")
+  w2_data <- params$w2_data
+}
+```
+
+# QC for WAMTRAM geolocation
+The following maps show the hand-typed coordinates of WAMTRAM encounters for one location code (e.g. Thevenard Island or Delambre Island), as well as encounters for one place code (e.g., THV tagging area, Delambre general).
+
+For performance, place markers are grouped, expanding on zoom.
+
+Error-free data would be contained entirely on the respective nesting beaches.
+
+## Thevenard Island
+
+### Location TH
+
+```{r map_thv}
+map_wamtram(w2_data, location = "TH")
+```
+
+### Thevenard Island East End (THEE)
+
+```{r map_thee}
+map_wamtram(w2_data, place = "THEE")
+# map_wamtram(w2_data, place = "THNB")
+```
+
+## Delambre Island
+
+### Location DA (Dampier)
+WAMTRAM encounters linked to site "DADI" (Delambre Island) are linked to
+the following location codes: `r w2_data$enc %>% dplyr::filter(place_code == "DADI") %>% magrittr::extract2("location_code") %>% unique()`. All but "DA" are wrong.
+
+```{r map_del}
+map_wamtram(w2_data, location = "DA")
+```
+
+### Delambre Island (DADI)
+
+The most impressive migration is shown by the Flatback turtle off Namibia seen in 2014.
+Others have made it to Micronesia - at least per typo.
+
+```{r map_dadi}
+map_wamtram(w2_data, place = "DADI")
+```
+
+## Dirk Hartog
+### Location DH
+
+Dirk Hartog as a rookery spans most of WA, up to the Top End, 
+and down to the South coast.
+
+```{r map_dhi}
+map_wamtram(w2_data, location="DH")
+```
+
+### DHI Turtle Bay (DHTB)
+Data from the site DHTB is actually pretty nicely georeferenced. The above map
+shows records that might be included below but currently are missing due to 
+an incorrect place code.
+
+```{r map_dhtb}
+map_wamtram(w2_data, place="DHTB")
+```
+
+
+## Conclusion
+The sheer number of misplaced hand-typed coordinates with errors not only in 
+coordinates, but also in locatino and place codes, means that significant
+human QA effort would be required to fix all of these coordinates.
+The star-pattern shows that misplaced coordinates mostly have a typo in one 
+digit of one coordinate. 
+This also means that coordinates within a site's boundaries can be off by 10 or
+100 metres, rendering the association to the underlying habitat unreliable.
+
+# Mapping of WAMTRAM to WAStD sites
+The following map shows WAStD sites (blue polygons) and WAMTRAM sites (points).
+WAMTRAM sites are either linked to WAStD sites (green markers), or not yet linked
+(red markers).
+
+Once all WAMTRAM sites are linked to exactly one WAStD site, the map below 
+will show only green place markers, and we can approximate
+coordinates for WAMTRAM encounters from the referenced site.
+In detail, we will use the coordinates of the centroid of the WAStD site as
+the coordinates of the WAMTRAM encounter.
+
+This will
+
+* lose both precision and typo errors of all hand-typed coordinates,
+* assume the place code is correct (above maps show that's not always the case),
+* allow the import of all WAMTRAM encounters which are at least georeferenced
+  by place name.
+
+```{r}
+areas_sf <- wastd_GET("area") %>% 
+  magrittr::extract2("data") %>%
+  geojsonio::as.json() %>% 
+  geojsonsf::geojson_sf()
+
+areas <- areas_sf %>%
+ dplyr::filter(area_type == "Locality") %>%
+ dplyr::transmute(
+   area_id = pk, 
+   area_name = name, 
+   w2_location_code = w2_location_code
+ )
+
+sites <- areas_sf %>%
+ dplyr::filter(area_type == "Site") %>%
+ dplyr::transmute(
+   site_id = pk, 
+   site_name = name, 
+   w2_place_code = w2_place_code
+ ) %>% 
+ sf::st_join(areas)
+
+wastdr::map_wastd_wamtram_sites(areas, sites, w2_data$sites)
+```
+
+  
+Stats of WAMTRAM encounters:
+
+* `r w2_data$enc %>% dplyr::filter(is.na(place_code)) %>% nrow()` encounters
+  **with** hand typed coordinates lack a place code,
+* `r w2_data$enc %>% dplyr::filter(is.na(place_code), is.na(location_code)) %>% nrow()` encounters **with** hand typed coordinates lack both a place and a location code,
+* `r w2_data$enc_qa %>% dplyr::filter(is.na(place_code)) %>% nrow()`
+  encounters **without** hand typed coordinates also lack a place code
+* `r w2_data$enc %>% dplyr::filter(is.na(place_code), is.na(location_code)) %>% nrow()` encounters **without** hand typed coordinates lack both a place and a location code,
+* `r w2_data$enc_qa %>% dplyr::filter(is.na(place_code), is.na(location_code), is.na(longitude_degrees)) %>% nrow()` encounters **without** hand typed coordinates lack both a place, a location code, and have no DMS coordinates (ideally 0).
+
+
+```{r}
+sites_nocoord <- w2_data$sites %>%
+  dplyr::filter(is.na(site_longitude)) 
+```
+
+Furthermore, there are `r sites_nocoord %>% nrow()` WAMTRAM sites without
+coordinates. All of these need to be linked to new or existing WAStD sites.
+Some may be known from their place names.
+
+```{r}
+sites_nocoord %>% reactable::reactable()
+```
+
+# Conclusion
+All errors above need to be rectified before WAMTRAM tagging data will be complete,
+consistent, and correct in WAStD.
+
+While QA progresses, we can already report on WAMTRAM tagging data, but will 
+see changes to historic data until QA is completed.
