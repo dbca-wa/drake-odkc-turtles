@@ -174,8 +174,8 @@ sites_nocoord %>% reactable::reactable()
 ```
 
 # Conclusion
-All errors above need to be rectified before WAMTRAM tagging data will be complete,
-consistent, and correct in WAStD.
+All errors above need to be rectified before WAMTRAM tagging data will be 
+complete, consistent, and correct in WAStD.
 
 While QA progresses, we can already report on WAMTRAM tagging data, but will 
 see changes to historic data until QA is completed.
