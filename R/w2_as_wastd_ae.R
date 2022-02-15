@@ -202,7 +202,7 @@ w2_as_wastd_ae <- function(data,
       # "cause_of_death" "re_entered_population"
       # "original_turtle_id"  "tag" "turtle_name"
     ),
-    when = observation_datetime_utc,
+    when = glue::glue("{observation_datetime_gmt08}+08"),
     where = glue::glue("POINT ({longitude} {latitude})"),
     location_accuracy = "10",
     location_accuracy_m = 10,
