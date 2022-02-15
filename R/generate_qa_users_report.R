@@ -35,17 +35,6 @@ generate_qa_users_report_w2 <- function(user_mapping,
   "Report {fn_out} copied to inst/reports." %>%
     glue::glue() %>% wastdr::wastdr_msg_success(verbose = verbose)
 
-  fn_in <- here::here("vignettes/qa_sites_w2.Rmd")
-  fn_out <- here::here("inst/reports/qa_sites_w2.html")
-  "Rendering site qa report to {fn_out}..." %>%
-    glue::glue() %>% wastdr::wastdr_msg_info(verbose = verbose)
-  site_qa_report  = rmarkdown::render(
-    fn_in,
-    output_file = fn_out,
-    quiet = FALSE,
-    params = list(w2_data = w2_data)
-  )
-
 
   fn_in <- here::here("vignettes/w2_geolocation_qa.Rmd")
   fn_out <- here::here("inst/reports/w2_geolocation_qa.html")
