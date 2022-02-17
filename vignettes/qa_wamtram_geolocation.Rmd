@@ -145,12 +145,11 @@ WAStD Areas (Localities and Sites) are downloaded every time this dashboard is r
 * Most typos are immediately obvious, as the first two to three decimals of each
   coordinate should be the same or close for place and observation.
 * Find observations through their observation ID in WAMTRAM and fix their coordinates.
+* Leave a note in the observation comments about the coordinate change, e.g.
+  "Lon 11123.456 changed to 123.456". This is the only change history we have.
 
-(Coming soon:)
-
-To refresh WAMTRAM data, run the commands below and re-run this dashboard.
+To refresh WAMTRAM data, run the commands below in R and re-run this dashboard.
 
 ```
-w2_data <- wastdr::download_w2_data()
-saveRDS(w2_data, file = here::here("inst/w2.rds"), compress="xz")
+w2_data <- wastdr::download_w2_data(save=here::here("inst/w2.rds"))
 ```
