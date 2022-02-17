@@ -159,7 +159,7 @@ w2_as_wastd_ae <- function(data,
     # # discard records in error
     # TODO this loses 20k records but the inverse finds none
     # dplyr::filter(turtle_status != "E") %>%
-
+    dplyr::rowwise() %>%
     dplyr::transmute(
       source = "wamtram", # wastd.observations.models.SOURCE_CHOICES
       source_id = observation_id %>% as.character(),
@@ -237,6 +237,14 @@ w2_as_wastd_ae <- function(data,
                   -clutch_completed,
                   -condition_code,
                   -sex_w2
+    ) %>%
+    # Replace NA in observer_id, reporter_id with 1 (WAStD admin)
+    # WAStD defaults to user ID 1, but this sets the user explicitly
+    # Replace <NA> in species with cheloniidae-fam
+    dplyr::mutate(
+      reporter_id = reporter_id %>% tidyr::replace_na(1)
+      observer_id = observer_id %>% tidyr::replace_na(1),
+      species = species %>% tidyr::replace_na("cheloniidae-fam")
     )
 }
 

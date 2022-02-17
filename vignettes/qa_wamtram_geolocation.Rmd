@@ -1,0 +1,156 @@
+---
+title: "WAMTRAM QA"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+runtime: shiny
+---
+
+```{css, echo=FALSE}
+#map {height: calc(100vh - 80px) !important;}
+```
+
+```{r global, include=FALSE}
+library(shiny)
+library(flexdashboard)
+library(leaflet)
+library(wastdr)
+
+knitr::opts_chunk$set(echo = FALSE)
+
+# Data ------------------------------------------------------------------------#
+w2_data <- readRDS(here::here("inst/w2.rds"))
+locations <- c("", sort(unique(w2_data$enc$location_code)))
+places <- c("", sort(unique(w2_data$enc$place_code)))
+w2_dl <- w2_data$downloaded_on
+
+areas_sf <- wastd_GET("area") %>%
+  magrittr::extract2("data") %>%
+  geojsonio::as.json() %>%
+  geojsonsf::geojson_sf()
+
+areas_dl <- Sys.time()
+
+areas <- areas_sf %>%
+  dplyr::filter(area_type == "Locality") %>%
+  dplyr::transmute(area_id = pk,
+                   area_name = name,
+                   w2_location_code = w2_location_code)
+
+sites <- areas_sf %>%
+  dplyr::filter(area_type == "Site") %>%
+  dplyr::transmute(site_id = pk,
+                   site_name = name,
+                   w2_place_code = w2_place_code) %>%
+  sf::st_join(areas)
+```
+
+Places
+================================================================================
+```{r map_loc, echo=FALSE}
+renderLeaflet({
+  wastdr::map_wastd_wamtram_sites(areas, sites, w2_data$sites)
+})
+```
+
+Observations {data-icon="fa-map-location-dot"}
+================================================================================
+
+Column {.sidebar}
+--------------------------------------------------------------------------------
+### Filter Observations
+
+```{r input_obs}
+inputPanel(
+  selectInput("lc", label = "Location:", choices = locations),
+  selectInput("pc", label = "Place:", choices = places),
+  textInput("oid", label = "Observation ID:", value = "")
+)
+```
+
+### WAMTRAM
+
+```{r gauge_w2_dl}
+valueBox(w2_dl, icon = "fa-calendar", caption = "WAMTRAM")
+```
+
+### WAStD
+
+```{r gauge_area_dl}
+valueBox(areas_dl, icon = "fa-calendar", caption = "WAStD Areas")
+```
+
+### Place
+
+```{r place_coords}
+selected_place <- reactive({w2_data$sites %>% dplyr::filter(code == input$pc)})
+renderText({glue::glue("Lat {round(selected_place()$site_latitude, 5)}")})
+renderText({glue::glue("Lon {round(selected_place()$site_longitude, 5)}")})
+```
+
+
+Column
+--------------------------------------------------------------------------------
+### Map
+```{r map_obs}
+renderLeaflet({
+  wastdr::map_wamtram(
+    w2_data, 
+    location = input$lc, 
+    place = input$pc, 
+    obs_id = input$oid, 
+    l_height="calc(100vh - 80px)"
+  )
+})
+```
+
+Protocols
+================================================================================
+
+### Places
+* Purpose: WAStD Areas of type Locality (WAMTRAM location) and Site (WAMTRAM Place) 
+  should correspond to all WAMTRAM Places within their bounds.
+* WAStD Sites should be one nesting beach that is typically surveyed in one effort.
+  Some nesting beaches are so large that they are split into sectors, which
+  are surveyed individually.
+* Some WAStD Sites can or should contain multiple WAMTRAM Places.
+* We can split WAStD Sites later and re-link the WAMTRAM Places.
+
+
+Red place markers are WAMTRAM sites without corresponding WAStD sites.
+For each red marker:
+
+* Create a WAStD Area of type "Site".
+  * Create a polygon that buffers one nesting beach by ca 100m, include vegetation
+    and shallow water.
+  * If there are other Sites close by, enable "WAStD Sites" from the layer menu.
+  * Go fullscreen for more convenient digitising if needed.
+  * Populate `w2_location_code` with exactly one W2 location code, taken from the 
+    red W2 Place marker. Code is all caps.
+  * Populate `w2_place_code` with any W2 Place's codes that are contained within.
+    Separate multiple values with a whitespace. Codes are all caps.
+  * OK to ignore "survey length" and "roundtrip length" for now.
+* If we ever need to report on surveys to a bunch of neighbouring Sites, 
+  create a WAStD Area with the Place's location code as `w2_location_code`. 
+  The Area should contain all Sites within.
+  
+WAStD Areas (Localities and Sites) are downloaded every time this dashboard is run.
+
+### Observations
+
+* Purpose: Fix errors in W2 Observation coordinates.
+* Select one place code. 
+* Review coordinates of misplaced observations (popup) against the coordinates 
+  of the selected place (sidebar).
+* Most typos are immediately obvious, as the first two to three decimals of each
+  coordinate should be the same or close for place and observation.
+* Find observations through their observation ID in WAMTRAM and fix their coordinates.
+
+(Coming soon:)
+
+To refresh WAMTRAM data, run the commands below and re-run this dashboard.
+
+```
+w2_data <- wastdr::download_w2_data()
+saveRDS(w2_data, file = here::here("inst/w2.rds"), compress="xz")
+```

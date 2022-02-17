@@ -60,7 +60,8 @@ map_wamtram(w2_data, place = "THEE")
 
 ### Location DA (Dampier)
 WAMTRAM encounters linked to site "DADI" (Delambre Island) are linked to
-the following location codes: `r w2_data$enc %>% dplyr::filter(place_code == "DADI") %>% magrittr::extract2("location_code") %>% unique()`. All but "DA" are wrong.
+the following location codes: `r w2_data$enc %>% dplyr::filter(place_code == "DADI") %>% magrittr::extract2("location_code") %>% unique()`. 
+All but "DA" are wrong.
 
 ```{r map_del}
 map_wamtram(w2_data, location = "DA")
@@ -74,6 +75,12 @@ Others have made it to Micronesia - at least per typo.
 ```{r map_dadi}
 map_wamtram(w2_data, place = "DADI")
 ```
+
+## Barrow Island
+```{r map_bwi}
+map_wamtram(w2_data, location = "BW")
+```
+
 
 ## Dirk Hartog
 ### Location DH
