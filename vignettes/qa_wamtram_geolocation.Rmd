@@ -115,6 +115,22 @@ renderLeaflet({
 })
 ```
 
+Places without Homes &trade;
+================================================================================
+### Update WAMTRAM with coordinates for these places
+```{r}
+homeless_places <- w2_data$sites %>% 
+  dplyr::filter(is.na(site_latitude)) %>% 
+  dplyr::mutate(search_areas_at=glue::glue(
+    '<a href="https://wastd.dbca.wa.gov.au/admin/observations/area/?q={prefix}"',
+    ' target="_" rel="external"><strong>{prefix}</strong></a>'),
+    .before=code) %>% 
+  dplyr::arrange(code) %>% 
+  janitor::clean_names(case="title")
+shiny::renderTable({homeless_places}, sanitize.text.function = function(x) x)
+```
+
+
 Protocols
 ================================================================================
 
@@ -164,3 +180,8 @@ To refresh WAMTRAM data, run the commands below in R and re-run this dashboard.
 ```
 w2_data <- wastdr::download_w2_data(save=here::here("inst/w2.rds"))
 ```
+
+### Places without Home &trade;
+Search WAStD for places at the same location code, create a WAStD Site for the 
+WAMTRAM place with the missing coordinates, save, then use the centroid you can
+see in the WAStD Area list view as coordinates in WAMTRAM.
