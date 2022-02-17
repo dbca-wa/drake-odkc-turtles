@@ -19,11 +19,22 @@ library(wastdr)
 knitr::opts_chunk$set(echo = FALSE)
 
 # Data ------------------------------------------------------------------------#
-w2_data <- readRDS(here::here("inst/w2.rds"))
+
+# WAMTRAM
+w2_dir <- fs::dir_create(here::here("inst"))
+w2_file <- here::here("inst/w2.rds")
+if (fs::file_exists(w2_file)){ 
+  wastdr::wastdr_msg_info("Reading saved WAMTRAM data...")
+  w2_data <- readRDS(w2_file)
+} else {
+  wastdr::wastdr_msg_info("Downloading WAMTRAM data...")
+  w2_data <- wastdr::download_w2_data(save=w2_file)
+}
 locations <- c("", sort(unique(w2_data$enc$location_code)))
 places <- c("", sort(unique(w2_data$enc$place_code)))
 w2_dl <- w2_data$downloaded_on
 
+wastdr::wastdr_msg_info("Downloading WAStD Areas...")
 areas_sf <- wastd_GET("area") %>%
   magrittr::extract2("data") %>%
   geojsonio::as.json() %>%
