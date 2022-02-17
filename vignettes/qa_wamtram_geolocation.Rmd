@@ -110,6 +110,7 @@ renderLeaflet({
     location = input$lc, 
     place = input$pc, 
     obs_id = input$oid, 
+    wa_sites = sites,
     l_height="calc(100vh - 80px)"
   )
 })
