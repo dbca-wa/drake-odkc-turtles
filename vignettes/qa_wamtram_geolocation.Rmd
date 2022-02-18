@@ -11,15 +11,24 @@ runtime: shiny
 ```
 
 ```{r global, include=FALSE}
+# Libraries -------------------------------------------------------------------#
+library(wastdr)
 library(shiny)
 library(flexdashboard)
 library(leaflet)
-library(wastdr)
+library(fs)
+library(here)
+library(dplyr)
+library(geojsonio)
+library(geojsonsf)
+library(janitor)
+library(reactable)
 
+# Settings --------------------------------------------------------------------#
 knitr::opts_chunk$set(echo = FALSE)
 
 # Data ------------------------------------------------------------------------#
-
+#
 # WAMTRAM
 w2_dir <- fs::dir_create(here::here("inst"))
 w2_file <- here::here("inst/w2.rds")
@@ -54,6 +63,23 @@ sites <- areas_sf %>%
                    site_name = name,
                    w2_place_code = w2_place_code) %>%
   sf::st_join(areas)
+
+enc_by_sites <- w2_data$enc %>% 
+  dplyr::group_by(place_code) %>% 
+  dplyr::tally(name = "observations") %>% 
+  dplyr::ungroup()
+
+homeless_places <- w2_data$sites %>% 
+  dplyr::filter(is.na(site_latitude)) %>% 
+  dplyr::mutate(search_areas_at=glue::glue(
+    '<a href="https://wastd.dbca.wa.gov.au/admin/observations/area/?q={prefix}"',
+    ' target="_" rel="external"><strong>{prefix}</strong></a>'),
+    .before=code) %>% 
+  dplyr::select(-site_datum, site_longitude, site_latitude) %>% 
+  dplyr::left_join(enc_by_sites, by=c("code"="place_code")) %>% 
+  dplyr::filter(observations > 0) %>% 
+  dplyr::arrange(-observations) %>% 
+  janitor::clean_names(case="title")
 ```
 
 Places
@@ -120,15 +146,15 @@ Places without Homes &trade;
 ================================================================================
 ### Update WAMTRAM with coordinates for these places
 ```{r}
-homeless_places <- w2_data$sites %>% 
-  dplyr::filter(is.na(site_latitude)) %>% 
-  dplyr::mutate(search_areas_at=glue::glue(
-    '<a href="https://wastd.dbca.wa.gov.au/admin/observations/area/?q={prefix}"',
-    ' target="_" rel="external"><strong>{prefix}</strong></a>'),
-    .before=code) %>% 
-  dplyr::arrange(code) %>% 
-  janitor::clean_names(case="title")
-shiny::renderTable({homeless_places}, sanitize.text.function = function(x) x)
+reactable::renderReactable({
+  reactable::reactable(
+    homeless_places, 
+    sortable = TRUE, 
+    filterable = TRUE, 
+    searchable = TRUE,
+    defaultColDef = colDef(html = TRUE)
+    )
+})
 ```
 
 
@@ -176,10 +202,16 @@ WAStD Areas (Localities and Sites) are downloaded every time this dashboard is r
 * Leave a note in the observation comments about the coordinate change, e.g.
   "Lon 11123.456 changed to 123.456". This is the only change history we have.
 
-To refresh WAMTRAM data, run the commands below in R and re-run this dashboard.
+To refresh WAMTRAM data, stop the dashboard, run the command below in the 
+console, then restart the dashboard.
 
 ```
 w2_data <- wastdr::download_w2_data(save=here::here("inst/w2.rds"))
+```
+
+To load new `wastdr` functionality, run (when instructed to upgrade `wastdr`):
+```
+remotes::install_github("dbca-wa/wastdr")
 ```
 
 ### Places without Home &trade;
