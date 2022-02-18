@@ -80,6 +80,18 @@ homeless_places <- w2_data$sites %>%
   dplyr::filter(observations > 0) %>% 
   dplyr::arrange(-observations) %>% 
   janitor::clean_names(case="title")
+
+located_places <- w2_data$sites %>% 
+  dplyr::filter(!is.na(site_latitude)) %>% 
+  dplyr::mutate(search_areas_at=glue::glue(
+    '<a href="https://wastd.dbca.wa.gov.au/admin/observations/area/?q={prefix}"',
+    ' target="_" rel="external"><strong>{prefix}</strong></a>'),
+    .before=code) %>% 
+  dplyr::select(-site_datum, site_longitude, site_latitude) %>% 
+  dplyr::left_join(enc_by_sites, by=c("code"="place_code")) %>% 
+  dplyr::filter(observations > 0) %>% 
+  dplyr::arrange(-observations) %>% 
+  janitor::clean_names(case="title")
 ```
 
 Places
@@ -142,6 +154,21 @@ renderLeaflet({
 })
 ```
 
+Places with Homes &trade;
+================================================================================
+### Only create WAStD places for these places
+```{r}
+reactable::renderReactable({
+  reactable::reactable(
+    located_places, 
+    sortable = TRUE, 
+    filterable = TRUE, 
+    searchable = TRUE,
+    defaultColDef = colDef(html = TRUE)
+    )
+})
+```
+
 Places without Homes &trade;
 ================================================================================
 ### Update WAMTRAM with coordinates for these places
@@ -156,7 +183,6 @@ reactable::renderReactable({
     )
 })
 ```
-
 
 Protocols
 ================================================================================
@@ -205,12 +231,12 @@ WAStD Areas (Localities and Sites) are downloaded every time this dashboard is r
 To refresh WAMTRAM data, stop the dashboard, run the command below in the 
 console, then restart the dashboard.
 
-```
+```{r eval=FALSE}
 w2_data <- wastdr::download_w2_data(save=here::here("inst/w2.rds"))
 ```
 
 To load new `wastdr` functionality, run (when instructed to upgrade `wastdr`):
-```
+```{r eval=FALSE}
 remotes::install_github("dbca-wa/wastdr")
 ```
 
