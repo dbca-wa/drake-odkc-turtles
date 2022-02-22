@@ -37,7 +37,7 @@ if (fs::file_exists(w2_file)){
   w2_data <- readRDS(w2_file)
 } else {
   wastdr::wastdr_msg_info("Downloading WAMTRAM data...")
-  w2_data <- wastdr::download_w2_data(save=w2_file)
+  w2_data <- wastdr::download_w2_data(save=w2_file, use_rodbc = FALSE)
 }
 locations <- c("", sort(unique(w2_data$enc$location_code)))
 places <- c("", sort(unique(w2_data$enc$place_code)))
@@ -92,6 +92,17 @@ located_places <- w2_data$sites %>%
   dplyr::filter(observations > 0) %>% 
   dplyr::arrange(-observations) %>% 
   janitor::clean_names(case="title")
+
+invalid_coords <- w2_data$enc %>% 
+  dplyr::filter(longitude < -180 | longitude > 180 | latitude < -90 | latitude > 90)
+
+unlikely_coords <- w2_data$enc %>% 
+  dplyr::filter(longitude < 100 | longitude > 150 | latitude < -45 | latitude > 0)
+
+w2_obs_wastd_sites <- w2_data$enc %>% 
+  dplyr::filter(longitude > -180 | longitude < 180 | latitude > -90 | latitude < 90) %>% 
+  sf::st_as_sf(coords=c("longitude", "latitude"), crs=4326) %>% 
+  sf::st_join(sites, left=TRUE)
 ```
 
 Places
@@ -117,24 +128,91 @@ inputPanel(
 )
 ```
 
+### Place selected
+
+```{r place_coords}
+selected_place <- reactive({w2_data$sites %>% dplyr::filter(code == input$pc)})
+renderText({glue::glue("Lat {round(selected_place()$site_latitude, 5)}")})
+renderText({glue::glue("Lon {round(selected_place()$site_longitude, 5)}")})
+```
+
+Column {data-width=150}
+--------------------------------------------------------------------------------
 ### WAMTRAM
 
 ```{r gauge_w2_dl}
 valueBox(w2_dl, icon = "fa-calendar", caption = "WAMTRAM")
 ```
 
-### WAStD
+### WAStD 
 
 ```{r gauge_area_dl}
 valueBox(areas_dl, icon = "fa-calendar", caption = "WAStD Areas")
 ```
 
-### Place
+### Total Obs
 
-```{r place_coords}
-selected_place <- reactive({w2_data$sites %>% dplyr::filter(code == input$pc)})
-renderText({glue::glue("Lat {round(selected_place()$site_latitude, 5)}")})
-renderText({glue::glue("Lon {round(selected_place()$site_longitude, 5)}")})
+```{r}
+total_obs <- reactive({
+  ifelse(
+    (is.null(input$pc) || input$pc == ""),
+    w2_obs_wastd_sites %>% nrow(),
+    w2_obs_wastd_sites %>% dplyr::filter(place_code == input$pc) %>% nrow()
+  )
+})
+# renderText({total_obs()})
+renderValueBox({
+  valueBox(total_obs(), icon = "fa-map", caption = "Total Obs")
+})
+```
+
+### Obs inside sites
+
+```{r}
+total_obs_inside <- reactive({
+  ifelse(
+    (is.null(input$pc) || input$pc == ""),
+    w2_obs_wastd_sites %>% dplyr::filter(!is.na(site_name)) %>% nrow(),
+    w2_obs_wastd_sites %>%
+      dplyr::filter(place_code == input$pc, !is.na(site_name)) %>% nrow()
+  )
+})
+renderValueBox({
+  valueBox(total_obs_inside(), icon = "fa-map-marker", caption = "Obs in Sites")
+})
+```
+
+
+### Obs outside sites
+
+```{r}
+total_obs_outside <- reactive({
+  ifelse(
+    (is.null(input$pc) || input$pc == ""),
+    w2_obs_wastd_sites %>% dplyr::filter(is.na(site_name)) %>% nrow(),
+    w2_obs_wastd_sites %>%
+      dplyr::filter(place_code == input$pc, is.na(site_name)) %>% nrow()
+  )
+})
+renderValueBox({
+  valueBox(total_obs_outside(), 
+           icon = "fa-question", 
+           caption = "Obs not in Sites")
+})
+```
+
+
+### Pct inside sites
+
+```{r}
+pct_obs <- reactive({round(100 * total_obs_inside() / total_obs(), 1)})
+renderValueBox({
+  
+  valueBox(pct_obs(), 
+           icon = "fa-percent", 
+           caption = "Pct in Sites",
+           color = ifelse(pct_obs() > 95, "success", "warning"))
+})
 ```
 
 
@@ -154,9 +232,53 @@ renderLeaflet({
 })
 ```
 
+Bad coords {data-icon="fa-danger"}
+================================================================================
+### Impossible coordinates
+```{r}
+reactable::renderReactable({
+  reactable::reactable(
+    invalid_coords, 
+    sortable = TRUE, 
+    filterable = TRUE, 
+    searchable = TRUE,
+    defaultColDef = colDef(html = TRUE)
+    )
+})
+```
+
+
+### Unlikely coordinates
+```{r}
+reactable::renderReactable({
+  reactable::reactable(
+    unlikely_coords, 
+    sortable = TRUE, 
+    filterable = TRUE, 
+    searchable = TRUE,
+    defaultColDef = colDef(html = TRUE)
+    )
+})
+```
+
+
 Places with Homes &trade;
 ================================================================================
-### Only create WAStD places for these places
+### Place statistics
+```{r}
+renderValueBox({
+  place_loc_rate <- round(100*(nrow(located_places) / nrow(w2_data$sites)), 0)
+  flexdashboard::valueBox(
+    value = place_loc_rate,
+    caption = "% located",
+    icon = "fa-area-chart",
+    color = if (place_loc_rate <= 90) "warning" else "primary"
+  )
+})
+```
+
+
+### Create WAStD sites for these WAMTRAM places
 ```{r}
 reactable::renderReactable({
   reactable::reactable(
@@ -171,6 +293,19 @@ reactable::renderReactable({
 
 Places without Homes &trade;
 ================================================================================
+### Place statistics
+```{r}
+renderValueBox({
+  place_loc_rate <- round(100*(nrow(homeless_places) / nrow(w2_data$sites)), 0)
+  flexdashboard::valueBox(
+    value = place_loc_rate,
+    caption = "% missing coordinates",
+    icon = "fa-area-chart",
+    color = if (place_loc_rate <= 90) "warning" else "primary"
+  )
+})
+```
+
 ### Update WAMTRAM with coordinates for these places
 ```{r}
 reactable::renderReactable({

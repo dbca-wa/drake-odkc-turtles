@@ -242,7 +242,7 @@ w2_as_wastd_ae <- function(data,
     # WAStD defaults to user ID 1, but this sets the user explicitly
     # Replace <NA> in species with cheloniidae-fam
     dplyr::mutate(
-      reporter_id = reporter_id %>% tidyr::replace_na(1)
+      reporter_id = reporter_id %>% tidyr::replace_na(1),
       observer_id = observer_id %>% tidyr::replace_na(1),
       species = species %>% tidyr::replace_na("cheloniidae-fam")
     )
