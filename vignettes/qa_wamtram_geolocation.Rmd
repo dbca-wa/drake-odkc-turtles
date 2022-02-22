@@ -19,6 +19,7 @@ library(leaflet)
 library(fs)
 library(here)
 library(dplyr)
+library(tidyr)
 library(geojsonio)
 library(geojsonsf)
 library(janitor)
@@ -37,14 +38,14 @@ if (fs::file_exists(w2_file)){
   w2_data <- readRDS(w2_file)
 } else {
   wastdr::wastdr_msg_info("Downloading WAMTRAM data...")
-  w2_data <- wastdr::download_w2_data(save=w2_file, use_rodbc = FALSE)
+  w2_data <- wastdr::download_w2_data(save=w2_file)
 }
 locations <- c("", sort(unique(w2_data$enc$location_code)))
 places <- c("", sort(unique(w2_data$enc$place_code)))
 w2_dl <- w2_data$downloaded_on
 
 wastdr::wastdr_msg_info("Downloading WAStD Areas...")
-areas_sf <- wastd_GET("area") %>%
+areas_sf <- wastdr::wastd_GET("area") %>%
   magrittr::extract2("data") %>%
   geojsonio::as.json() %>%
   geojsonsf::geojson_sf()
@@ -63,6 +64,9 @@ sites <- areas_sf %>%
                    site_name = name,
                    w2_place_code = w2_place_code) %>%
   sf::st_join(areas)
+
+sites_by_pc <- sites %>% 
+  tidyr::separate_rows(w2_place_code)
 
 enc_by_sites <- w2_data$enc %>% 
   dplyr::group_by(place_code) %>% 
@@ -88,21 +92,31 @@ located_places <- w2_data$sites %>%
     ' target="_" rel="external"><strong>{prefix}</strong></a>'),
     .before=code) %>% 
   dplyr::select(-site_datum, site_longitude, site_latitude) %>% 
+  # dplyr::left_join(sites_by_pc, by=c("code"="w2_location_code")) %>% 
   dplyr::left_join(enc_by_sites, by=c("code"="place_code")) %>% 
-  dplyr::filter(observations > 0) %>% 
+  dplyr::filter(observations > 0) %>%
   dplyr::arrange(-observations) %>% 
   janitor::clean_names(case="title")
 
 invalid_coords <- w2_data$enc %>% 
-  dplyr::filter(longitude < -180 | longitude > 180 | latitude < -90 | latitude > 90)
+  dplyr::filter(
+    longitude < -180 | 
+      longitude > 180 | 
+      latitude < -90 | 
+      latitude > 90 |
+      is.na(latitude) |
+      is.na(longitude)
+      )
 
 unlikely_coords <- w2_data$enc %>% 
-  dplyr::filter(longitude < 100 | longitude > 150 | latitude < -45 | latitude > 0)
+  dplyr::filter(
+    longitude < 100 | longitude > 150 | latitude < -45 | latitude > 0)
 
-w2_obs_wastd_sites <- w2_data$enc %>% 
-  dplyr::filter(longitude > -180 | longitude < 180 | latitude > -90 | latitude < 90) %>% 
-  sf::st_as_sf(coords=c("longitude", "latitude"), crs=4326) %>% 
-  sf::st_join(sites, left=TRUE)
+w2_obs_wastd_sites <- w2_data$enc %>%
+  dplyr::filter(
+    longitude > -180, longitude < 180, latitude > -90, latitude < 90) %>%
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326) %>%
+  sf::st_join(sites, left = TRUE)
 ```
 
 Places
@@ -364,7 +378,9 @@ WAStD Areas (Localities and Sites) are downloaded every time this dashboard is r
   "Lon 11123.456 changed to 123.456". This is the only change history we have.
 
 To refresh WAMTRAM data, stop the dashboard, run the command below in the 
-console, then restart the dashboard.
+console, restart the R session 
+(<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F10</kbd>) then restart the dashboard 
+(<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>).
 
 ```{r eval=FALSE}
 w2_data <- wastdr::download_w2_data(save=here::here("inst/w2.rds"))
