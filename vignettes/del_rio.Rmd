@@ -1075,21 +1075,27 @@ shipping container (7.442 square metres) can cover a maximum of about 7 to 8 nes
 
 ```{r total_turtles_season_fb}
 total_turtles_season %>% 
-  dplyr::filter(Species == "Natator depressus", Season > 2016) %>% 
+  dplyr::filter(Species == "Natator depressus"
+                # , Season > 2016
+                ) %>% 
   total_turtles_gt("Flatback")
 ```
 
 #### Hawksbill turtles
 ```{r total_turtles_season_hb}
 total_turtles_season %>% 
-  dplyr::filter(Species == "Eretmochelys imbricata", Season > 2016) %>% 
+  dplyr::filter(Species == "Eretmochelys imbricata"
+                # , Season > 2016
+                ) %>% 
   total_turtles_gt("Hawksbill")
 ```
 
 #### Green turtles
 ```{r total_turtles_season_gn}
 total_turtles_season %>% 
-  dplyr::filter(Species == "Chelonia mydas", Season > 2016) %>% 
+  dplyr::filter(Species == "Chelonia mydas"
+                # , Season > 2016
+                ) %>% 
   total_turtles_gt("Green")
 ```
 
@@ -1127,13 +1133,16 @@ This figure is exported as `turtles_proc_mis_by_species.png`.
 ```{r proc_vs_missed_fig, fig.height=12}
 plt_total_turtles_season <- 
   total_turtles_season %>%
-  tidyr::pivot_longer(cols=c(Missed, Processed), names_to="Type", values_to="N") %>%
+  tidyr::pivot_longer(
+    cols=c(Missed, Processed), names_to="Type", values_to="N"
+  ) %>%
   dplyr::filter(Season > 2007) %>% # , species == "natator-depressus"
   ggplot2::ggplot() +
   ggplot2::geom_col(ggplot2::aes(x=Season, y=N, colour=Type, fill=Type)) +
   ggplot2::facet_grid(facets = ggplot2::vars(Species), scales="free_x") +
-  ggplot2::ggtitle(label="Processed and missed turtles", 
-                   subtitle="Numbers of processed and missed turtles over seasons by species") + 
+  ggplot2::ggtitle(
+    label="Processed and missed turtles", 
+    subtitle="Numbers of processed and missed turtles over seasons by species") + 
   ggplot2::labs(x="Year", y="Turtles") +
   ggplot2::theme_bw() +
   ggplot2::theme(legend.position="bottom") +
