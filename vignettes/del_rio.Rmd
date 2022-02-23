@@ -116,7 +116,7 @@ w2_all <- here::here(params$w2_filepath) %>%
   readr::read_csv() %>% 
   janitor::clean_names() %>% 
   dplyr::left_join(species_lookup, by="species_code") %>% 
-  dplyr::filter(turtle_status != "E") %>%
+  dplyr::filter(is.na(turtle_status) | turtle_status != "E") %>%
   dplyr::mutate(
     o_time = observed_time %>% tidyr::replace_na("00:00:00") %>% as.character(),
     o_datetime = glue::glue("{observation_date} {o_time} +08:00"),
