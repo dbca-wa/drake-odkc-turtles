@@ -32,7 +32,6 @@ rsconnect/
 # renv via capsule
 renv/
 .env
-inst/doc
 media
 *.RData
 port-hedland
