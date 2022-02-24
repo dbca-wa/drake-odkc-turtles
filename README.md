@@ -4,7 +4,6 @@
 # etlTurtleNesting
 
 <!-- badges: start -->
-
 <!-- badges: end -->
 
 The package etlTurtleNesting contains the ETL and QA for Turtle Nesting
@@ -22,21 +21,54 @@ with:
 remotes::install_github("dbca-wa/etlTurtleNesting")
 ```
 
+## Run the WAMTRAM geolocation QA dashboard
+
+### Running the dashboard
+
+Either open “vignettes/qa\_wamtram\_geolocation.Rmd” and click “Run
+Document”, or run
+
+``` r
+rmarkdown::run(here::here("vignettes/qa_wamtram_geolocation.Rmd"), shiny_args = list(port = 3838, host = "0.0.0.0"))
+```
+
+Follow instructions on the last tab (protocols) to update WAMTRAM
+through its admin front-end.
+
+### Refresh WAMTRAM data
+
+After a while of updating WAMTRAM, you’ll want to see these updates
+reflected in the dashboard. To refresh WAMTRAM data, stop the running
+dashboard, then run the command below in the console, restart the R
+session (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F10</kbd>) then restart
+the dashboard (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>).
+
+``` r
+w2_data <- wastdr::download_w2_data(save=here::here("inst/w2.rds"))
+```
+
+### Update wastdr
+
+When instructed to upgrade the R package `wastdr` which does most of the
+work under the bonnet, run:
+
+``` r
+remotes::install_github("dbca-wa/wastdr", dependencies = TRUE, upgrade = "always", build_vignettes = TRUE)
+```
+
 ## Add new users
 
 New users can be added to WAStD in batches before each field season.
 Local coordinators will provide a spreadsheet with columns “name” (full
-name, correct\! spelling and capitalisation), “email”, “phone”.
+name, correct! spelling and capitalisation), “email”, “phone”.
 
 The spreadsheet is post-processed:
 
-  - Open with option “quoted columns as text”
-  - username (A), name (B), email, phone, role (C-E)
-  - Formula for username: `=SUBSTITUTE(LOWER(B2), " ", "_")`
-  - Format phone as text and prefix with +61
-  - Save as CSV with “quote all text columns”
-
-<!-- end list -->
+-   Open with option “quoted columns as text”
+-   username (A), name (B), email, phone, role (C-E)
+-   Formula for username: `=SUBSTITUTE(LOWER(B2), " ", "_")`
+-   Format phone as text and prefix with +61
+-   Save as CSV with “quote all text columns”
 
 ``` r
 # Step 1: New users (username, name, phone, email, role)
@@ -52,55 +84,3 @@ users <- here::here("inst/users_nin2020.csv") %>%
 
 Run `run.R` as a local job. Full data export and reporting are already
 part of `run.R`.
-
-``` r
-library(wastdr)
-
-# Download all turtledata - long running (30min)
-wastd_data_full <- download_wastd_turtledata()
-
-# Save and restore
-save(wastd_data_full, file = "wastd_data_full.RData")
-load("wastd_data_full.RData")
-
-# Docs on data structure and contents
-??wastdr::download_wastd_turtledata
-
-# Review choice of existing turtle program locations
-wastd_data_full$areas$area_name
-
-# Target area to filter for, choose from:
-a <- "Cape Domett"                                     
-a <- "Smokey Bay Area"                                 
-a <- "Cable Beach Broome"                              
-a <- "Port Hedland"                                    
-a <- "Delambre Island"                                 
-a <- "Rosemary Island"                                 
-a <- "Conzinc Bay"                                     
-a <- "West Pilbara Turtle Program beaches Wickam"      
-a <- "West Pilbara Turtle Program beaches Caravan Park"
-a <- "Barrow Island"                                   
-a <- "Thevenard Island"                                
-a <- "Ningaloo"                                        
-a <- "Onslow"                                          
-a <- "Perth Metro" 
-a <- "Other" # orphaned records
-
-# Target directory
-target_dir <- here::here(wastdr::urlize(a))
-target_fn <- wastdr::urlize(a)
-
-# Filter all data down to target area
-# wastd_data_filtered <- filter_wastd_turtledata(list(), a) # must fail
-wastd_data_filtered <- wastd_data_full %>% filter_wastd_turtledata(a) 
-wastd_data_filtered
-# Optional: summarise, analyse, visualise (tables, figures, maps)
-
-# Export to a ZIP file
-wastd_data_filtered %>% 
-  export_wastd_turtledata(outdir = target_dir, filename = target_fn)
-
-# Save to RData for further analysis in R 
-# See wastdr helpers for available summaries and maps
-save(wastd_data_filtered, file = glue::glue("wastd_data_{target_fn}.RData"))
-```
