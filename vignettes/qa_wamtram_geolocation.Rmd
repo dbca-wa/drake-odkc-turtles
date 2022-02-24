@@ -35,6 +35,15 @@ knitr::opts_chunk$set(echo = FALSE)
 # WAMTRAM
 w2_dir <- fs::dir_create(here::here("inst"))
 w2_file <- here::here("inst/w2.rds")
+
+w2_data_dl <- eventReactive(input$dlw2, {
+  wastdr::wastdr_msg_info("Downloading new WAMTRAM data...")
+  wastdr::download_w2_data(save=here::here("inst/w2.rds"))
+  wastdr::wastdr_msg_success("Done!")
+})
+
+# w2_data <- reactive({w2_data <- readRDS(w2_file)})
+
 if (fs::file_exists(w2_file)){ 
   wastdr::wastdr_msg_info("Reading saved WAMTRAM data...")
   w2_data <- readRDS(w2_file)
@@ -42,6 +51,9 @@ if (fs::file_exists(w2_file)){
   wastdr::wastdr_msg_info("Downloading WAMTRAM data...")
   w2_data <- wastdr::download_w2_data(save=w2_file)
 }
+
+
+
 locations <- c("", sort(unique(w2_data$enc$location_code)))
 places <- c("", sort(unique(w2_data$enc$place_code)))
 w2_dl <- w2_data$downloaded_on
@@ -137,6 +149,8 @@ Column {.sidebar}
 ### Filter Observations
 
 ```{r input_obs}
+# actionButton("dlw2", "Download WAMTRAM", 
+#              class = "btn btn-danger", icon=shiny::icon(name="download"))
 inputPanel(
   selectInput("lc", label = "Location:", choices = locations),
   selectInput("pc", label = "Place:", choices = places),
