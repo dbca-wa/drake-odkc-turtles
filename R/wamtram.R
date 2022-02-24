@@ -50,8 +50,7 @@ wamtram <- function() {
 
     # ------------------------------------------------------------------------ #
     # EXTRACT
-    # w2_data <- wastdr::download_w2_data()
-    # saveRDS(w2_data, file = here::here("inst/w2.rds"), compress="xz")
+    # w2_data <- wastdr::download_w2_data(save=here::here("inst/w2.rds"))
     w2_data = readRDS(here::here("inst/w2.rds")),
     # w2_data = wastdr::download_w2_data(
     #   ord = c("YmdHMS", "Ymd"),
@@ -68,17 +67,17 @@ wamtram <- function() {
     # ------------------------------------------------------------------------ #
     # TRANSFORM
     wastd_users = wastdr::download_wastd_users(),
-    w2_user_mapping = make_user_mapping_w2(w2_data, wastd_users),
+    w2_user_mapping = etlTurtleNesting::make_user_mapping_w2(w2_data, wastd_users),
 
     # QA Reports: inspect user mappings - flag dissimilar matches
     # https://github.com/dbca-wa/wastdr/issues/21
-    user_qa = generate_qa_users_report_w2(w2_user_mapping, w2_yr, w2_data),
+    user_qa = etlTurtleNesting::generate_qa_users_report_w2(w2_user_mapping, w2_yr, w2_data),
 
     # Resume:
     # load("data/w2dev.RData")
     #
     # Source data transformed into target format
-    w2_tf = w2_as_wastd(w2_data, w2_user_mapping),
+    w2_tf = etlTurtleNesting::w2_as_wastd(w2_data, w2_user_mapping),
     # Sites
     # site_qa = generate_qa_sites_report_w2(w2_data, w2_tf, w2_yr),
 
@@ -86,9 +85,9 @@ wamtram <- function() {
     # LOAD
     wastd_data_min = wastdr::download_minimal_wastd_turtledata(year = wastd_data_yr),
     # Skip logic compares existing data in target DB with new data to upload
-    w2_up = split_create_update_skip_w2(w2_tf, wastd_data_min),
+    w2_up = etlTurtleNesting::split_create_update_skip_w2(w2_tf, wastd_data_min),
     # Upload (skip, update, create as per skip logic)
-    upload_to_wastd = upload_w2_to_wastd(w2_up, update_existing = up_ex)
+    upload_to_wastd = etlTurtleNesting::upload_w2_to_wastd(w2_up, update_existing = up_ex)
   )
 }
 
