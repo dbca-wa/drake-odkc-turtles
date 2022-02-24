@@ -382,12 +382,13 @@ console, restart the R session
 (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F10</kbd>) then restart the dashboard 
 (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>K</kbd>).
 
-```{r eval=FALSE}
+```{r eval=FALSE, echo=TRUE}
 w2_data <- wastdr::download_w2_data(save=here::here("inst/w2.rds"))
 ```
 
 To load new `wastdr` functionality, run (when instructed to upgrade `wastdr`):
-```{r eval=FALSE}
+
+```{r eval=FALSE, echo=TRUE}
 remotes::install_github("dbca-wa/wastdr")
 ```
 
