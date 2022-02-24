@@ -53,7 +53,7 @@ When instructed to upgrade the R package `wastdr` which does most of the
 work under the bonnet, run:
 
 ``` r
-remotes::install_github("dbca-wa/wastdr", dependencies = TRUE, upgrade = "always", build_vignettes = TRUE)
+remotes::install_github("dbca-wa/wastdr", dependencies = TRUE, upgrade = "never", build_vignettes = TRUE)
 ```
 
 ## Add new users
