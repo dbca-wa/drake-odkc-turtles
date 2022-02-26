@@ -13,7 +13,8 @@ output: html_document
 }
 </style>
 ```
-```{r setup, include=FALSE}
+
+```{r setup, include=FALSE, warning=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(etlTurtleNesting)
 library(drake)
@@ -28,7 +29,7 @@ loadd(odkc_ex)
 loadd(user_mapping)
 ```
 
-```{r user_table, echo=FALSE}
+```{r user_table, echo=FALSE, warning=FALSE}
 a <- user_mapping %>%
     annotate_user_mapping() %>%
     pointblank::create_agent() %>%
@@ -39,7 +40,10 @@ actions_table <- a %>%
   pointblank::get_data_extracts() %>%
   magrittr::extract2(1) %>%
   dplyr::rowwise() %>% 
-  dplyr::mutate(active_at = get_user_area(odkc_ex, odkc_username)) %>% 
+  dplyr::mutate(
+    active_at = get_user_area(odkc_ex, odkc_username),
+    dist = round(dist,3)
+    ) %>% 
   dplyr::select(-email, -phone) %>% 
   dplyr::arrange(active_at, -dist) %>% 
   gt::gt() %>%
@@ -49,7 +53,7 @@ actions_table <- a %>%
     active_at = gt::html("<small>Active at</small>"),
     wastd_matched = gt::html("<h5>We matched</h5>\n<small>WAStD User</small>"),
     search_wastd = gt::html("<h5>Search</h5>\n<small>likely candidates</small>"),
-    dist = gt::html("<h5>Dissimilarity</h5>\n<small>smaller = better</small>")
+    dist = gt::html("<h5>Dissimilarity</h5>\n<small>smaller is better</small>")
   ) %>%
   gt::tab_spanner(
     label = "WASTD User match",
@@ -58,7 +62,26 @@ actions_table <- a %>%
   gt::tab_spanner(
     label = "WASTD User profile (chosen as best match)",
     columns = c(role, pk, username, name, nickname, aliases)
+  ) %>% 
+  gt::tab_style(
+    style = list(
+      gt::cell_text(weight = "bold", color="red")
+      ),
+    locations = gt::cells_body(
+      columns = dist,
+      rows = dist > 0.1
+    )
+  ) %>% 
+  gt::tab_style(
+    style = list(
+      gt::cell_text(color="orange")
+      ),
+    locations = gt::cells_body(
+      columns = dist,
+      rows = dist < 0.1
+    )
   )
+
 ```
 
 
@@ -67,13 +90,21 @@ actions_table <- a %>%
 ## Please review {.active}
 Work through the issues directly in the table below.
 
+Close matches (typos) have a dissimilarity distance of less than 0.1. For these
+there likely exists a WAStD user profile already, and their mis-spelled name
+can be added as an alias.
+
+Likely mismatches have a distance of more than 0.1 and are highlighted red. 
+For these we are likely missing a WAStD user profile.
+
 Your actions:
 
 -   Users who put team lists in username - please re-train ASAP:
 
     -   Username is tablet holder.
     -   SVS team is other names.
-    -   Full names as given to us pre season.
+    -   Full names as given to us pre season. 
+    -   No first names, no nicknames, no team lists, no abbreviations.
 
 -   If a "We matched WAStD User" is definitely not the person from the "ODK
     Collect username":
