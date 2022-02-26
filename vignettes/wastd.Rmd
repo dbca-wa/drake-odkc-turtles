@@ -226,7 +226,9 @@ pt %>%
   tidyr::pivot_wider(names_from="species", values_from = "n",values_fill = 0) %>% 
   janitor::clean_names(case="sentence") %>% 
   gt::gt()
+```
 
+```{r}
 pt %>% map_mwi(sites = x$sites)
 ```
 
