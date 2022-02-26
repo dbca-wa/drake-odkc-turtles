@@ -70,16 +70,15 @@ make_user_mapping <- function(odkc_data, wastd_users,
         stringr::str_to_lower()
     ) %>%
     tidyr::separate_rows(wastd_usernames, sep=",") %>%
+    dplyr::mutate(
+      wastd_usernames = wastd_usernames %>% stringr::str_squish()
+    ) %>%
     dplyr::arrange(wastd_usernames) %>%
     dplyr::filter(!duplicated(wastd_usernames)) %>%
     invisible()
 
   out <- tibble::tibble(
-    odkc_username = odkc_reporters
-    # odkc_un_trim = stringr::str_squish(
-    #   odkc_username
-    #   # stringr::str_remove_all(odkc_username, "[:punct:]")
-    # )
+      odkc_username = odkc_reporters
     ) %>%
     fuzzyjoin::stringdist_left_join(
       w_users,
