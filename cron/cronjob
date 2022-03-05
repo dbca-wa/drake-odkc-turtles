@@ -1,0 +1,2 @@
+11 * * * *  /usr/local/bin/Rscript /app/cron/job_download_wastd_areas.R >> /app/inst/cron.log 2>&1
+# empty trailing line
