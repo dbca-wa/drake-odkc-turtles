@@ -1,5 +1,4 @@
-*.html
-*.csv
-*.R
-*.xlsx
 reports
+data
+queries
+users

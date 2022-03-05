@@ -1,0 +1,5 @@
+fn_wastd_sites <- here::here("inst/wastd_sites.rds")
+"[{Sys.time()}] Downloading WAStD Sites to {fn_wastd_sites}" %>% glue::glue() %>% wastdr::wastdr_msg_info()
+sites <- wastdr::download_wastd_sites()
+saveRDS(sites, file = fn_wastd_sites)
+"WAStD Data saved locally to {fn_wastd_sites}." %>% glue::glue() %>% wastdr::wastdr_msg_success()

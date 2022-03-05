@@ -1,6 +1,6 @@
 # Turtle Data Exports
 ## Contents
-This folder contains the exported data and data products from WAStD.
+The folder `/inst/reports` contains the exported data and data products from WAStD.
 The files are split up by monitoring programs and contain:
 
 * Raw data: CSV for text data, GeoJSON for spatial data.
@@ -17,4 +17,4 @@ Please QA the data there.
 
 ## Currency
 The contents of this folder are replaced after each data import to WAStD.
-Contact Florian.Mayer@dbca.wa.gov.au for any further questions.
+Contact the data custodian for any further questions.
