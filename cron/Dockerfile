@@ -27,11 +27,11 @@ RUN Rscript -e 'remotes::install_version("janitor",upgrade="never", version = "2
 RUN Rscript -e 'remotes::install_github("r-spatial/sf")'
 RUN Rscript -e 'remotes::install_github("Thinkr-open/golem")'
 RUN Rscript -e 'remotes::install_github("RinteRface/bs4Dash")'
-RUN Rscript -e 'remotes::install_github("dbca-wa/wastdr", upgrade = "always", force=TRUE)'
+RUN Rscript -e 'remotes::install_github("dbca-wa/wastdr", dependencies = TRUE, upgrade = "never")'
 RUN mkdir /app
 ADD . /app
 WORKDIR /app
-RUN R -e 'remotes::install_local(upgrade="always", force=TRUE, dependencies = TRUE)'
+RUN R -e 'remotes::install_local(upgrade="never", dependencies = TRUE)'
 
 # Mount a volume to /app/inst that is shared with turtleviewer2
 RUN mkdir -p /app/inst
@@ -40,8 +40,8 @@ RUN mkdir -p /app/inst
 RUN crontab cron/cronjob
 
 # Run command on container startup
-CMD echo "cronjob gets started" &&\
+CMD echo "start cronjob" &&\
   (cron) &&\
-  echo "now touch n' tail" &&\
+  echo "init logs" &&\
   touch /app/inst/cron.log &&\
   tail -f /app/inst/cron.log
