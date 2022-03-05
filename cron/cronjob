@@ -1,2 +1,2 @@
-11 * * * *  /usr/local/bin/Rscript /app/cron/job_download_wastd_areas.R >> /app/inst/cron.log 2>&1
-# empty trailing line
+1 * * * *  /usr/local/bin/Rscript /app/cron/job.R >> /app/inst/cron.log 2>&1
+# run every full hour + 1 minute (dev) / run daily at noon + 1 minute
