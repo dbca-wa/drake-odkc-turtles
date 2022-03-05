@@ -1,2 +1,2 @@
-1 * * * *  /usr/local/bin/Rscript /app/cron/job.R >> /app/inst/cron.log 2>&1
-# run every full hour + 1 minute (dev) / run daily at noon + 1 minute
+0 */2 * * *  /usr/local/bin/Rscript /app/cron/job.R >> /app/inst/cron.log 2>&1
+# run second hour (dev) / run daily at noon + 1 minute
