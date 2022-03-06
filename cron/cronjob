@@ -1,5 +1,5 @@
-# 0 */2 * * *  /usr/local/bin/Rscript /app/cron/job.R >> /app/inst/cron.log 2>&1
+0 */2 * * *  /usr/local/bin/Rscript /app/cron/job.R >> /app/inst/cron.log 2>&1
 # run every second hour
 #
-*/2 * * * *  /usr/local/bin/Rscript /app/cron/job.R >> /app/inst/cron.log 2>&1
+# */2 * * * *  /usr/local/bin/Rscript /app/cron/job.R >> /app/inst/cron.log 2>&1
 # run every second minute (dev)
