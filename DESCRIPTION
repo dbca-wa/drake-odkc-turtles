@@ -1,6 +1,6 @@
 Package: etlTurtleNesting
 Title: Data ETL of Turtle Nesting Census Data from ODK Central to WAStD
-Version: 0.5.5
+Version: 0.6.0
 Authors@R: 
     person(given = "Florian",
            family = "Mayer",
