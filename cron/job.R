@@ -9,11 +9,27 @@ fn_wastd_data <- "/app/inst/wastd_data.rds"
 fn_w2_data <- "/app/inst/w2_data.rds"
 
 # Gatechecks ------------------------------------------------------------------#
-print("Shared directory exists:")
+# There are two mounted persistent volumes, one for data, the other for config.
+# If the data directory does not exist, the save functions below will fail.
+print("Shared data directory exists:")
 print(fs::dir_exists("/app/inst/"))
 
+print("Persistent config directory exists:")
+print(fs::dir_exists("/app/config/"))
+
+# The file .Renviron has to be created once manually through a shell into the
+# running container, pasting in any environment variables we need for the script.
+print("Persisted .Renviron exists:")
+print(fs::file_exists("/app/config/.Renviron"))
+
+# Since out .Renviron is not in a default location, we have to read it explicitly.
+# The non-default location of .Renviron allows to mount a persistent volume
+# containing the .Renviron to a (non-standard) folder, here "/app/config".
+# This avoids collisions between the mounted volume and other files in the
+# target folder inside the running Docker container.
 readRenviron("/app/config/.Renviron")
 
+# This should indicate whether the environment variables have been read.
 print("wastdr settings:")
 print(wastdr::wastdr_settings())
 
@@ -22,8 +38,7 @@ print(wastdr::wastdr_settings())
 "[{Sys.time()}] Downloading WAStD Sites to {fn_wastd_sites}" %>%
   glue::glue() %>%
   print()
-sites <- wastdr::download_wastd_sites()
-saveRDS(sites, file = fn_wastd_sites)
+sites <- wastdr::download_wastd_sites(save=fn_wastd_sites, compress=FALSE)
 "[{Sys.time()}] WAStD Data saved locally to {fn_wastd_sites}." %>%
   glue::glue() %>%
   print()
@@ -38,7 +53,7 @@ if (wastdr::w2_online() == FALSE) {
     glue::glue() %>%
     print()
 
-  w2_data <- wastdr::download_w2_data(save = fn_w2_data)
+  w2_data <- wastdr::download_w2_data(save = fn_w2_data, compress=FALSE)
 
   "[{Sys.time()}] WAMTRAM Data saved locally to folder {fn_w2_data}." %>%
     glue::glue() %>%
@@ -50,8 +65,7 @@ if (wastdr::w2_online() == FALSE) {
   glue::glue() %>%
   print()
 
-wastd_data <- wastdr::download_wastd_turtledata()
-saveRDS(wastd_data, file = fn_wastd_data)
+wastd_data <- wastdr::download_wastd_turtledata(save=fn_wastd_data, compress=FALSE)
 
 "[{Sys.time()}] WAStD Data saved locally to folder {fn_wastd_data}." %>%
   glue::glue() %>%
