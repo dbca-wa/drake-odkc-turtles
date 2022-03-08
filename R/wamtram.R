@@ -50,8 +50,8 @@ wamtram <- function() {
 
     # ------------------------------------------------------------------------ #
     # EXTRACT
-    # w2_data <- wastdr::download_w2_data(save=here::here("inst/w2.rds"))
-    w2_data = readRDS(here::here("inst/w2.rds")),
+    # w2_data <- wastdr::download_w2_data(save=here::here("inst/data/w2.rds"))
+    w2_data = readRDS(here::here("inst/data/w2.rds")),
     # w2_data = wastdr::download_w2_data(
     #   ord = c("YmdHMS", "Ymd"),
     #   tz = "Australia/Perth",

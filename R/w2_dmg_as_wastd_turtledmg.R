@@ -69,14 +69,14 @@ w2_dmg_as_wastd_turtledmg <- function(data) {
   #
   damage_type <- tibble::tribble(
     ~damage_code, ~damage_type,
-    '0', 'other', # None significant
-    '1', 'tip-amputated', # Tip off - Flipper
-    '2', 'amputated-from-nail', # Lost from Nail - Flipper
-    '3', 'amputated-half', # Lost half - Flipper
-    '4', 'amputated-entirely', # Lost whole - Flipper
-    '5', 'cuts', # Minor Wounds or cuts
-    '6', 'cuts', # Major Wounds or cuts
-    '7', 'deformity', # Deformity
+    0, 'other', # None significant
+    1, 'tip-amputated', # Tip off - Flipper
+    2, 'amputated-from-nail', # Lost from Nail - Flipper
+    3, 'amputated-half', # Lost half - Flipper
+    4, 'amputated-entirely', # Lost whole - Flipper
+    5, 'cuts', # Minor Wounds or cuts
+    6, 'cuts', # Major Wounds or cuts
+    7, 'deformity', # Deformity
   )
 
   damage_cause <- tibble::tribble(
@@ -88,7 +88,8 @@ w2_dmg_as_wastd_turtledmg <- function(data) {
     "MM", 'thick mud',
     "OI", 'Other Impact',
     "PS", 'parasites (other than barnacles)',
-    "SD", 'strike damage'
+    "SD", 'strike damage',
+    NA, 'not available'
   )
 
   data %>%

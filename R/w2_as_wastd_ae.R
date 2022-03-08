@@ -154,34 +154,31 @@ w2_as_wastd_ae <- function(data,
   # checked_for_injuries = # TODO map did_not_check_for_injury
 
   # Transform data
-  data$enc %>%
+  x <- data$enc %>%
 
     # # discard records in error
-    # TODO this loses 20k records but the inverse finds none
-    # dplyr::filter(turtle_status != "E") %>%
-    dplyr::rowwise() %>%
+    # dplyr::filter(!is.na(turtle_status) && turtle_status != "E") %>%
+    # dplyr::rowwise() %>%
     dplyr::transmute(
       source = "wamtram", # wastd.observations.models.SOURCE_CHOICES
       source_id = observation_id %>% as.character(),
     observer = tagger_person_id,
     reporter = reporter_person_id,
     behaviour = glue::glue(
+      "Turtle ID {turtle_id}\n",
       "Species ID confidence: {identification_confidence}\n",
       "Activity when encountered: {activity_label} {activity_description}\n",
       "Nesting: {nesting}, clutch completed: {clutch_completed}\n",
       "Location: {location_code} {place_code} {label} {place_description}.",
-      "Rookery: {is_rookery}, beach approach: {beach_approach}, beach aspect: {beach_aspect}\n"
+      "Rookery: {is_rookery}, beach approach: {beach_approach}, beach aspect: {beach_aspect}\n",
+      "W2 measurer ID {measurer_person_id}, measurement reporter ID {measurer_reporter_person_id}\n",
+      "Alive: {alive}\n",
+      "Action taken: {action_taken}\n"
       # # Left to map
       # original_observation_id
-      # measurer_person_id > handler
-      # measurer_reporter_person_id > recorder
       # nesting number_of_eggs egg_count_method > NestObs
       # measurements > morph
-      # action_taken
       # comment_from recorded tags table
-      #
-      #   #
-      # "turtle_id"
       # "scars_left" "scars_right" "other_tags" "other_tags_identification_type"
       # "transfer_id" "mund" "mund_id" "entered_by_person_id"
       #
@@ -192,7 +189,7 @@ w2_as_wastd_ae <- function(data,
       # "cc_length_not_measured" "cc_notch_length_not_measured" "cc_width_not_measured"
       #
       # # Health / Injuries / Mortality
-      # "did_not_check_for_injury" "alive"
+      # "did_not_check_for_injury"
       #
       # "observation_status"
       # "display_this_observation" "label" "prefix"
