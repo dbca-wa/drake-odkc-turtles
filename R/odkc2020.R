@@ -60,6 +60,7 @@ odkc2020 <- function() {
     odkc_yr = Sys.getenv("ODKC_YEAR", unset = 2020L),
     up_ex = Sys.getenv("ODKC_IMPORT_UPDATE_EXISTING", unset = FALSE),
     up_media = Sys.getenv("ODKC_IMPORT_UPLOAD_MEDIA", unset = TRUE),
+    skip_qa = Sys.getenv("ODKC_ETL_SKIP_QA", unset = FALSE),
 
     # ------------------------------------------------------------------------ #
     # EXTRACT

@@ -5,8 +5,12 @@
 #' \dontrun{
 #' generate_qa_sites_report(odkc_ex, odkc_tf, wastd_data_yr)
 #' }
-generate_qa_sites_report <- function(odkc_ex, odkc_tf, year) {
-  wastdr::wastdr_msg_info(glue::glue("Rendering QA for sites in {year}..."))
+generate_qa_sites_report <- function(odkc_ex, odkc_tf, year, skip=FALSE) {
+  if (skip==TRUE) {
+    wastdr::wastdr_msg_info(glue::glue("Skipping QA for sites"))
+    return(NULL)
+  }
+
   fn_out <- here::here("vignettes", glue::glue("qa_sites{year}.html"))
   fn_in <- here::here("vignettes", "qa_sites.Rmd")
 

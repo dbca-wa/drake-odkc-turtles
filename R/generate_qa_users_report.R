@@ -5,7 +5,12 @@
 #' \dontrun{
 #' generate_qa_users_report(odkc_ex, user_mapping, wastd_data_yr)
 #' }
-generate_qa_users_report <- function(odkc_ex, user_mapping, year) {
+generate_qa_users_report <- function(odkc_ex, user_mapping, year, skip=FALSE) {
+  if (skip==TRUE) {
+    wastdr::wastdr_msg_info(glue::glue("Skipping QA for user mapping"))
+    return(NULL)
+  }
+
   wastdr::wastdr_msg_info(glue::glue("Rendering QA for users in {year}..."))
   fn_out <-
     here::here("vignettes", glue::glue("qa_users{year}.html"))
