@@ -8,9 +8,11 @@ test_that("odkc_tt_as_wastd_turtlemorph works", {
   # curved_carapace_length_min_mm not in example data
   odkc_names <- odkc_data$tt %>%
     odkc_tt_as_wastd_turtlemorph(user_mapping = user_mapping) %>%
-    dplyr::select(-source, -source_id, -handler_id, -recorder_id,
-                  -encounter_source_id,
-                  -curved_carapace_length_min_mm) %>%
+    dplyr::select(
+      -source, -source_id, -handler_id, -recorder_id,
+      -encounter_source_id,
+      -curved_carapace_length_min_mm
+    ) %>%
     # either exclude handler/recorder_id or rename to _pk
     # dplyr::rename(handler_pk = handler_id, recorder_pk = recorder_id) %>%
     names()

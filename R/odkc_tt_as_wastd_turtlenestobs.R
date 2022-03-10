@@ -18,7 +18,7 @@ odkc_tt_as_wastd_turtlenestobs <- function(data) {
     dplyr::transmute(
       source = 2,
       source_id = id,
-      encounter_source="odk",
+      encounter_source = "odk",
       encounter_source_id = id,
       egg_count = nest_egg_count
       # comments = ""

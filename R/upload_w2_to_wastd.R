@@ -17,24 +17,30 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_DEV_URL"),
-#'                      api_token = Sys.getenv("WASTDR_API_DEV_TOKEN"))
-#' wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_TEST_URL"),
-#'                      api_token = Sys.getenv("WASTDR_API_TEST_TOKEN"))
-#' wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_URL"),
-#'                      api_token = Sys.getenv("WASTDR_API_TOKEN"))
+#' wastdr::wastdr_setup(
+#'   api_url = Sys.getenv("WASTDR_API_DEV_URL"),
+#'   api_token = Sys.getenv("WASTDR_API_DEV_TOKEN")
+#' )
+#' wastdr::wastdr_setup(
+#'   api_url = Sys.getenv("WASTDR_API_TEST_URL"),
+#'   api_token = Sys.getenv("WASTDR_API_TEST_TOKEN")
+#' )
+#' wastdr::wastdr_setup(
+#'   api_url = Sys.getenv("WASTDR_API_URL"),
+#'   api_token = Sys.getenv("WASTDR_API_TOKEN")
+#' )
 #' drake::loadd("w2_up")
-#' upload_odkc_to_wastd(w2_up, update_existing=TRUE, verbose=TRUE)
+#' upload_odkc_to_wastd(w2_up, update_existing = TRUE, verbose = TRUE)
 #' }
 upload_w2_to_wastd <- function(data,
-                                 update_existing = FALSE,
-                                 api_url = wastdr::get_wastdr_api_url(),
-                                 api_token = wastdr::get_wastdr_api_token(),
-                                 verbose = wastdr::get_wastdr_verbose()) {
+                               update_existing = FALSE,
+                               api_url = wastdr::get_wastdr_api_url(),
+                               api_token = wastdr::get_wastdr_api_token(),
+                               verbose = wastdr::get_wastdr_verbose()) {
   res <- list()
 
   # Tagging > AE ------------------------------------------------------------#
-  res$tt = wastdr::wastd_create_update_skip(
+  res$tt <- wastdr::wastd_create_update_skip(
     data$tt_create,
     data$tt_update,
     data$tt_skip,
@@ -47,7 +53,7 @@ upload_w2_to_wastd <- function(data,
   )
 
   # Flipper tags
-  res$tt_tag = wastdr::wastd_create_update_skip(
+  res$tt_tag <- wastdr::wastd_create_update_skip(
     data$tt_tag_create,
     data$tt_tag_update,
     data$tt_tag_skip,
@@ -60,7 +66,7 @@ upload_w2_to_wastd <- function(data,
   )
 
   # PIT tags
-  res$tt_pit = wastdr::wastd_create_update_skip(
+  res$tt_pit <- wastdr::wastd_create_update_skip(
     data$tt_pit_create,
     data$tt_pit_update,
     data$tt_pit_skip,
@@ -73,7 +79,7 @@ upload_w2_to_wastd <- function(data,
   )
 
   # Turtle Damages
-  res$tt_dmg = wastdr::wastd_create_update_skip(
+  res$tt_dmg <- wastdr::wastd_create_update_skip(
     data$tt_dmg_create,
     data$tt_dmg_update,
     data$tt_dmg_skip,
@@ -85,7 +91,7 @@ upload_w2_to_wastd <- function(data,
     verbose = verbose
   )
   #
-  res$tt_tsc = wastdr::wastd_create_update_skip(
+  res$tt_tsc <- wastdr::wastd_create_update_skip(
     data$tt_tsc_create,
     data$tt_tsc_update,
     data$tt_tsc_skip,

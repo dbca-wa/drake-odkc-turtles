@@ -29,7 +29,6 @@ test_that("odkc_tt_as_wastd_ae generates valid coordinates", {
   x <- odkc_data %>% odkc_tt_as_wastd_ae(user_mapping = user_mapping)
 
   # If this fails, we have invalid WKT in x$where
-  testthat::expect_s3_class(sf::st_as_sf(x, wkt="where"), "sf")
-
+  testthat::expect_s3_class(sf::st_as_sf(x, wkt = "where"), "sf")
 })
 # usethis::use_r("odkc_tt_as_wastd_ae")

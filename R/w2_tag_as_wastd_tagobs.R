@@ -26,28 +26,28 @@ w2_tag_as_wastd_tagobs <- function(data, user_mapping) {
 
   w2_handlers <- enc %>%
     dplyr::select(observation_id, tagger_person_id) %>%
-    dplyr::left_join(wastd_handlers, by="tagger_person_id") %>%
-    tidyr::replace_na(list(handler_id=1))
+    dplyr::left_join(wastd_handlers, by = "tagger_person_id") %>%
+    tidyr::replace_na(list(handler_id = 1))
 
   wastd_recorders <- user_mapping %>%
     dplyr::transmute(reporter_person_id = legacy_userid, recorder_id = pk)
 
   w2_recorders <- enc %>%
     dplyr::select(observation_id, reporter_person_id) %>%
-    dplyr::left_join(wastd_recorders, by="reporter_person_id") %>%
-    tidyr::replace_na(list(recorder_id=1))
+    dplyr::left_join(wastd_recorders, by = "reporter_person_id") %>%
+    tidyr::replace_na(list(recorder_id = 1))
 
 
   tag_sides <- tibble::tribble(
     ~tag_location, ~attached_on_side, ~tag_position,
-    "flipper-front-left-1",  "L", 1,
-    "flipper-front-left-2",  "L", 2,
-    "flipper-front-left-3",  "L", 3,
-    "flipper-front-left",    "L", NA,
+    "flipper-front-left-1", "L", 1,
+    "flipper-front-left-2", "L", 2,
+    "flipper-front-left-3", "L", 3,
+    "flipper-front-left", "L", NA,
     "flipper-front-right-1", "R", 1,
     "flipper-front-right-2", "R", 2,
     "flipper-front-right-3", "R", 3,
-    "flipper-front-right",   "R", NA
+    "flipper-front-right", "R", NA
   )
 
   #   unique(w2_data$obs_flipper_tags$tag_state)
@@ -72,18 +72,18 @@ w2_tag_as_wastd_tagobs <- function(data, user_mapping) {
 
   tag_states <- tibble::tribble(
     ~tag_state, ~status,
-    "A1",  'applied-new',
-    "AE",  'applied-new',
-    "ae",  'applied-new',
-    "OX",  'resighted',
-    "P",   'resighted',
-    "p",   'resighted',
-    "P_OK",'resighted',
-    "RQ",  'resighted',
-    "P_ED",'resighted',
-    "R",   'removed',
-    "OO",  'removed',
-    "RC",  'reclinched'
+    "A1", "applied-new",
+    "AE", "applied-new",
+    "ae", "applied-new",
+    "OX", "resighted",
+    "P", "resighted",
+    "p", "resighted",
+    "P_OK", "resighted",
+    "RQ", "resighted",
+    "P_ED", "resighted",
+    "R", "removed",
+    "OO", "removed",
+    "RC", "reclinched"
   )
 
 
@@ -96,25 +96,27 @@ w2_tag_as_wastd_tagobs <- function(data, user_mapping) {
       # https://github.com/dbca-wa/wastd/blob/master/shared/models.py#L259
       source = 20,
       source_id = as.character(recorded_tag_id),
-      encounter_source="wamtram",
+      encounter_source = "wamtram",
       encounter_source_id = observation_id %>% as.character(),
       # handler = reporter,
       # recorder = reporter,
       # handler_id = 1, # TODO enc.observer_id
       # reporter_id = 1, # TODO enc.reporter_id
-      tag_type = 'flipper-tag',
-      attached_on_side=attached_on_side,
-      tag_position=tag_position,
-      tag_state=tag_state,
+      tag_type = "flipper-tag",
+      attached_on_side = attached_on_side,
+      tag_position = tag_position,
+      tag_state = tag_state,
       name = tag_name, # TODO sanitize
       comments = glue::glue("Tag status: {tag_state}")
     ) %>%
-    dplyr::left_join(w2_handlers, by = c("encounter_source_id"="observation_id")) %>%
-    dplyr::left_join(w2_recorders, by = c("encounter_source_id"="observation_id")) %>%
+    dplyr::left_join(w2_handlers, by = c("encounter_source_id" = "observation_id")) %>%
+    dplyr::left_join(w2_recorders, by = c("encounter_source_id" = "observation_id")) %>%
     dplyr::left_join(tag_sides, by = c("attached_on_side", "tag_position")) %>%
-    dplyr::left_join(tag_states, by="tag_state") %>%
-    dplyr::select(-tagger_person_id, -reporter_person_id,
-                  -attached_on_side, -tag_position, -tag_state) %>%
+    dplyr::left_join(tag_states, by = "tag_state") %>%
+    dplyr::select(
+      -tagger_person_id, -reporter_person_id,
+      -attached_on_side, -tag_position, -tag_state
+    ) %>%
     # If data == tracks or mwi, drop all NA subgroups
     # If data == tracks_*, there are only non-NA records
     dplyr::filter_at(

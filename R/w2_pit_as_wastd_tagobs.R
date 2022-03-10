@@ -9,9 +9,9 @@
 #' @export
 #' @examples
 #' \dontrun{
+#'
 #' }
 w2_pit_as_wastd_tagobs <- function(data) {
-
   tag_sides <- tibble::tribble(
     ~tag_location, ~tag_position,
     "shoulder-left", "LF",
@@ -37,18 +37,18 @@ w2_pit_as_wastd_tagobs <- function(data) {
 
   tag_states <- tibble::tribble(
     ~tag_state, ~status,
-    "A1",  'applied-new',
-    "AE",  'applied-new',
-    "ae",  'applied-new',
-    "OX",  'resighted',
-    "P",   'resighted',
-    "p",   'resighted',
-    "P_OK",'resighted',
-    "RQ",  'resighted',
-    "P_ED",'resighted',
-    "R",   'removed',
-    "OO",  'removed',
-    "RC",  'reclinched'
+    "A1", "applied-new",
+    "AE", "applied-new",
+    "ae", "applied-new",
+    "OX", "resighted",
+    "P", "resighted",
+    "p", "resighted",
+    "P_OK", "resighted",
+    "RQ", "resighted",
+    "P_ED", "resighted",
+    "R", "removed",
+    "OO", "removed",
+    "RC", "reclinched"
   )
 
   data %>%
@@ -59,16 +59,16 @@ w2_pit_as_wastd_tagobs <- function(data) {
       # https://github.com/dbca-wa/wastd/blob/master/shared/models.py#L259
       source = 20,
       source_id = as.character(recorded_pit_tag_id),
-      encounter_source="wamtram",
+      encounter_source = "wamtram",
       encounter_source_id = as.character(observation_id),
-      tag_type = 'pit-tag',
-      tag_position=pit_tag_position,
-      tag_state=pit_tag_state,
+      tag_type = "pit-tag",
+      tag_position = pit_tag_position,
+      tag_state = pit_tag_state,
       name = as.character(pit_tag_id), # TODO sanitize
       comments = glue::glue("Tag status: {pit_tag_state}")
     ) %>%
-    dplyr::left_join(tag_sides, by ="tag_position") %>%
-    dplyr::left_join(tag_states, by="tag_state") %>%
+    dplyr::left_join(tag_sides, by = "tag_position") %>%
+    dplyr::left_join(tag_states, by = "tag_state") %>%
     dplyr::select(-tag_position, -tag_state) %>%
     dplyr::filter_at(
       dplyr::vars(-source, -source_id, -encounter_source, -encounter_source_id),

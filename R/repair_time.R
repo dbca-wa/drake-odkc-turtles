@@ -19,7 +19,7 @@
 repair_time <- function(dt,
                         ref_was = "2010-03-22 20:08:00 +08",
                         ref_should = "2020-12-28 07:08:00 +08",
-                        tz = ruODK::get_default_tz()){
+                        tz = ruODK::get_default_tz()) {
   timediff <- lubridate::ymd_hms(ref_should) - lubridate::ymd_hms(ref_was)
   lubridate::with_tz(lubridate::ymd_hms(dt) + timediff, tz)
 }

@@ -18,7 +18,7 @@ odkc_tracks_log_as_wastd_loggerobs <- function(data) {
     dplyr::transmute(
       source = 2,
       source_id = id,
-      encounter_source="odk",
+      encounter_source = "odk",
       encounter_source_id = submissions_id,
       logger_type = ifelse( # prepare for ToN 1.4 field logger_type
         "logger_type" %in% names(data),

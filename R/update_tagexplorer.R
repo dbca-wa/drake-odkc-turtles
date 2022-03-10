@@ -20,10 +20,8 @@
 #' * `tag_sheet` The Google sheet ID for the sheet containing `tags`.
 #' * `meta_sheet` The Google sheet ID for the sheet containing the metadata.
 #' @export
-update_tagexplorer <- function(
-  wastd_data,
-  doc_id = Sys.getenv("TURTLE_SHEET")
-  ){
+update_tagexplorer <- function(wastd_data,
+                               doc_id = Sys.getenv("TURTLE_SHEET")) {
   #
   # googledrive::drive_auth(path = service_account_token)
   #
@@ -49,9 +47,12 @@ update_tagexplorer <- function(
     dplyr::select(-encounter_absolute_admin_url)
 
   cell_count <- nrow(tags) * ncol(tags)
-  if (cell_count > 5000000) wastdr::wastdr_msg_abort(glue::glue(
-    "Exceeding Google Sheets limit of 5M cells ",
-    "with {nrow(tags)} rows and {ncol(tags)} cols."))
+  if (cell_count > 5000000) {
+    wastdr::wastdr_msg_abort(glue::glue(
+      "Exceeding Google Sheets limit of 5M cells ",
+      "with {nrow(tags)} rows and {ncol(tags)} cols."
+    ))
+  }
 
   wastdr::wastdr_msg_info(
     glue::glue(
@@ -71,5 +72,5 @@ update_tagexplorer <- function(
     googlesheets4::sheet_write(Sys.getenv("TURTLE_SHEET"), sheet = "Metadata")
   wastdr::wastdr_msg_success("Done.")
 
-  list(tags=tags, tag_sheet=tag_sheet, meta_sheet=meta)
+  list(tags = tags, tag_sheet = tag_sheet, meta_sheet = meta)
 }

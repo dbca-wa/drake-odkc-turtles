@@ -48,7 +48,7 @@ odkc_tsi_as_wastd_ae <- function(data, user_mapping) {
       location_accuracy_m = encounter_observed_at_accuracy,
       when = lubridate::format_ISO8601(observation_start_time, usetz = TRUE),
       taxon = "Cheloniidae",
-      health="alive",
+      health = "alive",
       species = encounter_species %>% tidyr::replace_na("na"),
       sex = encounter_sex %>% tidyr::replace_na("na"),
       maturity = encounter_maturity %>% tidyr::replace_na("na"),

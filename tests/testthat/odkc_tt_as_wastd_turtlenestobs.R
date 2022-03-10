@@ -4,10 +4,11 @@ test_that("odkc_tt_as_wastd_turtlenestobs works", {
 
   odkc_names <- odkc_data$tt %>%
     odkc_tt_as_wastd_turtlenestobs() %>%
-    dplyr::select(-source, -source_id,
-                  # TODO: regenerate WAStD nest_excavations to include egg_count
-                  -egg_count
-                  ) %>%
+    dplyr::select(
+      -source, -source_id,
+      # TODO: regenerate WAStD nest_excavations to include egg_count
+      -egg_count
+    ) %>%
     names()
 
   # ODKC data transformed into WAStD shape should contain all fields of the

@@ -16,24 +16,27 @@
 #'   Default: `Sys.getenv("ODKC_IMPORT_UPLOAD_MEDIA", unset=TRUE)`
 #' @export
 upload_survey_media <- function(x,
-                         api_url = wastdr::get_wastdr_api_url(),
-                         api_token = wastdr::get_wastdr_api_token(),
-                         verbose = wastdr::get_wastdr_verbose(),
-                         upload = Sys.getenv("ODKC_IMPORT_UPLOAD_MEDIA", unset=TRUE)){
-  if (upload==FALSE) {
+                                api_url = wastdr::get_wastdr_api_url(),
+                                api_token = wastdr::get_wastdr_api_token(),
+                                verbose = wastdr::get_wastdr_verbose(),
+                                upload = Sys.getenv("ODKC_IMPORT_UPLOAD_MEDIA", unset = TRUE)) {
+  if (upload == FALSE) {
     "Not uploading {nrow(x)} media files." %>%
-      glue::glue() %>% wastdr::wastdr_msg_noop()
+      glue::glue() %>%
+      wastdr::wastdr_msg_noop()
     return(x)
   }
-  if (nrow(x)==0) {
+  if (nrow(x) == 0) {
     "No media files to upload, skipping." %>%
-      glue::glue() %>% wastdr::wastdr_msg_noop()
+      glue::glue() %>%
+      wastdr::wastdr_msg_noop()
     return(x)
   }
-  for (i in seq_len(nrow(x))){
-    if (fs::file_exists(x$attachment[i])){
+  for (i in seq_len(nrow(x))) {
+    if (fs::file_exists(x$attachment[i])) {
       "Uploading Survey photo {x$attachment[i]}" %>%
-        glue::glue() %>% wastdr_msg_info()
+        glue::glue() %>%
+        wastdr_msg_info()
       list(
         source = x$source[i],
         source_id = x$source_id[i],
@@ -53,7 +56,8 @@ upload_survey_media <- function(x,
         )
     } else {
       "Skipping missing file {x$attachment[i]}: {x$title[i]}" %>%
-        glue::glue() %>% wastdr::wastdr_msg_warn()
+        glue::glue() %>%
+        wastdr::wastdr_msg_warn()
     }
   }
 

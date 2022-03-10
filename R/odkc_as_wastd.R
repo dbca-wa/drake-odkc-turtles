@@ -91,7 +91,8 @@ odkc_as_wastd <- function(odkc_data, user_mapping) {
     # https://wastd.dbca.wa.gov.au/api/1/surveys/
     # make survey end from orphaned sve?
     surveys = odkc_svs_sve_as_wastd_surveys(
-      odkc_data$svs, odkc_data$sve, user_mapping),
+      odkc_data$svs, odkc_data$sve, user_mapping
+    ),
     survey_media = odkc_as_survey_media(odkc_data),
 
 
@@ -100,17 +101,17 @@ odkc_as_wastd <- function(odkc_data, user_mapping) {
     media = odkc_as_media(odkc_data)
   )
 
-  if(!is.null(odkc_data$tt)){
+  if (!is.null(odkc_data$tt)) {
     # -------------------------------------------------------------------- #
     # tt turtle tagging
-    res$tt = odkc_tt_as_wastd_ae(odkc_data, user_mapping)
-    res$tt_dmg = odkc_tt_dmg_as_wastd_turtledmg(odkc_data$tt_dmg)
-    res$tt_tsc = odkc_tt_as_wastd_turtledmg(odkc_data$tt)
-    res$tt_log = odkc_tt_log_as_wastd_loggerobs(odkc_data$tt_log)
-    res$tt_mor = odkc_tt_as_wastd_turtlemorph(odkc_data$tt, user_mapping)
-    res$tt_tag = odkc_tt_tag_as_wastd_tagobs(odkc_data, user_mapping)
-    res$tt_nto = odkc_tt_as_wastd_nesttagobs(odkc_data$tt)
-    res$tt_tno = odkc_tt_as_wastd_turtlenestobs(odkc_data$tt)
+    res$tt <- odkc_tt_as_wastd_ae(odkc_data, user_mapping)
+    res$tt_dmg <- odkc_tt_dmg_as_wastd_turtledmg(odkc_data$tt_dmg)
+    res$tt_tsc <- odkc_tt_as_wastd_turtledmg(odkc_data$tt)
+    res$tt_log <- odkc_tt_log_as_wastd_loggerobs(odkc_data$tt_log)
+    res$tt_mor <- odkc_tt_as_wastd_turtlemorph(odkc_data$tt, user_mapping)
+    res$tt_tag <- odkc_tt_tag_as_wastd_tagobs(odkc_data, user_mapping)
+    res$tt_nto <- odkc_tt_as_wastd_nesttagobs(odkc_data$tt)
+    res$tt_tno <- odkc_tt_as_wastd_turtlenestobs(odkc_data$tt)
   }
 
   res

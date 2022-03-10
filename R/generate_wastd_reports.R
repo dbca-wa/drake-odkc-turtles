@@ -11,13 +11,14 @@
 #'
 #' # Compile one single report
 #' rmarkdown::render(
-#' here::here("vignettes/wastd.Rmd"),
-#' params = list(area_name = "Delambre Island"),
-#' output_file = here::here("vignettes/wastd_del.html"))
+#'   here::here("vignettes/wastd.Rmd"),
+#'   params = list(area_name = "Delambre Island"),
+#'   output_file = here::here("vignettes/wastd_del.html")
+#' )
 #' }
-generate_wastd_reports <- function(wastd_data){
+generate_wastd_reports <- function(wastd_data) {
   # save wastd_data.rds
-  saveRDS(wastd_data, file=here::here("vignettes", "wastd_data.rds"))
+  saveRDS(wastd_data, file = here::here("vignettes", "wastd_data.rds"))
 
   # # Overview dashboard
   # a <- "wa_overview"
@@ -37,20 +38,21 @@ generate_wastd_reports <- function(wastd_data){
   wastdr::wastdr_msg_info(glue::glue("Rendering report for {a} to {fn}..."))
   rmarkdown::render(
     here::here("vignettes/del_rio.Rmd"),
-    params = list(area_name = "Delambre Island",
-                  prefix="DEL",
-                  w2_filepath="inst/data/wamtram.csv",
-                  w2_initial_rookery_code="DA",
-                  w2_place_code="DADI",
-                  w2_exported_on="20 Sept 2021",
-                  export_dir="inst/reports/rio"
-                  ),
+    params = list(
+      area_name = "Delambre Island",
+      prefix = "DEL",
+      w2_filepath = "inst/data/wamtram.csv",
+      w2_initial_rookery_code = "DA",
+      w2_place_code = "DADI",
+      w2_exported_on = "20 Sept 2021",
+      export_dir = "inst/reports/rio"
+    ),
     output_file = fn
   )
   wastdr::wastdr_msg_success(glue::glue("Compiled {fn}."))
 
   # WAStD only reports - compile
-   for (a in c(unique(wastd_data$areas$area_name), "Other")) {
+  for (a in c(unique(wastd_data$areas$area_name), "Other")) {
     fn <- here::here("vignettes", glue::glue("{wastdr::urlize(a)}.html"))
     wastdr::wastdr_msg_info(glue::glue("Rendering report for {a} to {fn}..."))
     rmarkdown::render(

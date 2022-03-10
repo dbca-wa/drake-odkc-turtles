@@ -65,7 +65,7 @@ odkc_tt_tag_as_wastd_tagobs <- function(data, user_mapping) {
       name = pit_pit3_name,
       tag_location = pit_pit3_location,
       status = pit_pit3_status
-  )
+    )
 
   ft1 <- d %>%
     dplyr::transmute(
@@ -160,14 +160,16 @@ odkc_tt_tag_as_wastd_tagobs <- function(data, user_mapping) {
 
 
   # Return combined data
-  dplyr::bind_rows(pit1,
-                   pit2,
-                   pit3,
-                   ft1,
-                   ft2,
-                   ft3,
-                   biopsy,
-                   extra) %>%
+  dplyr::bind_rows(
+    pit1,
+    pit2,
+    pit3,
+    ft1,
+    ft2,
+    ft3,
+    biopsy,
+    extra
+  ) %>%
     dplyr::left_join(wastd_handlers, by = "handler") %>% # wastd User PK
     dplyr::left_join(wastd_recorders, by = "recorder") %>% # wastd User PK
     dplyr::select(-handler, -recorder) %>% # drop odkc_username

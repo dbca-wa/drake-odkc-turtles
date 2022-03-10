@@ -26,7 +26,7 @@ odkc_mwi_tag_as_wastd_tagobs <- function(data, user_mapping) {
     dplyr::transmute(
       source = 2,
       source_id = id,
-      encounter_source="odk",
+      encounter_source = "odk",
       encounter_source_id = submissions_id,
       handler = reporter,
       recorder = reporter,

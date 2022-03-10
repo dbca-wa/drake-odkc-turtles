@@ -15,12 +15,11 @@
 #' x %>% wastdr::wastd_POST("logger-observations", api_url = au, api_token = at)
 #' }
 odkc_tt_log_as_wastd_loggerobs <- function(data) {
-
   data %>%
     dplyr::transmute(
       source = 2,
       source_id = id,
-      encounter_source="odk",
+      encounter_source = "odk",
       encounter_source_id = submissions_id,
       logger_type = logger_type,
       deployment_status = logger_status,
@@ -31,7 +30,6 @@ odkc_tt_log_as_wastd_loggerobs <- function(data) {
       dplyr::vars(-source, -source_id, -encounter_source, -encounter_source_id),
       dplyr::any_vars(!is.na(.))
     )
-
 }
 
 # usethis::use_test("odkc_tt_log_as_wastd_loggerobs")

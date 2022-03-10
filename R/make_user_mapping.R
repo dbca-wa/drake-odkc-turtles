@@ -23,8 +23,6 @@
 #' @export
 make_user_mapping <- function(odkc_data, wastd_users,
                               verbose = wastdr::get_wastdr_verbose()) {
-
-
   if (!is.null(odkc_data$tt)) {
     tagging_names <- unique(
       c(
@@ -59,17 +57,18 @@ make_user_mapping <- function(odkc_data, wastd_users,
 
   glue::glue(
     "Mapping {nrow(odkc_reporters)} ODKC usernames to ",
-    "{nrow(wastd_users)} WAStD user profiles...") %>%
+    "{nrow(wastd_users)} WAStD user profiles..."
+  ) %>%
     wastdr::wastdr_msg_info(verbose = verbose)
 
   w_users <- wastd_users %>%
-    dplyr::filter(is_active==TRUE) %>%
+    dplyr::filter(is_active == TRUE) %>%
     dplyr::mutate(
-      wastd_usernames = paste(username, name, aliases, sep=",") %>%
+      wastd_usernames = paste(username, name, aliases, sep = ",") %>%
         stringr::str_remove_all(",$|,,$") %>%
         stringr::str_to_lower()
     ) %>%
-    tidyr::separate_rows(wastd_usernames, sep=",") %>%
+    tidyr::separate_rows(wastd_usernames, sep = ",") %>%
     dplyr::mutate(
       wastd_usernames = wastd_usernames %>% stringr::str_squish()
     ) %>%
@@ -78,8 +77,8 @@ make_user_mapping <- function(odkc_data, wastd_users,
     invisible()
 
   out <- tibble::tibble(
-      odkc_username = odkc_reporters
-    ) %>%
+    odkc_username = odkc_reporters
+  ) %>%
     fuzzyjoin::stringdist_left_join(
       w_users,
       by = c("odkc_username" = "wastd_usernames"),
@@ -95,7 +94,8 @@ make_user_mapping <- function(odkc_data, wastd_users,
   # %>% dplyr::select(-odkc_un_trim)
 
   "Done, returning user mapping." %>%
-    glue::glue() %>% wastdr::wastdr_msg_success(verbose = verbose)
+    glue::glue() %>%
+    wastdr::wastdr_msg_success(verbose = verbose)
 
   out
 }

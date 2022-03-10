@@ -75,29 +75,29 @@ odkc_tt_as_wastd_ae <- function(data,
       where = dplyr::case_when(
         # Manually backfilled coordinates using coordinate fields
         (encounter_capture_mode == "new" &
-           !is.na(manual_nest_location_lat) &
-           !is.na(manual_nest_location_lon)
-         ) ~ glue::glue(
+          !is.na(manual_nest_location_lat) &
+          !is.na(manual_nest_location_lon)
+        ) ~ glue::glue(
           "POINT ({manual_nest_location_lon} ",
           "{manual_nest_location_lat})"
-         ),
+        ),
 
         # Manually backfilled coordinates using map widget
         (encounter_capture_mode == "new" &
-           # If manual_nest_location_lat/lon given, previous clause catches
-           # is.na(manual_nest_location_lat) &
-           # is.na(manual_nest_location_lon) &
-           !is.na(manual_nest_location_map_latitude) &
-           !is.na(manual_nest_location_map_longitude)
-         ) ~ glue::glue(
-             "POINT ({manual_nest_location_map_longitude} ",
-             "{manual_nest_location_map_latitude})"
-         ),
+          # If manual_nest_location_lat/lon given, previous clause catches
+          # is.na(manual_nest_location_lat) &
+          # is.na(manual_nest_location_lon) &
+          !is.na(manual_nest_location_map_latitude) &
+          !is.na(manual_nest_location_map_longitude)
+        ) ~ glue::glue(
+          "POINT ({manual_nest_location_map_longitude} ",
+          "{manual_nest_location_map_latitude})"
+        ),
 
         # Geolocation captured in ODK
         (encounter_capture_mode != "new" &
-           !is.na(realtime_nest_location_longitude) &
-           !is.na(realtime_nest_location_latitude)) ~ glue::glue(
+          !is.na(realtime_nest_location_longitude) &
+          !is.na(realtime_nest_location_latitude)) ~ glue::glue(
           "POINT ({realtime_nest_location_longitude} ",
           "{realtime_nest_location_latitude})"
         ),

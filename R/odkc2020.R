@@ -14,18 +14,24 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_DEV_URL"),
-#'                      api_token = Sys.getenv("WASTDR_API_DEV_TOKEN"))
-#' wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_TEST_URL"),
-#'                      api_token = Sys.getenv("WASTDR_API_TEST_TOKEN"))
-#' wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_URL"),
-#'                      api_token = Sys.getenv("WASTDR_API_TOKEN"))
-#' Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=TRUE)
-#' Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
-#' Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA=TRUE)
-#' Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA=FALSE)
-#' Sys.setenv(ODKC_DOWNLOAD=TRUE) # Dl media files
-#' Sys.setenv(ODKC_DOWNLOAD=FALSE)
+#' wastdr::wastdr_setup(
+#'   api_url = Sys.getenv("WASTDR_API_DEV_URL"),
+#'   api_token = Sys.getenv("WASTDR_API_DEV_TOKEN")
+#' )
+#' wastdr::wastdr_setup(
+#'   api_url = Sys.getenv("WASTDR_API_TEST_URL"),
+#'   api_token = Sys.getenv("WASTDR_API_TEST_TOKEN")
+#' )
+#' wastdr::wastdr_setup(
+#'   api_url = Sys.getenv("WASTDR_API_URL"),
+#'   api_token = Sys.getenv("WASTDR_API_TOKEN")
+#' )
+#' Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING = TRUE)
+#' Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING = FALSE)
+#' Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA = TRUE)
+#' Sys.setenv(ODKC_IMPORT_UPLOAD_MEDIA = FALSE)
+#' Sys.setenv(ODKC_DOWNLOAD = TRUE) # Dl media files
+#' Sys.setenv(ODKC_DOWNLOAD = FALSE)
 #'
 #' library(etlTurtleNesting)
 #' library(wastdr)
@@ -58,7 +64,8 @@ odkc2020 <- function() {
     # ------------------------------------------------------------------------ #
     # EXTRACT
     odkc_ex = wastdr::download_odkc_turtledata_2020(
-      download = dl_odkc, verbose = FALSE),
+      download = dl_odkc, verbose = FALSE
+    ),
 
     # ------------------------------------------------------------------------ #
     # TRANSFORM

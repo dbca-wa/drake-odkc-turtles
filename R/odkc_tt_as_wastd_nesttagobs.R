@@ -18,7 +18,7 @@ odkc_tt_as_wastd_nesttagobs <- function(data) {
     dplyr::transmute(
       source = 2,
       source_id = id,
-      encounter_source="odk",
+      encounter_source = "odk",
       encounter_source_id = id,
       status = "applied-new",
       flipper_tag_id = ft1_ft1_name,

@@ -59,11 +59,11 @@ odkc_tracks_as_wastd_tne <- function(data, user_mapping) {
       species = details_species,
       habitat = nest_habitat %>% tidyr::replace_na("na"),
       disturbance = nest_disturbance %>% tidyr::replace_na("na"),
-      nest_tagged = nest_nest_tagged %>% tx_obs_choices,
-      logger_found = nest_logger_found %>% tx_obs_choices,
-      eggs_counted = nest_eggs_counted %>% tx_obs_choices,
-      hatchlings_measured = nest_hatchlings_measured %>% tx_obs_choices,
-      fan_angles_measured = nest_fan_angles_measured %>% tx_obs_choices
+      nest_tagged = nest_nest_tagged %>% tx_obs_choices(),
+      logger_found = nest_logger_found %>% tx_obs_choices(),
+      eggs_counted = nest_eggs_counted %>% tx_obs_choices(),
+      hatchlings_measured = nest_hatchlings_measured %>% tx_obs_choices(),
+      fan_angles_measured = nest_fan_angles_measured %>% tx_obs_choices()
     ) %>%
     dplyr::left_join(wastd_reporters, by = "reporter") %>% # WAStD User PK
     dplyr::left_join(wastd_observers, by = "observer") %>% # WAStD User PK
@@ -71,7 +71,8 @@ odkc_tracks_as_wastd_tne <- function(data, user_mapping) {
 }
 
 
-tx_obs_choices <- . %>% tidyr::replace_na("na") %>%
+tx_obs_choices <- . %>%
+  tidyr::replace_na("na") %>%
   stringr::str_replace_all("yes", "present") %>%
   stringr::str_replace_all("no", "absent")
 

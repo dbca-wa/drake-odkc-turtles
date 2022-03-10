@@ -29,7 +29,7 @@ odkc_tt_as_wastd_turtlemorph <- function(data, user_mapping) {
     dplyr::transmute(
       source = 2,
       source_id = id,
-      encounter_source="odk",
+      encounter_source = "odk",
       encounter_source_id = id,
       handler = morphometrics_morphometrics_handled_by,
       recorder = reporter,

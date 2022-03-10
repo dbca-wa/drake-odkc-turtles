@@ -26,12 +26,12 @@ split_create_update_skip <- function(odkc_prep, wastd_data) {
 
   enc_create <- . %>% dplyr::anti_join(wastd_data$enc, by = "source_id")
   enc_update <- . %>% dplyr::semi_join(enc_upd, by = "source_id")
-  enc_skip <-   . %>% dplyr::semi_join(enc_skp, by = "source_id")
+  enc_skip <- . %>% dplyr::semi_join(enc_skp, by = "source_id")
 
   obs_match <- c("encounter_source_id" = "source_id")
   obs_create <- . %>% dplyr::anti_join(wastd_data$enc, by = obs_match)
   obs_update <- . %>% dplyr::semi_join(enc_upd, by = obs_match)
-  obs_skip <-   . %>% dplyr::semi_join(enc_skp, by = obs_match)
+  obs_skip <- . %>% dplyr::semi_join(enc_skp, by = obs_match)
 
 
   res <- list(
@@ -39,31 +39,24 @@ split_create_update_skip <- function(odkc_prep, wastd_data) {
     tne_create = odkc_prep$tne %>% enc_create(),
     tne_update = odkc_prep$tne %>% enc_update(),
     tne_skip = odkc_prep$tne %>% enc_skip(),
-
     tn_dist_create = odkc_prep$tn_dist %>% obs_create(),
     tn_dist_update = odkc_prep$tn_dist %>% obs_update(),
     tn_dist_skip = odkc_prep$tn_dist %>% obs_skip(),
-
     tn_tags_create = odkc_prep$tn_tags %>% obs_create(),
     tn_tags_update = odkc_prep$tn_tags %>% obs_update(),
     tn_tags_skip = odkc_prep$tn_tags %>% obs_skip(),
-
     tn_eggs_create = odkc_prep$tn_eggs %>% obs_create(),
     tn_eggs_update = odkc_prep$tn_eggs %>% obs_update(),
     tn_eggs_skip = odkc_prep$tn_eggs %>% obs_skip(),
-
     th_morph_create = odkc_prep$th_morph %>% obs_create(),
     th_morph_update = odkc_prep$th_morph %>% obs_update(),
     th_morph_skip = odkc_prep$th_morph %>% obs_skip(),
-
     th_emerg_create = odkc_prep$th_emerg %>% obs_create(),
     th_emerg_update = odkc_prep$th_emerg %>% obs_update(),
     th_emerg_skip = odkc_prep$th_emerg %>% obs_skip(),
-
     th_outlier_create = odkc_prep$th_outlier %>% obs_create(),
     th_outlier_update = odkc_prep$th_outlier %>% obs_update(),
     th_outlier_skip = odkc_prep$th_outlier %>% obs_skip(),
-
     th_light_create = odkc_prep$th_light %>% obs_create(),
     th_light_update = odkc_prep$th_light %>% obs_update(),
     th_light_skip = odkc_prep$th_light %>% obs_skip(),
@@ -146,42 +139,42 @@ split_create_update_skip <- function(odkc_prep, wastd_data) {
   if (!is.null(odkc_prep$tt)) {
     # Tagging > AE ------------------------------------------------------------#
     # AE
-    res$tt_create = odkc_prep$tt %>% enc_create()
-    res$tt_update = odkc_prep$tt %>% enc_update()
-    res$tt_skip = odkc_prep$tt %>% enc_skip()
+    res$tt_create <- odkc_prep$tt %>% enc_create()
+    res$tt_update <- odkc_prep$tt %>% enc_update()
+    res$tt_skip <- odkc_prep$tt %>% enc_skip()
 
     # Obs
-    res$tt_dmg_create = odkc_prep$tt_dmg %>% obs_create()
-    res$tt_dmg_update = odkc_prep$tt_dmg %>% obs_update()
-    res$tt_dmg_skip = odkc_prep$tt_dmg %>% obs_skip()
+    res$tt_dmg_create <- odkc_prep$tt_dmg %>% obs_create()
+    res$tt_dmg_update <- odkc_prep$tt_dmg %>% obs_update()
+    res$tt_dmg_skip <- odkc_prep$tt_dmg %>% obs_skip()
     #
-    res$tt_tsc_create = odkc_prep$tt_tsc %>% obs_create()
-    res$tt_tsc_update = odkc_prep$tt_tsc %>% obs_update()
-    res$tt_tsc_skip = odkc_prep$tt_tsc %>% obs_skip()
+    res$tt_tsc_create <- odkc_prep$tt_tsc %>% obs_create()
+    res$tt_tsc_update <- odkc_prep$tt_tsc %>% obs_update()
+    res$tt_tsc_skip <- odkc_prep$tt_tsc %>% obs_skip()
     #
-    res$tt_log_create = odkc_prep$tt_log %>% obs_create()
-    res$tt_log_update = odkc_prep$tt_log %>% obs_update()
-    res$tt_log_skip = odkc_prep$tt_log %>% obs_skip()
+    res$tt_log_create <- odkc_prep$tt_log %>% obs_create()
+    res$tt_log_update <- odkc_prep$tt_log %>% obs_update()
+    res$tt_log_skip <- odkc_prep$tt_log %>% obs_skip()
     #
-    res$tt_mor_create = odkc_prep$tt_mor %>% obs_create()
-    res$tt_mor_update = odkc_prep$tt_mor %>% obs_update()
-    res$tt_mor_skip = odkc_prep$tt_mor %>% obs_skip()
+    res$tt_mor_create <- odkc_prep$tt_mor %>% obs_create()
+    res$tt_mor_update <- odkc_prep$tt_mor %>% obs_update()
+    res$tt_mor_skip <- odkc_prep$tt_mor %>% obs_skip()
     #
-    res$tt_tag_create = odkc_prep$tt_tag %>% obs_create()
-    res$tt_tag_update = odkc_prep$tt_tag %>% obs_update()
-    res$tt_tag_skip = odkc_prep$tt_tag %>% obs_skip()
+    res$tt_tag_create <- odkc_prep$tt_tag %>% obs_create()
+    res$tt_tag_update <- odkc_prep$tt_tag %>% obs_update()
+    res$tt_tag_skip <- odkc_prep$tt_tag %>% obs_skip()
     #
-    res$tt_tag_create = odkc_prep$tt_tag %>% obs_create()
-    res$tt_tag_update = odkc_prep$tt_tag %>% obs_update()
-    res$tt_tag_skip = odkc_prep$tt_tag %>% obs_skip()
+    res$tt_tag_create <- odkc_prep$tt_tag %>% obs_create()
+    res$tt_tag_update <- odkc_prep$tt_tag %>% obs_update()
+    res$tt_tag_skip <- odkc_prep$tt_tag %>% obs_skip()
     #
-    res$tt_nto_create = odkc_prep$tt_nto %>% obs_create()
-    res$tt_nto_update = odkc_prep$tt_nto %>% obs_update()
-    res$tt_nto_skip = odkc_prep$tt_nto %>% obs_skip()
+    res$tt_nto_create <- odkc_prep$tt_nto %>% obs_create()
+    res$tt_nto_update <- odkc_prep$tt_nto %>% obs_update()
+    res$tt_nto_skip <- odkc_prep$tt_nto %>% obs_skip()
     #
-    res$tt_tno_create = odkc_prep$tt_tno %>% obs_create()
-    res$tt_tno_update = odkc_prep$tt_tno %>% obs_update()
-    res$tt_tno_skip = odkc_prep$tt_tno %>% obs_skip()
+    res$tt_tno_create <- odkc_prep$tt_tno %>% obs_create()
+    res$tt_tno_update <- odkc_prep$tt_tno %>% obs_update()
+    res$tt_tno_skip <- odkc_prep$tt_tno %>% obs_skip()
   }
   res
 }

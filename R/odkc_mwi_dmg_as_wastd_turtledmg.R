@@ -18,7 +18,7 @@ odkc_mwi_dmg_as_wastd_turtledmg <- function(data) {
     dplyr::transmute(
       source = 2,
       source_id = id,
-      encounter_source="odk",
+      encounter_source = "odk",
       encounter_source_id = submissions_id,
       body_part = body_part,
       damage_type = damage_type,

@@ -10,8 +10,10 @@ generate_qa_users_report <- function(odkc_ex, user_mapping, year) {
   fn_out <-
     here::here("vignettes", glue::glue("qa_users{year}.html"))
   fn_in <- here::here("vignettes", "qa_users.Rmd")
-  user_qa_report  = rmarkdown::render(fn_in, output_file = fn_out, quiet =
-                                        FALSE)
+  user_qa_report <- rmarkdown::render(fn_in,
+    output_file = fn_out, quiet =
+      FALSE
+  )
   wastdr::wastdr_msg_success(glue::glue("Report {fn_out} copied to inst/reports."))
   fs::file_copy(fn_out, here::here("inst/reports/"), overwrite = TRUE)
 }
@@ -30,17 +32,20 @@ generate_qa_users_report_w2 <- function(user_mapping,
   fn_in <- here::here("vignettes/qa_users_w2.Rmd")
   fn_out <- here::here("inst/reports/qa_users_w2.html")
   "Rendering QA for WAMTRAM users to {fn_out}..." %>%
-    glue::glue() %>% wastdr::wastdr_msg_info(verbose = verbose)
-  user_qa_report  = rmarkdown::render(fn_in, output_file = fn_out, quiet = FALSE)
+    glue::glue() %>%
+    wastdr::wastdr_msg_info(verbose = verbose)
+  user_qa_report <- rmarkdown::render(fn_in, output_file = fn_out, quiet = FALSE)
   "Report {fn_out} copied to inst/reports." %>%
-    glue::glue() %>% wastdr::wastdr_msg_success(verbose = verbose)
+    glue::glue() %>%
+    wastdr::wastdr_msg_success(verbose = verbose)
 
 
   fn_in <- here::here("vignettes/w2_geolocation_qa.Rmd")
   fn_out <- here::here("inst/reports/w2_geolocation_qa.html")
   "Rendering geolocation qa report to {fn_out}..." %>%
-    glue::glue() %>% wastdr::wastdr_msg_info(verbose = verbose)
-  geolocation_qa_report  = rmarkdown::render(
+    glue::glue() %>%
+    wastdr::wastdr_msg_info(verbose = verbose)
+  geolocation_qa_report <- rmarkdown::render(
     fn_in,
     output_file = fn_out,
     quiet = FALSE,

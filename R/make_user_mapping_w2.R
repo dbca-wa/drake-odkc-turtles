@@ -21,7 +21,8 @@
 make_user_mapping_w2 <- function(w2_data, wastd_users, verbose = wastdr::get_wastdr_verbose()) {
   glue::glue(
     "Mapping {nrow(w2_data$persons)} WAMTRAM users to ",
-    "{nrow(wastd_users)} WAStD user profiles...") %>%
+    "{nrow(wastd_users)} WAStD user profiles..."
+  ) %>%
     wastdr::wastdr_msg_info(verbose = verbose)
 
   unique_legacy_users <-
@@ -52,7 +53,7 @@ make_user_mapping_w2 <- function(w2_data, wastd_users, verbose = wastdr::get_was
     dplyr::transmute(
       legacy_userid = person_id,
       legacy_username = clean_name
-      ) %>%
+    ) %>%
     fuzzyjoin::stringdist_left_join(
       wastd_users,
       by = c(legacy_username = "wastd_usernames"),
@@ -67,7 +68,8 @@ make_user_mapping_w2 <- function(w2_data, wastd_users, verbose = wastdr::get_was
     dplyr::ungroup()
 
   "Done, returning user mapping." %>%
-    glue::glue() %>% wastdr::wastdr_msg_success(verbose = verbose)
+    glue::glue() %>%
+    wastdr::wastdr_msg_success(verbose = verbose)
 
   out
 }

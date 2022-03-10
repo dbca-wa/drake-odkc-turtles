@@ -18,11 +18,11 @@
 #' @return A list of results from `wastdr::wastd_create_update_skip`.
 #' @export
 upload_odkc_to_wastd <- function(data,
-                               update_existing = FALSE,
-                               up_media = TRUE,
-                               api_url = wastdr::get_wastdr_api_url(),
-                               api_token = wastdr::get_wastdr_api_token(),
-                               verbose = wastdr::get_wastdr_verbose()) {
+                                 update_existing = FALSE,
+                                 up_media = TRUE,
+                                 api_url = wastdr::get_wastdr_api_url(),
+                                 api_token = wastdr::get_wastdr_api_token(),
+                                 verbose = wastdr::get_wastdr_verbose()) {
   res <- list(
     # Tracks ------------------------------------------------------------------#
     tne = wastdr::wastd_create_update_skip(
@@ -36,7 +36,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     tn_dist = wastdr::wastd_create_update_skip(
       data$tn_dist_create,
       data$tn_dist_update,
@@ -48,7 +47,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     tn_tags = wastdr::wastd_create_update_skip(
       data$tn_tags_create,
       data$tn_tags_update,
@@ -60,7 +58,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     tn_eggs = wastdr::wastd_create_update_skip(
       data$tn_eggs_create,
       data$tn_eggs_update,
@@ -72,7 +69,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     th_morph = wastdr::wastd_create_update_skip(
       data$th_morph_create,
       data$th_morph_update,
@@ -84,7 +80,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     th_emerg = wastdr::wastd_create_update_skip(
       data$th_emerg_create,
       data$th_emerg_update,
@@ -96,7 +91,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     th_outlier = wastdr::wastd_create_update_skip(
       data$th_outlier_create,
       data$th_outlier_update,
@@ -108,7 +102,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     th_light = wastdr::wastd_create_update_skip(
       data$th_light_create,
       data$th_light_update,
@@ -133,7 +126,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     tto = wastdr::wastd_create_update_skip(
       data$tto_create,
       data$tto_update,
@@ -145,7 +137,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     ttd = wastdr::wastd_create_update_skip(
       data$ttd_create,
       data$ttd_update,
@@ -171,7 +162,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     obs_turtlemorph = wastdr::wastd_create_update_skip(
       data$obs_turtlemorph_create,
       data$obs_turtlemorph_update,
@@ -183,7 +173,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     obs_tagobs = wastdr::wastd_create_update_skip(
       data$obs_tagobs_create,
       data$obs_tagobs_update,
@@ -195,7 +184,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     obs_turtledmg = wastdr::wastd_create_update_skip(
       data$obs_turtledmg_create,
       data$obs_turtledmg_update,
@@ -233,7 +221,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     de = wastdr::wastd_create_update_skip(
       data$de_mwi_create,
       data$de_mwi_update,
@@ -245,7 +232,6 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     ),
-
     tnd_obs = wastdr::wastd_create_update_skip(
       data$tnd_obs_create,
       data$tnd_obs_update,
@@ -257,12 +243,10 @@ upload_odkc_to_wastd <- function(data,
       api_token = api_token,
       verbose = verbose
     )
-
   )
   # Tagging > AE ------------------------------------------------------------#
-  if("tt_create" %in% names(data)){
-
-    res$tt = wastdr::wastd_create_update_skip(
+  if ("tt_create" %in% names(data)) {
+    res$tt <- wastdr::wastd_create_update_skip(
       data$tt_create,
       data$tt_update,
       data$tt_skip,
@@ -274,7 +258,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     )
 
-    res$tt_dmg = wastdr::wastd_create_update_skip(
+    res$tt_dmg <- wastdr::wastd_create_update_skip(
       data$tt_dmg_create,
       data$tt_dmg_update,
       data$tt_dmg_skip,
@@ -286,7 +270,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     )
 
-    res$tt_tsc = wastdr::wastd_create_update_skip(
+    res$tt_tsc <- wastdr::wastd_create_update_skip(
       data$tt_tsc_create,
       data$tt_tsc_update,
       data$tt_tsc_skip,
@@ -298,7 +282,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     )
 
-    res$tt_log = wastdr::wastd_create_update_skip(
+    res$tt_log <- wastdr::wastd_create_update_skip(
       data$tt_log_create,
       data$tt_log_update,
       data$tt_log_skip,
@@ -310,7 +294,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     )
 
-    res$tt_mor = wastdr::wastd_create_update_skip(
+    res$tt_mor <- wastdr::wastd_create_update_skip(
       data$tt_mor_create,
       data$tt_mor_update,
       data$tt_mor_skip,
@@ -322,7 +306,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     )
 
-    res$tt_tag = wastdr::wastd_create_update_skip(
+    res$tt_tag <- wastdr::wastd_create_update_skip(
       data$tt_tag_create,
       data$tt_tag_update,
       data$tt_tag_skip,
@@ -334,7 +318,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     )
 
-    res$tt_nto = wastdr::wastd_create_update_skip(
+    res$tt_nto <- wastdr::wastd_create_update_skip(
       data$tt_nto_create,
       data$tt_nto_update,
       data$tt_nto_skip,
@@ -346,7 +330,7 @@ upload_odkc_to_wastd <- function(data,
       verbose = verbose
     )
 
-    res$tt_tno = wastdr::wastd_create_update_skip(
+    res$tt_tno <- wastdr::wastd_create_update_skip(
       data$tt_tno_create,
       data$tt_tno_update,
       data$tt_tno_skip,
@@ -360,7 +344,7 @@ upload_odkc_to_wastd <- function(data,
   }
 
   # Surveys come after tagging so they adopt tagging AnimalEncounters in WAStD
-  res$svy = wastdr::wastd_create_update_skip(
+  res$svy <- wastdr::wastd_create_update_skip(
     data$svy_create,
     data$svy_update,
     data$svy_skip,
@@ -372,17 +356,19 @@ upload_odkc_to_wastd <- function(data,
     verbose = verbose
   )
 
-  res$survey_media = upload_survey_media(data$survey_media_create,
-                                     upload = up_media,
-                                     api_url = api_url,
-                                     api_token = api_token,
-                                     verbose = verbose)
+  res$survey_media <- upload_survey_media(data$survey_media_create,
+    upload = up_media,
+    api_url = api_url,
+    api_token = api_token,
+    verbose = verbose
+  )
 
-  res$media = upload_media(data$media_create,
-                       upload = up_media,
-                       api_url = api_url,
-                       api_token = api_token,
-                       verbose = verbose)
+  res$media <- upload_media(data$media_create,
+    upload = up_media,
+    api_url = api_url,
+    api_token = api_token,
+    verbose = verbose
+  )
 
   res
 }

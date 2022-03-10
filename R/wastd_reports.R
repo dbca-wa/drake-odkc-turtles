@@ -24,5 +24,5 @@ wastd_reports <- function() {
     wastd_reports = etlTurtleNesting::generate_wastd_reports(wastd_data),
     wastd_tags = etlTurtleNesting::update_tagexplorer(wastd_data),
     sharepoint = etlTurtleNesting::upload_to_sharepoint(wastd_reports)
-)
+  )
 }

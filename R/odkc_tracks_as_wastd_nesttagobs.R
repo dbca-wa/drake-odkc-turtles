@@ -18,7 +18,7 @@ odkc_tracks_as_wastd_nesttagobs <- function(data) {
     dplyr::transmute(
       source = 2,
       source_id = id,
-      encounter_source="odk",
+      encounter_source = "odk",
       encounter_source_id = id,
       status = nest_tag_status,
       flipper_tag_id = nest_tag_flipper_tag_id,
@@ -34,8 +34,10 @@ odkc_tracks_as_wastd_nesttagobs <- function(data) {
       comments = nest_tag_tag_comments
     ) %>%
     dplyr::filter_at(
-      dplyr::vars(-source, -source_id, -encounter_source, -encounter_source_id,
-                  -date_nest_laid),
+      dplyr::vars(
+        -source, -source_id, -encounter_source, -encounter_source_id,
+        -date_nest_laid
+      ),
       dplyr::any_vars(!is.na(.))
     )
 }

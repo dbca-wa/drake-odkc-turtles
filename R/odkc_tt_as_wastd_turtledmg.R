@@ -12,7 +12,8 @@
 #' at <- Sys.getenv("WASTDR_API_DEV_TOKEN")
 #' x <- odkc_tt_as_wastd_turtledmg(odkc_data$tt)
 #' x %>% wastdr::wastd_POST("turtle-damage-observations",
-#'   api_url = au, api_token = at)
+#'   api_url = au, api_token = at
+#' )
 #' }
 odkc_tt_as_wastd_turtledmg <- function(data) {
   scars <- data %>%
@@ -20,7 +21,7 @@ odkc_tt_as_wastd_turtledmg <- function(data) {
     dplyr::transmute(
       source = 2,
       source_id = id,
-      encounter_source="odk",
+      encounter_source = "odk",
       encounter_source_id = id,
       body_part = ft1_tag_scar_locations,
       damage_type = "tag-scar",
@@ -35,7 +36,7 @@ odkc_tt_as_wastd_turtledmg <- function(data) {
     dplyr::transmute(
       source = 2,
       source_id = id,
-      encounter_source="odk",
+      encounter_source = "odk",
       encounter_source_id = id,
       body_part = ft1_tag_sighted_but_unread,
       damage_type = "tag-seen",

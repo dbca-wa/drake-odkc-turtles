@@ -20,7 +20,7 @@ odkc_tracks_fan_outlier_as_tnheo <- function(data) {
     dplyr::transmute(
       source = 2,
       source_id = id,
-      encounter_source="odk",
+      encounter_source = "odk",
       encounter_source_id = submissions_id,
       bearing_outlier_track_degrees = outlier_track_bearing_manual,
       outlier_group_size = outlier_group_size,

@@ -7,7 +7,7 @@
 #' @return A tibble suitable for `split_create_update_skip()`.
 #' @family wamtram
 #' @export
-w2_as_wastd <- function(data, user_mapping){
+w2_as_wastd <- function(data, user_mapping) {
   list(
     tt = w2_as_wastd_ae(data, user_mapping),
     tt_tag = w2_tag_as_wastd_tagobs(data, user_mapping),

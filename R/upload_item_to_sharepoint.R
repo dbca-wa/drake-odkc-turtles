@@ -10,13 +10,14 @@
 #' @export
 upload_item_to_sharepoint <- function(local_file_path,
                                       dst,
-                                      local_root_rel="inst/reports"){
+                                      local_root_rel = "inst/reports") {
   local_root_abs <- here::here(local_root_rel)
 
   # Catch file does not exist
   if (!fs::file_exists(local_file_path)) {
     "File {} does not exist, skipping" %>%
-      glue::glue() %>% wastdr::wastdr_msg_warn()
+      glue::glue() %>%
+      wastdr::wastdr_msg_warn()
     return()
   }
 
@@ -26,21 +27,30 @@ upload_item_to_sharepoint <- function(local_file_path,
     stringr::str_replace(local_root_abs, "")
 
   dest_fn <- "{dest_pth}/{fs::path_file(local_file_path)}" %>%
-    glue::glue() %>% as.character()
+    glue::glue() %>%
+    as.character()
 
-  "Target {dest_fn}" %>% glue::glue() %>% wastdr::wastdr_msg_info()
+  "Target {dest_fn}" %>%
+    glue::glue() %>%
+    wastdr::wastdr_msg_info()
 
   # Catch file already exists
-  if ("ms_drive_item" %in% try(class(dst$get_item(dest_fn)), silent=TRUE)) {
-    "Skip existing {dest_fn}" %>% glue::glue() %>% wastdr::wastdr_msg_success()
+  if ("ms_drive_item" %in% try(class(dst$get_item(dest_fn)), silent = TRUE)) {
+    "Skip existing {dest_fn}" %>%
+      glue::glue() %>%
+      wastdr::wastdr_msg_success()
     return()
   }
 
   if (fs::is_dir(local_file_path)) {
     x <- dst$create_folder(dest_fn)
-    "Created folder {dest_fn}" %>% glue::glue() %>% wastdr::wastdr_msg_success()
+    "Created folder {dest_fn}" %>%
+      glue::glue() %>%
+      wastdr::wastdr_msg_success()
   } else {
     x <- dst$upload(src = local_file_path, dest = dest_fn)
-    "Created file {dest_fn}" %>% glue::glue() %>% wastdr::wastdr_msg_success()
+    "Created file {dest_fn}" %>%
+      glue::glue() %>%
+      wastdr::wastdr_msg_success()
   }
 }

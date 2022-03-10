@@ -5,6 +5,7 @@
 
 <!-- badges: start -->
 
+[![docker](https://github.com/dbca-wa/etlTurtleNesting/actions/workflows/docker.yaml/badge.svg)](https://github.com/dbca-wa/etlTurtleNesting/actions/workflows/docker.yaml)
 <!-- badges: end -->
 
 The package etlTurtleNesting contains the ETL and QA for Turtle Nesting

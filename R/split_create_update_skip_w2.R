@@ -27,14 +27,14 @@ split_create_update_skip_w2 <- function(w2_tf, wastd_data) {
   enc_create <-
     . %>% dplyr::anti_join(wastd_data$enc, by = "source_id")
   enc_update <- . %>% dplyr::semi_join(enc_upd, by = "source_id")
-  enc_skip <-   . %>% dplyr::semi_join(enc_skp, by = "source_id")
+  enc_skip <- . %>% dplyr::semi_join(enc_skp, by = "source_id")
 
   # bug: https://github.com/dbca-wa/wastdr/issues/64
   obs_match <- c("encounter_source_id" = "source_id")
   obs_create <-
     . %>% dplyr::anti_join(wastd_data$enc, by = obs_match)
   obs_update <- . %>% dplyr::semi_join(enc_upd, by = obs_match)
-  obs_skip <-   . %>% dplyr::semi_join(enc_skp, by = obs_match)
+  obs_skip <- . %>% dplyr::semi_join(enc_skp, by = obs_match)
   # Can't combine `encounter_source_id` <integer> and `encounter_source_id` <character>.
 
   res <- list(
@@ -48,7 +48,6 @@ split_create_update_skip_w2 <- function(w2_tf, wastd_data) {
     tt_dmg_create = w2_tf$tt_dmg %>% obs_create(),
     tt_dmg_update = w2_tf$tt_dmg %>% obs_update(),
     tt_dmg_skip = w2_tf$tt_dmg %>% obs_skip(),
-
     tt_tsc_create = w2_tf$tt_tsc %>% obs_create(),
     tt_tsc_update = w2_tf$tt_tsc %>% obs_update(),
     tt_tsc_skip = w2_tf$tt_tsc %>% obs_skip(),
