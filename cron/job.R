@@ -1,8 +1,11 @@
 # Setup -----------------------------------------------------------------------#
+library(etlTurtleNesting)
 library(sf)
 library(wastdr)
 library(magrittr)
 library(glue)
+library(drake)
+library(ruODK)
 
 fn_wastd_sites <- "/app/inst/wastd_sites.rds"
 fn_wastd_data <- "/app/inst/wastd_data.rds"
@@ -32,6 +35,15 @@ readRenviron("/app/config/.Renviron")
 # This should indicate whether the environment variables have been read.
 print("wastdr settings:")
 print(wastdr::wastdr_settings())
+
+print("ruODK settings:")
+print(ruODK::ru_settings())
+
+
+# ODK to WAStD import ---------------------------------------------------------#
+Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
+drake::clean()
+drake::make(odkc2020(), lock_envir = FALSE)
 
 # WAStD Areas and Sites - 10 sec ----------------------------------------------#
 
