@@ -4,7 +4,7 @@
 \alias{generate_qa_sites_report}
 \title{Generate QA report for surveys and sites}
 \usage{
-generate_qa_sites_report(odkc_ex, odkc_tf, year)
+generate_qa_sites_report(odkc_ex, odkc_tf, year, skip = FALSE)
 }
 \description{
 Generate QA report for surveys and sites

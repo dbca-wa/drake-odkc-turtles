@@ -4,7 +4,7 @@
 \alias{generate_qa_users_report}
 \title{Generate QA report for user mapping}
 \usage{
-generate_qa_users_report(odkc_ex, user_mapping, year)
+generate_qa_users_report(odkc_ex, user_mapping, year, skip = FALSE)
 }
 \description{
 Generate QA report for user mapping

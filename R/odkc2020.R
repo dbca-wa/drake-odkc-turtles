@@ -74,11 +74,11 @@ odkc2020 <- function() {
     user_mapping = make_user_mapping(odkc_ex, wastd_users),
     # QA Reports: inspect user mappings - flag dissimilar matches
     # https://github.com/dbca-wa/wastdr/issues/21
-    user_qa = generate_qa_users_report(odkc_ex, user_mapping, odkc_yr),
+    user_qa = generate_qa_users_report(odkc_ex, user_mapping, odkc_yr, skip = skip_qa),
     # Source data transformed into target format
     odkc_tf = odkc_as_wastd(odkc_ex, user_mapping),
     # Sites
-    site_qa = generate_qa_sites_report(odkc_ex, odkc_tf, odkc_yr),
+    site_qa = generate_qa_sites_report(odkc_ex, odkc_tf, odkc_yr, skip = skip_qa),
 
     # ------------------------------------------------------------------------ #
     # LOAD
