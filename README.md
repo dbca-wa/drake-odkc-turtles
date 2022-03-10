@@ -4,6 +4,7 @@
 # etlTurtleNesting
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 The package etlTurtleNesting contains the ETL and QA for Turtle Nesting
@@ -60,15 +61,17 @@ remotes::install_github("dbca-wa/wastdr", dependencies = TRUE, upgrade = "never"
 
 New users can be added to WAStD in batches before each field season.
 Local coordinators will provide a spreadsheet with columns “name” (full
-name, correct! spelling and capitalisation), “email”, “phone”.
+name, correct\! spelling and capitalisation), “email”, “phone”.
 
 The spreadsheet is post-processed:
 
--   Open with option “quoted columns as text”
--   username (A), name (B), email, phone, role (C-E)
--   Formula for username: `=SUBSTITUTE(LOWER(B2), " ", "_")`
--   Format phone as text and prefix with +61
--   Save as CSV with “quote all text columns”
+  - Open with option “quoted columns as text”
+  - username (A), name (B), email, phone, role (C-E)
+  - Formula for username: `=SUBSTITUTE(LOWER(B2), " ", "_")`
+  - Format phone as text and prefix with +61
+  - Save as CSV with “quote all text columns”
+
+<!-- end list -->
 
 ``` r
 # Step 1: New users (username, name, phone, email, role)
@@ -84,3 +87,50 @@ users <- here::here("inst/users_nin2020.csv") %>%
 
 Run `run.R` as a local job. Full data export and reporting are already
 part of `run.R`.
+
+## Run ODKC data import in the cloud
+
+This repo contains a Dockerfile to build an image containing a cron job
+running the data import as well as download and export of data from
+WAStD and WAMTRAM as needed by `turtleviewer2`.
+
+The build process is identical to that of `turtleviewer2`.
+
+## Development and local testing
+
+Build Docker image for local testing:
+
+``` bash
+docker build . -t dbca-wa/etlTurtleNesting:latest
+```
+
+Inspect the locally built image for debugging:
+
+``` bash
+docker run -it dbca-wa/etlTurtleNesting:latest /bin/bash -c "export TERM=xterm; exec bash"
+```
+
+### Deployment
+
+Once app and Docker image work, create a new version, tag, and push the
+tag.
+
+``` r
+# One of these (R console)
+usethis::use_version(which="patch")
+usethis::use_version(which="minor")
+usethis::use_version(which="major")
+
+styler::style_pkg()
+spelling::spell_check_package()
+spelling::update_wordlist()
+
+# Code and docs tested, working, committed
+usethis::use_version()
+usethis::edit_file("NEWS.md")
+
+# Git commit, then tag and push
+v <- packageVersion("turtleviewer2")
+system(glue::glue("git tag -a v{v} -m 'v{v}'"))
+system(glue::glue("git push origin v{v}"))
+```
