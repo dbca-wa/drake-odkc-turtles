@@ -21,8 +21,9 @@ etlTurtleNesting::generate_wastd_reports(wastd_data)
 
 # Compile one single report
 rmarkdown::render(
-here::here("vignettes/wastd.Rmd"),
-params = list(area_name = "Delambre Island"),
-output_file = here::here("vignettes/wastd_del.html"))
+  here::here("vignettes/wastd.Rmd"),
+  params = list(area_name = "Delambre Island"),
+  output_file = here::here("vignettes/wastd_del.html")
+)
 }
 }

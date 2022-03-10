@@ -19,5 +19,6 @@ WAStD TurtleDamageObservations of damage_type tag-scar.
 }
 \examples{
 \dontrun{
+
 }
 }

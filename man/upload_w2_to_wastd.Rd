@@ -50,13 +50,19 @@ if \code{update_existing=TRUE}, else skipped.
 }
 \examples{
 \dontrun{
-wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_DEV_URL"),
-                     api_token = Sys.getenv("WASTDR_API_DEV_TOKEN"))
-wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_TEST_URL"),
-                     api_token = Sys.getenv("WASTDR_API_TEST_TOKEN"))
-wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_URL"),
-                     api_token = Sys.getenv("WASTDR_API_TOKEN"))
+wastdr::wastdr_setup(
+  api_url = Sys.getenv("WASTDR_API_DEV_URL"),
+  api_token = Sys.getenv("WASTDR_API_DEV_TOKEN")
+)
+wastdr::wastdr_setup(
+  api_url = Sys.getenv("WASTDR_API_TEST_URL"),
+  api_token = Sys.getenv("WASTDR_API_TEST_TOKEN")
+)
+wastdr::wastdr_setup(
+  api_url = Sys.getenv("WASTDR_API_URL"),
+  api_token = Sys.getenv("WASTDR_API_TOKEN")
+)
 drake::loadd("w2_up")
-upload_odkc_to_wastd(w2_up, update_existing=TRUE, verbose=TRUE)
+upload_odkc_to_wastd(w2_up, update_existing = TRUE, verbose = TRUE)
 }
 }

@@ -25,7 +25,7 @@ data("odkc_data", package = "wastdr")
 au <- Sys.getenv("WASTDR_API_DEV_URL")
 at <- Sys.getenv("WASTDR_API_DEV_TOKEN")
 x <- odkc_data$track_tally_dist \%>\%
-  odkc_tt_as_wastd_tndto \%>\%
+  odkc_tt_as_wastd_tndto() \%>\%
   wastd_POST("turtle-nest-disturbance-tally", api_url = au, api_token = at)
 }
 }

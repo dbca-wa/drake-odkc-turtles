@@ -24,19 +24,25 @@ create / update / skip:
 }
 \examples{
 \dontrun{
-wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_DEV_URL"),
-                     api_token = Sys.getenv("WASTDR_API_DEV_TOKEN"))
-wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_TEST_URL"),
-                     api_token = Sys.getenv("WASTDR_API_TEST_TOKEN"))
-wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_URL"),
-                     api_token = Sys.getenv("WASTDR_API_TOKEN"))
+wastdr::wastdr_setup(
+  api_url = Sys.getenv("WASTDR_API_DEV_URL"),
+  api_token = Sys.getenv("WASTDR_API_DEV_TOKEN")
+)
+wastdr::wastdr_setup(
+  api_url = Sys.getenv("WASTDR_API_TEST_URL"),
+  api_token = Sys.getenv("WASTDR_API_TEST_TOKEN")
+)
+wastdr::wastdr_setup(
+  api_url = Sys.getenv("WASTDR_API_URL"),
+  api_token = Sys.getenv("WASTDR_API_TOKEN")
+)
 
 library(etlTurtleNesting)
 library(wastdr)
 library(drake)
 
-Sys.setenv(W2_IMPORT_UPDATE_EXISTING=TRUE)
-Sys.setenv(W2_IMPORT_UPDATE_EXISTING=FALSE)
+Sys.setenv(W2_IMPORT_UPDATE_EXISTING = TRUE)
+Sys.setenv(W2_IMPORT_UPDATE_EXISTING = FALSE)
 
 visNetwork::visSave(vis_drake_graph(wamtram()), "drake_graph.html")
 drake::vis_drake_graph(wamtram())

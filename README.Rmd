@@ -126,7 +126,8 @@ usethis::use_version()
 usethis::edit_file("NEWS.md")
 
 # Git commit, then tag and push
-v <- packageVersion("turtleviewer2")
+devtools::build()
+v <- packageVersion("etlTurtleNesting")
 system(glue::glue("git tag -a v{v} -m 'v{v}'"))
 system(glue::glue("git push origin v{v}"))
 ```

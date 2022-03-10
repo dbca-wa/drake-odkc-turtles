@@ -20,6 +20,7 @@ Transform w2_data into WAStD TagObservations.
 }
 \examples{
 \dontrun{
+
 }
 }
 \seealso{

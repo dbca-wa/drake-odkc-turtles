@@ -45,8 +45,10 @@ surveys (device swapped?)
 }
 \examples{
 \dontrun{
-wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_DEV_URL"),
-                     api_token = Sys.getenv("WASTDR_API_DEV_TOKEN"))
+wastdr::wastdr_setup(
+  api_url = Sys.getenv("WASTDR_API_DEV_URL"),
+  api_token = Sys.getenv("WASTDR_API_DEV_TOKEN")
+)
 drake::loadd(odkc_ex)
 drake::loadd(user_mapping)
 x <- odkc_svs_sve_as_wastd_surveys(odkc_ex$svs, odkc_ex$sve, user_mapping)
