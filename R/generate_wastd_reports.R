@@ -39,8 +39,8 @@ generate_wastd_reports <- function(wastd_data){
     here::here("vignettes/del_rio.Rmd"),
     params = list(area_name = "Delambre Island",
                   prefix="DEL",
-                  w2_filepath="inst/wamtram.csv",
-                  w2_observed_location_code="DA",
+                  w2_filepath="inst/data/wamtram.csv",
+                  w2_initial_rookery_code="DA",
                   w2_place_code="DADI",
                   w2_exported_on="20 Sept 2021",
                   export_dir="inst/reports/rio"

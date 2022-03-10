@@ -21,9 +21,9 @@ vignette: |
 params:
   area_name: Delambre Island
   prefix: DEL
-  w2_filepath: 'inst/wamtram.csv'
-  w2_rds_filepath: 'inst/w2.rds'
-  w2_observed_location_code: 'DA'
+  w2_filepath: 'inst/data/wamtram.csv'
+  w2_rds_filepath: 'inst/data/w2.rds'
+  w2_initial_rookery_code: 'DA'
   w2_place_code: 'DADI'
   w2_exported_on: '20 Sept 2021'
   export_dir: 'inst/reports/rio'
@@ -129,15 +129,17 @@ w2_all <- here::here(params$w2_filepath) %>%
   wastdr::add_dates(date_col = "encounter_datetime_utc", parse_date = FALSE) %>% 
   annotate_w2_nesting_success()
 
+# params$w2_initial_rookery_code filters turtles seen anywhere else (could be found outside initial rookery)
+# params$w2_place_code filters turtles seen exactly there (could be from other rookeries)
+# e.g. "DADI" or "THEE|THNB"
 w2 <- w2_all %>% 
-  # dplyr::filter(observed_location_code == params$w2_observed_location_code)
-  dplyr::filter(place_code == params$w2_place_code)
+  dplyr::filter(grepl(params$w2_place_code, place_code))
 
 w2 %>% 
   readr::write_csv(
     here::here(
       ld, 
-      glue::glue("wamtram_{params$w2_place_code}.csv")
+      glue::glue("wamtram_{stringr::str_replace_all(params$w2_place_code, '|', '_')}.csv")
     )
   )
 
