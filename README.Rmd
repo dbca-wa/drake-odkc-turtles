@@ -129,5 +129,5 @@ usethis::edit_file("NEWS.md")
 devtools::build()
 v <- packageVersion("etlTurtleNesting")
 system(glue::glue("git tag -a v{v} -m 'v{v}'"))
-system(glue::glue("git push origin v{v}"))
+system(glue::glue("git push && git push --tags"))
 ```
