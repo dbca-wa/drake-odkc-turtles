@@ -3,10 +3,12 @@ library(etlTurtleNesting)
 library(sf)
 library(wastdr)
 library(magrittr)
+library(lubridate)
 library(glue)
 library(drake)
 library(ruODK)
 
+fn_odk <- "/app/inst/odk.txt"
 fn_wastd_sites <- "/app/inst/wastd_sites.rds"
 fn_wastd_data <- "/app/inst/wastd_data.rds"
 fn_w2_data <- "/app/inst/w2_data.rds"
@@ -41,12 +43,18 @@ print(ruODK::ru_settings())
 
 
 # ODK to WAStD import ---------------------------------------------------------#
+"[{Sys.time()}] Importing ODK to WAStD" %>% glue::glue() %>% print()
+
 Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
 drake::clean()
 drake::make(odkc2020(), lock_envir = FALSE)
 
-# WAStD Areas and Sites - 10 sec ----------------------------------------------#
+writeLines(lubridate::format_ISO8601(Sys.time()), fn_odk)
 
+"[{Sys.time()}] ODK Data imported to WAStD." %>% glue::glue() %>% print()
+
+
+# WAStD Areas and Sites - 10 sec ----------------------------------------------#
 "[{Sys.time()}] Downloading WAStD Sites to {fn_wastd_sites}" %>%
   glue::glue() %>%
   print()
