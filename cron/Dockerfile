@@ -32,7 +32,7 @@ RUN Rscript -e 'remotes::install_version("fuzzyjoin", upgrade="never", version =
 RUN Rscript -e 'remotes::install_github("r-spatial/sf")'
 RUN Rscript -e 'remotes::install_github("Thinkr-open/golem")'
 RUN Rscript -e 'remotes::install_github("RinteRface/bs4Dash")'
-RUN Rscript -e 'remotes::install_github("dbca-wa/wastdr", dependencies = TRUE, upgrade = "never")'
+RUN Rscript -e 'remotes::install_github("dbca-wa/wastdr", dependencies = TRUE, upgrade = "always")'
 
 FROM rlibs
 RUN mkdir /app

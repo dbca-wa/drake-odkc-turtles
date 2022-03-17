@@ -33,23 +33,23 @@ generate_wastd_reports <- function(wastd_data) {
 
   # Delambre RIO report
   # Add other tagging reports here
-  a <- "del_rio"
-  fn <- here::here("vignettes", glue::glue("{wastdr::urlize(a)}.html"))
-  wastdr::wastdr_msg_info(glue::glue("Rendering report for {a} to {fn}..."))
-  rmarkdown::render(
-    here::here("vignettes/del_rio.Rmd"),
-    params = list(
-      area_name = "Delambre Island",
-      prefix = "DEL",
-      w2_filepath = "inst/data/wamtram.csv",
-      w2_initial_rookery_code = "DA",
-      w2_place_code = "DADI",
-      w2_exported_on = "20 Sept 2021",
-      export_dir = "inst/reports/rio"
-    ),
-    output_file = fn
-  )
-  wastdr::wastdr_msg_success(glue::glue("Compiled {fn}."))
+  # a <- "del_rio"
+  # fn <- here::here("vignettes", glue::glue("{wastdr::urlize(a)}.html"))
+  # wastdr::wastdr_msg_info(glue::glue("Rendering report for {a} to {fn}..."))
+  # rmarkdown::render(
+  #   here::here("vignettes/del_rio.Rmd"),
+  #   params = list(
+  #     area_name = "Delambre Island",
+  #     prefix = "DEL",
+  #     w2_filepath = "inst/data/wamtram.csv",
+  #     w2_initial_rookery_code = "DA",
+  #     w2_place_code = "DADI",
+  #     w2_exported_on = "20 Sept 2021",
+  #     export_dir = "inst/reports/rio"
+  #   ),
+  #   output_file = fn
+  # )
+  # wastdr::wastdr_msg_success(glue::glue("Compiled {fn}."))
 
   # WAStD only reports - compile
   for (a in c(unique(wastd_data$areas$area_name), "Other")) {

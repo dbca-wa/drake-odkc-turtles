@@ -33,8 +33,8 @@ knitr::opts_chunk$set(echo = FALSE)
 # Data ------------------------------------------------------------------------#
 #
 # WAMTRAM
-w2_dir <- fs::dir_create(here::here("inst"))
-w2_file <- here::here("inst/w2.rds")
+w2_dir <- fs::dir_create(here::here("inst/data"))
+w2_file <- here::here("inst/data/w2.rds")
 
 w2_data_dl <- eventReactive(input$dlw2, {
   wastdr::wastdr_msg_info("Downloading new WAMTRAM data...")
