@@ -1,0 +1,93 @@
+---
+title: "Port Hedland nesting 2019-2021"
+author: "Florian Mayer, DBCA"
+date: "22/03/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(wastdr)
+library(etlTurtleNesting)
+library(drake)
+library(tmap)
+library(spData)
+# library(spDataLarge)
+```
+
+## Data
+
+```{r data_load}
+drake::loadd("wastd_data")
+x <- wastd_data %>%
+  wastdr::filter_wastd_turtledata(area_name = "Port Hedland")
+site_cb <- x$sites %>% dplyr::filter(site_name == "Port Hedland Cemetery Beach")
+```
+
+## From Tracks
+```{r}
+nests_pth <- x$tracks %>%
+  dplyr::filter(site_name == "Port Hedland Cemetery Beach") %>%
+  dplyr::filter(nest_type == "successful-crawl") %>%
+  wastdr::filter_realspecies()
+
+nests_2021 <- nests_pth %>% wastdr::filter_wastd_season(2021)
+nests_2020 <- nests_pth %>% wastdr::filter_wastd_season(2020)
+nests_2019 <- nests_pth %>% wastdr::filter_wastd_season(2019)
+
+nests_2021 %>% geojsonio::geojson_write(
+  lat = "latitude", lon = "longitude", crs = 4326,
+  file = here::here("inst/data/nests_2021.geojson")
+)
+nests_2020 %>% geojsonio::geojson_write(
+  lat = "latitude", lon = "longitude", crs = 4326,
+  file = here::here("inst/data/nests_2020.geojson")
+)
+nests_2019 %>% geojsonio::geojson_write(
+  lat = "latitude", lon = "longitude", crs = 4326,
+  file = here::here("inst/data/nests_2019.geojson")
+)
+
+nests_2021 %>% map_tracks(sites = site_cb)
+nests_2020 %>% map_tracks(sites = site_cb)
+nests_2019 %>% map_tracks(sites = site_cb)
+```
+
+```{r}
+# nests_2021_sf <- nests_2021 %>%
+#   sf::st_as_sf(coords=c("longitude", "latitude"), crs = sf::st_crs(4326))
+#
+# tmap_mode("view")
+# tm_basemap("Esri.WorldImagery") +
+#   tm_shape(nests_2021_sf) +
+#   tm_bubbles(size=0.5, col="red")
+```
+
+## From tagging
+```{r}
+tags_pth <- x$animals %>%
+  dplyr::filter(site_name == "Port Hedland Cemetery Beach") %>%
+  wastdr::filter_realspecies() %>%
+  dplyr::filter(nesting_event %in% c("nest-unsure-of-eggs", "nest-with-eggs"))
+
+tags_2021 <- tags_pth %>% wastdr::filter_wastd_season(2021)
+tags_2020 <- tags_pth %>% wastdr::filter_wastd_season(2020)
+tags_2019 <- tags_pth %>% wastdr::filter_wastd_season(2019)
+
+tags_2021 %>% geojsonio::geojson_write(
+  lat = "latitude", lon = "longitude", crs = 4326,
+  file = here::here("inst/data/tags_2021.geojson")
+)
+tags_2020 %>% geojsonio::geojson_write(
+  lat = "latitude", lon = "longitude", crs = 4326,
+  file = here::here("inst/data/tags_2020.geojson")
+)
+tags_2019 %>% geojsonio::geojson_write(
+  lat = "latitude", lon = "longitude", crs = 4326,
+  file = here::here("inst/data/tags_2019.geojson")
+)
+
+tags_2021 %>% map_mwi(sites = site_cb)
+tags_2020 %>% map_mwi(sites = site_cb)
+tags_2019 %>% map_mwi(sites = site_cb)
+```
