@@ -31,6 +31,9 @@ RUN Rscript -e 'remotes::install_version("leaflet.extras",upgrade="never", versi
 RUN Rscript -e 'remotes::install_version("odbc",upgrade="never", version = "1.3.3")'
 RUN Rscript -e 'remotes::install_version("reactable",upgrade="never", version = "0.2.3")'
 RUN Rscript -e 'remotes::install_version("waiter",upgrade="never", version = "0.2.5")'
+RUN Rscript -e 'remotes::install_version("drake",upgrade="never", version = "7.13.3")'
+RUN Rscript -e 'remotes::install_version("fuzzyjoin",upgrade="never", version = "0.1.6")'
+RUN Rscript -e 'remotes::install_version("pointblank",upgrade="never", version = "0.10.0")'
 RUN Rscript -e 'remotes::install_github("Thinkr-open/golem")'
 RUN Rscript -e 'remotes::install_github("RinteRface/bs4Dash")'
 # Unused wastdr dependencies:
@@ -42,7 +45,7 @@ FROM rlibs
 RUN mkdir /app
 ADD . /app
 WORKDIR /app
-RUN R -e 'remotes::install_local(upgrade="never", dependencies = FALSE)'
+RUN R -e 'remotes::install_local(upgrade="never", dependencies = FALSE) '
 
 # Mount a volume to /app/inst that is shared with turtleviewer2
 # A second volume /app/config will hold an .Renviron file (replace with a vol mount)
