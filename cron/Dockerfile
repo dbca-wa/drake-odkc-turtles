@@ -34,6 +34,9 @@ RUN Rscript -e 'remotes::install_version("waiter",upgrade="never", version = "0.
 RUN Rscript -e 'remotes::install_version("drake",upgrade="never", version = "7.13.3")'
 RUN Rscript -e 'remotes::install_version("fuzzyjoin",upgrade="never", version = "0.1.6")'
 RUN Rscript -e 'remotes::install_version("pointblank",upgrade="never", version = "0.10.0")'
+RUN Rscript -e 'remotes::install_version("waiter",upgrade="never", version = "0.2.5")'
+RUN Rscript -e 'remotes::install_version("plotly",upgrade="never", version = "4.10.0")'
+RUN Rscript -e 'remotes::install_version("shinyWidgets",upgrade="never", version = "0.6.4")'
 RUN Rscript -e 'remotes::install_github("Thinkr-open/golem")'
 RUN Rscript -e 'remotes::install_github("RinteRface/bs4Dash")'
 # Unused wastdr dependencies:
