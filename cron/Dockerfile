@@ -48,10 +48,10 @@ FROM rlibs
 RUN mkdir /app
 ADD . /app
 WORKDIR /app
-RUN R -e 'remotes::install_local(upgrade="never", dependencies = FALSE) '
+RUN R -e 'remotes::install_local(upgrade="never", dependencies = FALSE)'
 
 # Mount a volume to /app/inst that is shared with turtleviewer2
-# A second volume /app/config will hold an .Renviron file (replace with a vol mount)
+# A second volume /app/config will hold an .Renviron file
 RUN mkdir -p /app/inst /app/config && echo "WASTDR_API_URL=NOTSET" >> /app/config/.Renviron
 
 # Initiate cronjob

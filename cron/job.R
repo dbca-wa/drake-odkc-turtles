@@ -29,7 +29,7 @@ print(fs::dir_exists("/app/config/"))
 print("Persisted .Renviron exists:")
 print(fs::file_exists(fn_renv))
 
-# Since out .Renviron is not in a default location, we have to read it explicitly.
+# Since our .Renviron is not in a default location, we have to read it explicitly.
 # The non-default location of .Renviron allows to mount a persistent volume
 # containing the .Renviron to a (non-standard) folder, here "/app/config".
 # This avoids collisions between the mounted volume and other files in the
