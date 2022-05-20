@@ -1,6 +1,6 @@
 Package: etlTurtleNesting
 Title: Data ETL of Turtle Nesting Census Data from ODK Central to WAStD
-Version: 0.6.19
+Version: 0.6.20
 Authors@R: 
     person(given = "Florian",
            family = "Mayer",
@@ -39,7 +39,7 @@ Imports:
     tibble (>= 2.1.3),
     tidyr (>= 1.0.2),
     rlang (>= 0.4.5),
-    wastdr (>= 0.8.39)
+    wastdr (>= 0.8.40)
 Remotes:
     github::dbca-wa/ruODK@main,
     github::dbca-wa/wastdr,
