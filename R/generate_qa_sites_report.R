@@ -5,8 +5,8 @@
 #' \dontrun{
 #' generate_qa_sites_report(odkc_ex, odkc_tf, wastd_data_yr)
 #' }
-generate_qa_sites_report <- function(odkc_ex, odkc_tf, year, skip=FALSE) {
-  if (skip==TRUE) {
+generate_qa_sites_report <- function(odkc_ex, odkc_tf, year, skip = FALSE) {
+  if (skip == TRUE) {
     wastdr::wastdr_msg_info(glue::glue("Skipping QA for sites"))
     return(NULL)
   }

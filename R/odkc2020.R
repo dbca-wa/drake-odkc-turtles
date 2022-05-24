@@ -69,7 +69,6 @@ odkc2020 <- function() {
     odkc_ex = wastdr::download_odkc_turtledata_2020(
       download = dl_odkc, verbose = FALSE
     ),
-
     odkc_save = saveRDS(odkc_ex, file = odkc_fn, compress = odkc_compress),
 
     # ------------------------------------------------------------------------ #
