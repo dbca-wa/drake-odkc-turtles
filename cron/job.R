@@ -10,6 +10,7 @@ library(ruODK)
 
 # Absolute paths to saved data and config files -------------------------------#
 fn_odk <- "/app/inst/odk.txt"
+fn_odkc_data <- "/app/inst/odkc_data.rds"
 fn_wastd_sites <- "/app/inst/wastd_sites.rds"
 fn_wastd_data <- "/app/inst/wastd_data.rds"
 fn_w2_data <- "/app/inst/w2_data.rds"
@@ -47,6 +48,9 @@ print(ruODK::ru_settings())
 "[{Sys.time()}] Importing ODK to WAStD" %>% glue::glue() %>% print()
 
 Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
+Sys.setenv(ODKC_IMPORT_SAVE_FILENAME=fn_odkc_data)
+Sys.setenv(ODKC_IMPORT_SAVE_COMPRESS=FALSE)
+
 drake::clean()
 drake::make(odkc2020(), lock_envir = FALSE)
 

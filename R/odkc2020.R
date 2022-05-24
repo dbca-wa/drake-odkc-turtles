@@ -61,12 +61,16 @@ odkc2020 <- function() {
     up_ex = Sys.getenv("ODKC_IMPORT_UPDATE_EXISTING", unset = FALSE),
     up_media = Sys.getenv("ODKC_IMPORT_UPLOAD_MEDIA", unset = TRUE),
     skip_qa = Sys.getenv("ODKC_ETL_SKIP_QA", unset = FALSE),
+    odkc_fn = Sys.getenv("ODKC_IMPORT_SAVE_FILENAME", unset = here::here("inst/odkc_data.rds")),
+    odkc_compress = Sys.getenv("ODKC_IMPORT_SAVE_COMPRESS", unset = "xz"),
 
     # ------------------------------------------------------------------------ #
     # EXTRACT
     odkc_ex = wastdr::download_odkc_turtledata_2020(
       download = dl_odkc, verbose = FALSE
     ),
+
+    odkc_save = saveRDS(odkc_ex, file = odkc_fn, compress = odkc_compress),
 
     # ------------------------------------------------------------------------ #
     # TRANSFORM
