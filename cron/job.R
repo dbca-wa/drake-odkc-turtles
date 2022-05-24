@@ -51,7 +51,7 @@ print(ruODK::ru_settings())
 Sys.setenv(ODKC_IMPORT_UPDATE_EXISTING=FALSE)
 Sys.setenv(ODKC_IMPORT_SAVE_FILENAME=fn_odkc_data)
 Sys.setenv(ODKC_IMPORT_LOCAL_DIR=fn_odkc_ld)
-Sys.setenv(ODKC_IMPORT_SAVE_COMPRESS=FALSE)
+Sys.setenv(ODKC_IMPORT_SAVE_COMPRESS="xz")
 
 drake::clean()
 drake::make(odkc2020(), lock_envir = FALSE)
