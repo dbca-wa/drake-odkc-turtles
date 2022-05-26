@@ -93,7 +93,8 @@ if (wastdr::w2_online() == FALSE) {
   glue::glue() %>%
   print()
 
-wastd_data <- wastdr::download_wastd_turtledata(save=fn_wastd_data, compress=FALSE)
+wastd_data <- wastdr::download_wastd_turtledata(
+  min_year = 1980, save=fn_wastd_data, compress=FALSE)
 
 "[{Sys.time()}] WAStD Data saved locally to folder {fn_wastd_data}." %>%
   glue::glue() %>%
