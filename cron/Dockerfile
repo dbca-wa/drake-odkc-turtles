@@ -1,4 +1,4 @@
-FROM rocker/geospatial:4.1.3 as base
+FROM rocker/geospatial:4.2.0 as base
 RUN apt-get update && apt-get install -y cron freetds-common freetds-dev \
 libbibutils6 libct4 libgeos++-dev libghc-pandoc-citeproc-data libprotoc-dev \
 libsybdb5 libyaml-0-2 pandoc pandoc-citeproc pandoc-data tdsodbc &&\

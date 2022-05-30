@@ -27,7 +27,7 @@ remotes::install_github("dbca-wa/etlTurtleNesting")
 
 ### Running the dashboard
 
-Either open “vignettes/qa\_wamtram\_geolocation.Rmd” and click “Run
+Either open “vignettes/qa_wamtram_geolocation.Rmd” and click “Run
 Document”, or run
 
 ``` r
@@ -62,17 +62,15 @@ remotes::install_github("dbca-wa/wastdr", dependencies = TRUE, upgrade = "never"
 
 New users can be added to WAStD in batches before each field season.
 Local coordinators will provide a spreadsheet with columns “name” (full
-name, correct\! spelling and capitalisation), “email”, “phone”.
+name, correct! spelling and capitalisation), “email”, “phone”.
 
 The spreadsheet is post-processed:
 
-  - Open with option “quoted columns as text”
-  - username (A), name (B), email, phone, role (C-E)
-  - Formula for username: `=SUBSTITUTE(LOWER(B2), " ", "_")`
-  - Format phone as text and prefix with +61
-  - Save as CSV with “quote all text columns”
-
-<!-- end list -->
+-   Open with option “quoted columns as text”
+-   username (A), name (B), email, phone, role (C-E)
+-   Formula for username: `=SUBSTITUTE(LOWER(B2), " ", "_")`
+-   Format phone as text and prefix with +61
+-   Save as CSV with “quote all text columns”
 
 ``` r
 # Step 1: New users (username, name, phone, email, role)
@@ -117,17 +115,14 @@ Once app and Docker image work, create a new version, tag, and push the
 tag.
 
 ``` r
-# One of these (R console)
-usethis::use_version(which="patch")
-usethis::use_version(which="minor")
-usethis::use_version(which="major")
-
 styler::style_pkg()
 spelling::spell_check_package()
 spelling::update_wordlist()
 
 # Code and docs tested, working, committed
-usethis::use_version()
+usethis::use_version(which="patch")
+usethis::use_version(which="minor")
+usethis::use_version(which="major")
 usethis::edit_file("NEWS.md")
 
 # Git commit, then tag and push
