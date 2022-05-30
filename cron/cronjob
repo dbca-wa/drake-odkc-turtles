@@ -1,2 +1,2 @@
-0 */2 * * *  /usr/local/bin/Rscript /app/cron/job.R >> /app/inst/cron.log 2>&1
-# run every second hour
+0 */3 * * *  /usr/local/bin/Rscript /app/cron/job.R >> /app/inst/cron.log 2>&1
+# run every third hour: 0000, 0300, 0600 and so on
