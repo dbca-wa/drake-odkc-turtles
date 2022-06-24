@@ -1,0 +1,195 @@
+---
+title: "Port Hedland Seawall"
+author: "NWSFTCP, DBCA"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
+    fig_width: 10
+    fig_height: 6
+    code_folding: hide
+    theme: lumen
+---
+
+```{r setup, include=TRUE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(wastdr)
+library(etlTurtleNesting)
+library(ruODK)
+library(dplyr)
+library(janitor)
+library(reactable)
+library(sf)
+
+x <- readRDS(here::here("inst/data/wastd_data_pth.rds"))
+
+sw <- geojsonsf::geojson_sf(here::here("inst/data/seawall.geojson")) %>%
+  dplyr::transmute(subsite = name)
+
+x$tracks <- x$tracks %>%
+  wastdr::filter_realspecies() %>%
+  dplyr::filter(season > 2018, site_name == "Port Hedland Cemetery Beach") %>%
+  sf::st_as_sf(coords = c("longitude", "latitude"), crs = 4326, remove = FALSE) %>%
+  sf::st_join(sw) %>%
+  wastdr::sf_as_tbl()
+
+x$animals <- x$animals %>%
+  wastdr::filter_realspecies() %>%
+  dplyr::filter(
+    taxon == "Cheloniidae",
+    season > 2018,
+    site_name == "Port Hedland Cemetery Beach"
+  ) %>%
+  sf::st_as_sf(
+    coords = c("longitude", "latitude"),
+    crs = 4326,
+    remove = FALSE
+  ) %>%
+  sf::st_join(sw) %>%
+  wastdr::sf_as_tbl()
+
+x$nest_excavations <- x$nest_excavations %>%
+  wastdr::filter_realspecies() %>%
+  dplyr::filter(
+    season > 2018,
+    encounter_site_name == "Port Hedland Cemetery Beach"
+  ) %>%
+  sf::st_as_sf(
+    coords = c("encounter_longitude", "encounter_latitude"),
+    crs = 4326,
+    remove = FALSE
+  ) %>%
+  sf::st_join(sw) %>%
+  wastdr::sf_as_tbl()
+
+x_reh <- x
+x_reh$tracks <- x_reh$tracks %>%
+  dplyr::filter(subsite == "rehab")
+x_reh$animals <- x_reh$animals %>%
+  dplyr::filter(subsite == "rehab")
+x_reh$nest_excavations <- x_reh$nest_excavations %>%
+  dplyr::filter(subsite == "rehab")
+
+x_sea <- x
+x_sea$tracks <- x_sea$tracks %>%
+  dplyr::filter(subsite == "seawall")
+x_sea$animals <- x_sea$animals %>%
+  dplyr::filter(subsite == "seawall")
+x_sea$nest_excavations <- x_sea$nest_excavations %>%
+  dplyr::filter(subsite == "seawall")
+
+
+rt <- . %>%
+  janitor::clean_names() %>%
+  reactable::reactable(
+    filterable = TRUE,
+    sortable = TRUE,
+    searchable = TRUE,
+    defaultColDef = reactable::colDef(html = TRUE)
+  )
+```
+
+## Data
+
+Data was extracted from WAStD on `r x$downloaded_on` AWST.
+
+## Location
+<img src="../inst/seawall1.png" />
+<img src="../inst/seawall2.png" />
+
+The above areas "rehab" (Rehabilitation Zone) and "seawall" (Seawall footprint) 
+were digitised from visual interpretation of the maps above and extended to the 
+waterline.
+```{r}
+wastdr::leaflet_basemap() %>%
+  leaflet::addPolygons(data = sw, label = ~subsite) %>%
+  leaflet::setView(118.615, -20.306, 18)
+```
+
+
+## Overview
+
+### Tagged turtles
+```{r map_tags}
+x$animals %>%
+  wastdr::map_mwi(sites = x$sites, cluster = TRUE) %>%
+  leaflet::addPolygons(data = sw, label = ~subsite) %>%
+  leaflet::setView(118.615, -20.306, 15)
+```
+
+
+### Tracks Cemetery Beach
+```{r map_tracks_cem}
+x$tracks %>%
+  wastdr::map_tracks(sites = x$sites, cluster = TRUE) %>%
+  leaflet::addPolygons(data = sw, label = ~subsite) %>%
+  leaflet::setView(118.615, -20.306, 15)
+```
+
+### Tracks rehab
+A visual check whether the data was correctly clipped to the subsites rehab and seawall.
+```{r map_tracks_reh}
+x_reh$tracks %>%
+  wastdr::map_tracks(cluster = TRUE) %>%
+  leaflet::addPolygons(data = sw, label = ~subsite) %>%
+  leaflet::setView(118.615, -20.306, 15)
+```
+
+### Tracks seawall
+```{r map_tracks_sea}
+x_sea$tracks %>%
+  wastdr::map_tracks(cluster = TRUE) %>%
+  leaflet::addPolygons(data = sw, label = ~subsite) %>%
+  leaflet::setView(118.615, -20.306, 15)
+```
+
+
+## Nesting effort
+### Cemetery Beach (total)
+```{r tbl_nesting_effort_cem}
+x %>%
+  wastdr::total_emergences_per_site_season_species() %>%
+  rt()
+```
+### Rehab
+```{r tbl_nesting_effort_reh}
+x_reh %>%
+  wastdr::total_emergences_per_site_season_species() %>%
+  rt()
+```
+### Seawall
+```{r tbl_nesting_effort_sea}
+x_sea %>%
+  wastdr::total_emergences_per_site_season_species() %>%
+  rt()
+```
+
+## Nesting Success
+### Cemetery Beach (total)
+```{r tbl_nesting_succ_cem}
+x %>% wastdr::nesting_success_per_area_season_species() %>% rt()
+```
+### Rehab
+```{r tbl_nesting_succ_reh}
+x_reh %>% wastdr::nesting_success_per_area_season_species() %>% rt()
+```
+### Seawall
+```{r tbl_nesting_succ_sea}
+x_sea %>% wastdr::nesting_success_per_area_season_species() %>% rt()
+```
+
+## Hatching and Emergence Success
+### Cemetery Beach (total)
+```{r tbl_hs_es_cem}
+x$nest_excavations %>% wastdr::hatching_emergence_success_area() %>% rt()
+```
+### Rehab
+```{r tbl_hs_es_reh}
+x_reh$nest_excavations %>% wastdr::hatching_emergence_success_area() %>% rt()
+```
+### Seawall
+```{r tbl_hs_es_sea}
+x_sea$nest_excavations %>% wastdr::hatching_emergence_success_area() %>% rt()
+```
