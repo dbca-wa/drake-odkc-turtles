@@ -26,7 +26,7 @@
 #' @param svs ODKC Site Visit Start, e.g. `data("odkc_data"); odkc_data$svs`
 #' @param sve ODKC Site Visit End, e.g. `data("odkc_data"); odkc_data$sve`
 #'
-#' @return
+#' @return A tibble in the correct format to upload as WAStD Surveys
 #' @export
 #'
 #' @examples

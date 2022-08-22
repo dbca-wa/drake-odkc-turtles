@@ -4,26 +4,32 @@
 \alias{update_tagexplorer}
 \title{Update the Google Sheet "Turtle Tag Explorer"}
 \usage{
-update_tagexplorer(wastd_data, doc_id = Sys.getenv("TURTLE_SHEET"))
+update_tagexplorer(
+  wastd_data,
+  doc_id = Sys.getenv("TURTLE_SHEET"),
+  api_key = Sys.getenv("GOOGLE_MAPS_APIKEY")
+)
 }
 \arguments{
 \item{wastd_data}{The output of \code{wastdr::download_wastd_turtledata()}..}
 
 \item{doc_id}{The Google Sheet ID, default: \code{Sys.getenv("TURTLE_SHEET")}.}
+
+\item{api_key}{A Google API key, default: \code{Sys.getenv("GOOGLE_MAPS_APIKEY")}.}
 }
 \value{
 A list with keys:
 \itemize{
-\item \code{tags} The selected columns and (all) rows of \code{wastd_data$turtle_tags}.
-\item \code{tag_sheet} The Google sheet ID for the sheet containing \code{tags}.
+\item \code{enc} The selected columns and (all) rows of tagged \code{wastd_data$animals}.
+\item \code{enc_sheet} The Google sheet ID for the sheet containing \code{encounters}.
 \item \code{meta_sheet} The Google sheet ID for the sheet containing the metadata.
 }
 }
 \description{
 This function first authenticates (out of band) against a Google account
-given through the email \code{Sys.getenv("GOOGLE_EMAIL")}.
-Next, selected columns of \code{wastd_data$turtle_tags} are written over an
-existing sheet "Tags" in the Google Sheet with ID
+given through the email \code{Sys.getenv("GOOGLE_MAPS_APIKEY")}.
+Next, selected columns of tagged \code{wastd_data$animals} are written over an
+existing sheet "Encounters" in the Google Sheet with ID
 \code{Sys.getenv("TURTLE_SHEET")}.
 Lastly, metadata (number of records, data accessed on, data uploaded on) are
 written to a sheet "Metadata".

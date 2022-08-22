@@ -12,7 +12,7 @@ odkc_svs_sve_as_wastd_surveys(svs, sve, user_mapping)
 \item{sve}{ODKC Site Visit End, e.g. \verb{data("odkc_data"); odkc_data$sve}}
 }
 \value{
-
+A tibble in the correct format to upload as WAStD Surveys
 }
 \description{
 Reconstruct WAStD Surveys from ODKC Site Visit Start/End

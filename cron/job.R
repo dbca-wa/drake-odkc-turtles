@@ -99,3 +99,14 @@ wastd_data <- wastdr::download_wastd_turtledata(
 "[{Sys.time()}] WAStD Data saved locally to folder {fn_wastd_data}." %>%
   glue::glue() %>%
   print()
+
+# Turtle Tag Explorer ---------------------------------------------------------#
+"[{Sys.time()}] Updating Turtle Tag Explorer" %>%
+  glue::glue() %>%
+  print()
+
+tte <- etlTurtleNesting::update_tagexplorer(wastd_data)
+
+"[{Sys.time()}] Turtle Tag Explorer updated." %>%
+  glue::glue() %>%
+  print()
