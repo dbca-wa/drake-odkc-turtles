@@ -30,7 +30,7 @@ update_tagexplorer <- function(wastd_data,
   googlesheets4::gs4_auth_configure(api_key = api_key)
 
   enc <- wastd_data$animals %>%
-    dplyr::filter(!is.na(name)) %>%
+    dplyr::filter(!is.na(identifiers)) %>%
     dplyr::select(
       id,
       datetime,
