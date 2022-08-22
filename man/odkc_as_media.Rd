@@ -19,21 +19,23 @@ ODKC Tracks as WAStD MediaObservations
 }
 \examples{
 \dontrun{
-wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_DEV_URL"),
-                     api_token = Sys.getenv("WASTDR_API_DEV_TOKEN"))
+wastdr::wastdr_setup(
+  api_url = Sys.getenv("WASTDR_API_DEV_URL"),
+  api_token = Sys.getenv("WASTDR_API_DEV_TOKEN")
+)
 drake::loadd(odkc_ex)
 x <- odkc_as_media(odkc_ex)
-upload_media(x[1:100,])
+upload_media(x[1:100, ])
 
 
 # Outside R, using curl (with correct auth token)
-curl -i -X POST
-  -H 'Authorization: Token xxx'
-  -F 'attachment=@my_photo.jpg'
-  -F encounter_source=paper
-  -F encounter_source_id=2015-01-21-08-00-00-117-152-20-6134-dead-disarticulated-juvenile-na-chelonia-mydas
-  -F source=2
-  -F source_id=test123
-  http://localhost:8220/api/1/media-attachments/
+# curl -i -X POST
+#   -H 'Authorization: Token xxx'
+#   -F 'attachment=@my_photo.jpg'
+#   -F encounter_source=paper
+#   -F encounter_source_id=2015-01-21-08-00-00-117-152-20-6134-dead-disarticulated-juvenile-na-chelonia-mydas
+#   -F source=2
+#   -F source_id=test123
+#   http://localhost:8220/api/1/media-attachments/
 }
 }

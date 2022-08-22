@@ -43,7 +43,7 @@ update_tagexplorer <- function(wastd_data,
     ) %>%
     dplyr::mutate(
       url = glue::glue(
-        'https://wastd.dbca.wa.gov.au/observations/animal-encounters/{id}'
+        "https://wastd.dbca.wa.gov.au/observations/animal-encounters/{id}"
       )
     ) %>%
     dplyr::select(-id)

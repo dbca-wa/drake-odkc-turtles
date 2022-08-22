@@ -7,22 +7,24 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' wastdr::wastdr_setup(api_url = Sys.getenv("WASTDR_API_DEV_URL"),
-#'                      api_token = Sys.getenv("WASTDR_API_DEV_TOKEN"))
+#' wastdr::wastdr_setup(
+#'   api_url = Sys.getenv("WASTDR_API_DEV_URL"),
+#'   api_token = Sys.getenv("WASTDR_API_DEV_TOKEN")
+#' )
 #' drake::loadd(odkc_ex)
 #' x <- odkc_as_media(odkc_ex)
-#' upload_media(x[1:100,])
+#' upload_media(x[1:100, ])
 #'
 #'
 #' # Outside R, using curl (with correct auth token)
-#' curl -i -X POST
-#'   -H 'Authorization: Token xxx'
-#'   -F 'attachment=@my_photo.jpg'
-#'   -F encounter_source=paper
-#'   -F encounter_source_id=2015-01-21-08-00-00-117-152-20-6134-dead-disarticulated-juvenile-na-chelonia-mydas
-#'   -F source=2
-#'   -F source_id=test123
-#'   http://localhost:8220/api/1/media-attachments/
+#' # curl -i -X POST
+#' #   -H 'Authorization: Token xxx'
+#' #   -F 'attachment=@my_photo.jpg'
+#' #   -F encounter_source=paper
+#' #   -F encounter_source_id=2015-01-21-08-00-00-117-152-20-6134-dead-disarticulated-juvenile-na-chelonia-mydas
+#' #   -F source=2
+#' #   -F source_id=test123
+#' #   http://localhost:8220/api/1/media-attachments/
 #' }
 odkc_as_media <- function(data) {
   tracks <- data$tracks %>%
@@ -38,7 +40,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Track 1",
-      attachment =  track_photos_photo_track_1 #%>% make_uploadable()
+      attachment = track_photos_photo_track_1 # %>% make_uploadable()
     )
 
   tracks2 <- tracks %>%
@@ -51,7 +53,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Track 2",
-      attachment =  track_photos_photo_track_2
+      attachment = track_photos_photo_track_2
     )
 
   nest1 <- tracks %>%
@@ -64,7 +66,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Nest 1",
-      attachment =  nest_photos_photo_nest_1
+      attachment = nest_photos_photo_nest_1
     )
 
   nest2 <- tracks %>%
@@ -77,7 +79,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Nest 2",
-      attachment =  nest_photos_photo_nest_2
+      attachment = nest_photos_photo_nest_2
     )
 
   nest3 <- tracks %>%
@@ -90,7 +92,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Nest 3",
-      attachment =  nest_photos_photo_nest_3
+      attachment = nest_photos_photo_nest_3
     )
 
   tag <- tracks %>%
@@ -103,7 +105,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Nest Tag",
-      attachment =  nest_tag_photo_tag
+      attachment = nest_tag_photo_tag
     )
 
   eggs <- data$tracks_egg %>%
@@ -117,7 +119,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = submissions_id,
       media_type = "photograph",
       title = "Photo Eggs",
-      attachment =  photo_eggs
+      attachment = photo_eggs
     )
 
   dist <- data$tracks_dist %>%
@@ -131,7 +133,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = submissions_id,
       media_type = "photograph",
       title = "Photo Disturbance",
-      attachment =  photo_disturbance
+      attachment = photo_disturbance
     )
 
   logg <- data$tracks_log %>%
@@ -145,7 +147,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = submissions_id,
       media_type = "photograph",
       title = "Photo Logger",
-      attachment =  photo_logger
+      attachment = photo_logger
     )
 
   tracks_out <- data$tracks_fan_outlier %>%
@@ -159,7 +161,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = submissions_id,
       media_type = "photograph",
       title = "Photo Hatchling Emergence Track Outlier",
-      attachment =  outlier_track_photo
+      attachment = outlier_track_photo
     )
 
   tracks_light <- data$tracks_light %>%
@@ -173,7 +175,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = submissions_id,
       media_type = "photograph",
       title = "Photo Light Source",
-      attachment =  light_source_photo
+      attachment = light_source_photo
     )
 
   tracks_seawards <- tracks %>%
@@ -186,7 +188,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Hatchling Tracks Seawards",
-      attachment =  fan_angles_photo_hatchling_tracks_seawards
+      attachment = fan_angles_photo_hatchling_tracks_seawards
     )
 
   tracks_relief <- tracks %>%
@@ -199,7 +201,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Hatchling Tracks Relief",
-      attachment =  fan_angles_photo_hatchling_tracks_relief
+      attachment = fan_angles_photo_hatchling_tracks_relief
     )
 
   dist2 <- data$dist %>%
@@ -213,7 +215,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Disturbance",
-      attachment =  disturbanceobservation_photo_disturbance
+      attachment = disturbanceobservation_photo_disturbance
     )
 
   mwi_ct <- data$mwi %>%
@@ -227,7 +229,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Carapace Top",
-      attachment =  photos_turtle_photo_carapace_top
+      attachment = photos_turtle_photo_carapace_top
     )
 
   mwi_ht <- data$mwi %>%
@@ -241,7 +243,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Head Top",
-      attachment =  photos_turtle_photo_head_top
+      attachment = photos_turtle_photo_head_top
     )
 
   mwi_hs <- data$mwi %>%
@@ -255,7 +257,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Head Side",
-      attachment =  photos_turtle_photo_head_side
+      attachment = photos_turtle_photo_head_side
     )
 
   mwi_hf <- data$mwi %>%
@@ -269,7 +271,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Head Front",
-      attachment =  photos_turtle_photo_head_front
+      attachment = photos_turtle_photo_head_front
     )
 
   mwi_hab1 <- data$mwi %>%
@@ -283,7 +285,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Habitat 1",
-      attachment =  incident_photo_habitat
+      attachment = incident_photo_habitat
     )
 
   mwi_hab2 <- data$mwi %>%
@@ -297,7 +299,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Habitat 2",
-      attachment =  habitat_photos_photo_habitat_2
+      attachment = habitat_photos_photo_habitat_2
     )
 
   mwi_hab3 <- data$mwi %>%
@@ -311,7 +313,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Habitat 3",
-      attachment =  habitat_photos_photo_habitat_3
+      attachment = habitat_photos_photo_habitat_3
     )
 
   mwi_hab4 <- data$mwi %>%
@@ -325,7 +327,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Habitat 4",
-      attachment =  habitat_photos_photo_habitat_4
+      attachment = habitat_photos_photo_habitat_4
     )
 
   # odkc_ex$mwi_tag$photo_tag # no submissions
@@ -342,7 +344,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = submissions_id,
       media_type = "photograph",
       title = "Photo Damage",
-      attachment =  photo_damage
+      attachment = photo_damage
     )
 
   # odkc_ex$tsi$encounter_photo_habitat
@@ -357,7 +359,7 @@ odkc_as_media <- function(data) {
       encounter_source_id = id,
       media_type = "photograph",
       title = "Photo Habitat",
-      attachment =  encounter_photo_habitat
+      attachment = encounter_photo_habitat
     )
 
   if (!is.null(data$tt)) {
@@ -372,7 +374,7 @@ odkc_as_media <- function(data) {
         encounter_source_id = id,
         media_type = "photograph",
         title = "Photo Flipper Tag 1",
-        attachment =  ft1_ft1_photo
+        attachment = ft1_ft1_photo
       )
 
     tt_ft2 <- data$tt %>%
@@ -386,7 +388,7 @@ odkc_as_media <- function(data) {
         encounter_source_id = id,
         media_type = "photograph",
         title = "Photo Flipper Tag 2",
-        attachment =  ft2_ft2_photo
+        attachment = ft2_ft2_photo
       )
 
     tt_ft3 <- data$tt %>%
@@ -400,7 +402,7 @@ odkc_as_media <- function(data) {
         encounter_source_id = id,
         media_type = "photograph",
         title = "Photo Flipper Tag 3",
-        attachment =  ft3_ft3_photo
+        attachment = ft3_ft3_photo
       )
 
     tt_bio <- data$tt %>%
@@ -414,7 +416,7 @@ odkc_as_media <- function(data) {
         encounter_source_id = id,
         media_type = "photograph",
         title = "Photo Biopsy",
-        attachment =  biopsy_biopsy_photo
+        attachment = biopsy_biopsy_photo
       )
 
     tt_ds1 <- data$tt %>%
@@ -428,7 +430,7 @@ odkc_as_media <- function(data) {
         encounter_source_id = id,
         media_type = "data_sheet",
         title = "Datasheet Front",
-        attachment =  datasheet_photo_datasheet_front
+        attachment = datasheet_photo_datasheet_front
       )
 
     tt_ds2 <- data$tt %>%
@@ -442,7 +444,7 @@ odkc_as_media <- function(data) {
         encounter_source_id = id,
         media_type = "data_sheet",
         title = "Datasheet Rear",
-        attachment =  datasheet_photo_datasheet_rear
+        attachment = datasheet_photo_datasheet_rear
       )
 
     # odkc_data$tt_tag$tag_photo
@@ -456,7 +458,7 @@ odkc_as_media <- function(data) {
         encounter_source_id = submissions_id,
         media_type = "photograph",
         title = "Photo Tag",
-        attachment =  tag_photo
+        attachment = tag_photo
       )
     # odkc_data$tt_dmg$photo_damage
     tt_dmg <- data$tt_dmg %>%
@@ -469,7 +471,7 @@ odkc_as_media <- function(data) {
         encounter_source_id = submissions_id,
         media_type = "photograph",
         title = "Photo Tag",
-        attachment =  photo_damage
+        attachment = photo_damage
       )
     # odkc_data$tt_log%logger_photo
     tt_log <- data$tt_log %>%
@@ -482,18 +484,20 @@ odkc_as_media <- function(data) {
         encounter_source_id = submissions_id,
         media_type = "photograph",
         title = "Photo Logger",
-        attachment =  logger_photo
+        attachment = logger_photo
       )
 
-    tt_media <- dplyr::bind_rows(tt_ft1,
-                                 tt_ft2,
-                                 tt_ft3,
-                                 tt_bio,
-                                 tt_ds1,
-                                 tt_ds2,
-                                 tt_tag,
-                                 tt_dmg,
-                                 tt_log)
+    tt_media <- dplyr::bind_rows(
+      tt_ft1,
+      tt_ft2,
+      tt_ft3,
+      tt_bio,
+      tt_ds1,
+      tt_ds2,
+      tt_tag,
+      tt_dmg,
+      tt_log
+    )
   }
 
   res <- dplyr::bind_rows(
@@ -528,6 +532,4 @@ odkc_as_media <- function(data) {
   } else {
     res
   }
-
-
 }
