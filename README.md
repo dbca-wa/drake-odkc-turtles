@@ -20,6 +20,7 @@ You can install etlTurtleNesting from [GitHub](https://github.com/)
 with:
 
 ``` r
+remotes::install_github("dbca-wa/wastdr")
 remotes::install_github("dbca-wa/etlTurtleNesting")
 ```
 

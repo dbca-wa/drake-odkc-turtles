@@ -29,6 +29,7 @@ Issues are tracked at [wastdr](https://github.com/dbca-wa/wastdr/milestone/1).
 You can install etlTurtleNesting from [GitHub](https://github.com/) with:
 
 ```{r, eval=FALSE, echo=TRUE}
+remotes::install_github("dbca-wa/wastdr")
 remotes::install_github("dbca-wa/etlTurtleNesting")
 ```
 
