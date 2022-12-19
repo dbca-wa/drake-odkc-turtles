@@ -100,13 +100,14 @@ wastd_data <- wastdr::download_wastd_turtledata(
   glue::glue() %>%
   print()
 
+# FIXME: comment out Turtle Tag Google Sheet update due to auth error.
 # Turtle Tag Explorer ---------------------------------------------------------#
-"[{Sys.time()}] Updating Turtle Tag Explorer" %>%
-  glue::glue() %>%
-  print()
-
-tte <- etlTurtleNesting::update_tagexplorer(wastd_data)
-
-"[{Sys.time()}] Turtle Tag Explorer updated." %>%
-  glue::glue() %>%
-  print()
+#"[{Sys.time()}] Updating Turtle Tag Explorer" %>%
+#  glue::glue() %>%
+#  print()
+#
+#tte <- etlTurtleNesting::update_tagexplorer(wastd_data)
+#
+#"[{Sys.time()}] Turtle Tag Explorer updated." %>%
+#  glue::glue() %>%
+#  print()

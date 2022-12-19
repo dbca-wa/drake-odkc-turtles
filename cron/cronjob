@@ -1,2 +1,0 @@
-0 */6 * * *  /usr/local/bin/Rscript /app/cron/job.R >> /app/inst/cron.log 2>&1
-# run every sixth hour: 0000, 0600, 1200, 1800

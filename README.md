@@ -85,8 +85,8 @@ users <- here::here("inst/users_nin2020.csv") %>%
 
 ## Import ODKC data, export WAStD data, create reports and outputs
 
-Run `run.R` as a local job. Full data export and reporting are already
-part of `run.R`.
+Run `job.R` as a local job. Full data export and reporting are already
+part of `job.R`.
 
 ## Run ODKC data import in the cloud
 
@@ -101,13 +101,13 @@ The build process is identical to that of `turtleviewer2`.
 Build Docker image for local testing:
 
 ``` bash
-docker build . -t dbca-wa/etlTurtleNesting:latest
+docker image build -t ghcr.io/dbca-wa/etlturtlenesting .
 ```
 
 Inspect the locally built image for debugging:
 
 ``` bash
-docker run -it dbca-wa/etlTurtleNesting:latest /bin/bash -c "export TERM=xterm; exec bash"
+docker run -it ghcr.io/dbca-wa/etlturtlenesting /bin/bash -c "export TERM=xterm; exec bash"
 ```
 
 ### Deployment

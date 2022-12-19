@@ -54,12 +54,5 @@ RUN R -e 'remotes::install_local(upgrade="never", dependencies = FALSE)'
 # A second volume /app/config will hold an .Renviron file
 RUN mkdir -p /app/inst /app/config && echo "WASTDR_API_URL=NOTSET" >> /app/config/.Renviron
 
-# Initiate cronjob
-RUN crontab cron/cronjob
-
 # Run command on container startup
-CMD echo "start cronjob" &&\
-  (cron) &&\
-  echo "init logs" &&\
-  touch /app/inst/cron.log &&\
-  tail -f /app/inst/cron.log
+CMD /usr/local/bin/Rscript /app/job.R

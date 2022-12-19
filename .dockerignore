@@ -16,3 +16,4 @@ vignettes/plant_health/
 *.html
 *.zip
 .drake/
+Dockerfile
